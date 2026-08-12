@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
 import { User, Notification } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -24,19 +24,20 @@ const isRelevantForUser = (n: any, userId: string, courseId?: string | null) => 
 // GET: Fetch student notifications (Personal + Course + Broadcast 'all')
 export async function GET() {
   try {
-    const { isMemoryMode } = await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user: currentUser, isMemoryMode } = authResult;
+
     if (isMemoryMode) {
       const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => String(u._id) === String(auth.userId));
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
       const currentUserId = String(currentUser._id);
       const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
       const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
@@ -79,11 +80,6 @@ export async function GET() {
     }
 
     // Mongoose Mode
-    const currentUser = await User.findById(auth.userId);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const userIdStr = currentUser._id.toString();
     const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
     const userCreatedAt = currentUser.created_at ? new Date(currentUser.created_at) : null;
@@ -105,10 +101,10 @@ export async function GET() {
       query.created_at = { $gte: new Date(userCreatedAt.getTime() - 5000) };
     }
 
-    const notifs = await Notification.find(query).sort({ created_at: -1 }).limit(30);
+    const notifs = await Notification.find(query).sort({ created_at: -1 }).limit(30).lean();
 
-    const formatted = notifs.map((n) => {
-      const readBy = (n.readBy || []).map((id: any) => String(id));
+    const formatted = notifs.map((n: any) => {
+      const readBy = (n.readBy || []).map((id: any) => id.toString());
       return {
         id: n._id.toString(),
         title: n.title,
@@ -119,37 +115,37 @@ export async function GET() {
       };
     });
 
-    const unreadCount = formatted.filter((n) => !n.isRead).length;
+    const unreadCount = formatted.filter((n: any) => !n.isRead).length;
 
     return NextResponse.json({
       notifications: formatted,
       unreadCount,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to fetch notifications' }, { status: 500 });
   }
 }
 
 // POST: Mark notification(s) as read or clear read notifications for current user
 export async function POST(request: Request) {
   try {
-    const { isMemoryMode } = await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user: currentUser, isMemoryMode } = authResult;
     const body = await request.json();
     const { notificationId, markAll, clearRead, clearId } = body;
 
     if (isMemoryMode) {
       const db = readSharedDb();
       if (!db.notifications) db.notifications = [];
-
-      const currentUser = (db.users || []).find((u) => String(u._id) === String(auth.userId));
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
 
       const currentUserId = String(currentUser._id);
       const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
@@ -198,11 +194,6 @@ export async function POST(request: Request) {
     }
 
     // Mongoose Mode
-    const currentUser = await User.findById(auth.userId);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const userIdStr = currentUser._id.toString();
     const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
 
@@ -247,6 +238,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Notification action completed' });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to process notification action' }, { status: 500 });
   }
 }

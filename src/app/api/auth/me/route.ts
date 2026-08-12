@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User, Course } from '@/lib/models';
+import { Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export async function GET() {
   const auth = getAuthenticatedUser();
@@ -11,21 +11,21 @@ export async function GET() {
   }
 
   try {
-    const { isMemoryMode } = await dbConnect();
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ authenticated: false }, { status: 401 });
+    }
+
+    const { user, isMemoryMode } = authResult;
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
-      if (!user) {
-        return NextResponse.json({ authenticated: false }, { status: 401 });
-      }
-
-      const lockedCourse = (db.courses || []).find((c) => String(c._id) === String(user.locked_course_id)) || null;
+      const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(user.locked_course_id)) || null;
 
       return NextResponse.json({
         authenticated: true,
         user: {
-          id: user._id,
+          id: user._id ? String(user._id) : auth.userId,
           name: user.name,
           email: user.email,
           lockedCourse,
@@ -36,20 +36,20 @@ export async function GET() {
     }
 
     // Mongoose Mode
-    const user = await User.findById(auth.userId);
-    if (!user) {
-      return NextResponse.json({ authenticated: false }, { status: 401 });
-    }
-
     let lockedCourse = null;
     if (user.locked_course_id) {
-      lockedCourse = await Course.findById(user.locked_course_id);
+      try {
+        lockedCourse = await Course.findById(user.locked_course_id);
+      } catch (e) {
+        const db = readSharedDb();
+        lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(user.locked_course_id)) || null;
+      }
     }
 
     return NextResponse.json({
       authenticated: true,
       user: {
-        id: user._id.toString(),
+        id: user._id ? user._id.toString() : auth.userId,
         name: user.name,
         email: user.email,
         lockedCourse,
@@ -58,6 +58,7 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to authenticate' }, { status: 500 });
   }
 }
+

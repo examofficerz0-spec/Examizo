@@ -1,30 +1,34 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export async function GET() {
   try {
-    const { isMemoryMode } = await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user, isMemoryMode } = authResult;
+    if (!user.locked_course_id) {
+      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+    }
+
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
-      if (!user || !user.locked_course_id) {
-        return NextResponse.json({ error: 'No course locked' }, { status: 400 });
-      }
-
       const students = (db.users || [])
-        .filter((u) => u.locked_course_id === user.locked_course_id && u.status === 'Active')
-        .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
+        .filter((u: any) => String(u.locked_course_id) === String(user.locked_course_id) && u.status === 'Active')
+        .sort((a: any, b: any) => (b.xp_total || 0) - (a.xp_total || 0));
 
       let userRank = 1;
-      const formattedList = students.map((s, idx) => {
+      const formattedList = students.map((s: any, idx: number) => {
         const isSelf = String(s._id) === String(user._id);
         if (isSelf) {
           userRank = idx + 1;
@@ -52,11 +56,6 @@ export async function GET() {
     }
 
     // Mongoose mode
-    const user = await User.findById(auth.userId);
-    if (!user || !user.locked_course_id) {
-      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
-    }
-
     const students = await User.find({
       locked_course_id: user.locked_course_id,
       status: 'Active',
@@ -91,6 +90,7 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to fetch leaderboard' }, { status: 500 });
   }
 }
+

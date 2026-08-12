@@ -3,23 +3,29 @@ import { dbConnect } from '@/lib/db';
 import { User, Question, MockTest, Attempt, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 
 export async function GET() {
   try {
-    const { isMemoryMode } = await dbConnect();
+    await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
+    }
+
+    const { user, isMemoryMode } = authResult;
+    if (!user.locked_course_id) {
+      return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
+    }
+
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
-      if (!user || !user.locked_course_id) {
-        return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
-      }
-
       const rawCourseId = user.locked_course_id;
       const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
       const lockedCourse = (db.courses || []).find((c) => String(c._id) === courseId) || (typeof rawCourseId === 'object' ? rawCourseId : null);
@@ -49,62 +55,74 @@ export async function GET() {
         if (topicQuestions.length > 0) {
           let attemptedInTopic = 0;
           topicQuestions.forEach((q) => {
-            if (attemptedQIds.has(String(q._id))) {
-              attemptedInTopic++;
-            }
+            if (attemptedQIds.has(String(q._id))) attemptedInTopic++;
           });
-          totalTopicCompletionSum += Math.min(1, attemptedInTopic / topicQuestions.length);
+          totalTopicCompletionSum += Math.round((attemptedInTopic / topicQuestions.length) * 100);
         }
       });
 
-      const progressPercent = topicsList.length > 0
-        ? Math.min(100, Math.max(0, Math.round((totalTopicCompletionSum / topicsList.length) * 100)))
-        : 0;
+      const progressPercent = topicsList.length > 0 ? Math.round(totalTopicCompletionSum / topicsList.length) : 0;
 
-      const validCourseIds = getEquivalentCourseIds(String(courseId), db.courses || []);
-
-      const mockTests = (db.mockTests || []).filter((m) => {
-        const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
-        return validCourseIds.includes(testCourseId) && m.is_active;
-      }).slice(0, 2);
-
-      const leaderboardStudents = (db.users || [])
-        .filter((u) => String(u.locked_course_id) === courseId && u.status === 'Active')
-        .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
-
-      let rank = 1;
-      for (let i = 0; i < leaderboardStudents.length; i++) {
-        if (String(leaderboardStudents[i]._id) === String(user._id)) {
-          rank = i + 1;
-          break;
-        }
-      }
+      const mockTests = (db.mockTests || [])
+        .filter((mt) => String(mt.course_id) === courseId && mt.is_active !== false)
+        .map((mt) => {
+          const userAttempts = (db.attempts || []).filter(
+            (a) => String(a.student_id) === String(user._id) && String(a.test_id) === String(mt._id)
+          );
+          const highestScore = userAttempts.reduce((max, a) => Math.max(max, a.score || 0), 0);
+          return {
+            id: mt._id,
+            title: mt.title,
+            type: mt.type,
+            duration: mt.duration_minutes,
+            cutoffMarks: mt.cutoff_marks,
+            totalQuestions: mt.question_ids?.length || 0,
+            attemptsCount: userAttempts.length,
+            highestScore,
+            isAttempted: userAttempts.length > 0,
+          };
+        });
 
       const incorrectLogMap = new Map<string, any>();
       attempts.forEach((a) => {
         (a.responses || []).forEach((r: any) => {
           const qId = String(r.question_id);
-          const q = (db.questions || []).find((item) => String(item._id) === qId);
+          const q = courseQs.find((item) => String(item._id) === qId);
           if (q) {
             const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option !== q.correct_option);
             if (isIncorrect && !incorrectLogMap.has(qId)) {
               incorrectLogMap.set(qId, {
-                _id: q._id,
-                question_text: q.question_text,
+                questionId: q._id,
+                topic: q.topic_tag || 'General',
+                questionText: q.question_text,
                 options: q.options || [],
-                userSelectedOption: r.selected_option,
+                selectedOption: r.selected_option,
                 correctOption: q.correct_option,
-                explanation: q.explanation || '',
-                detailed_explanation: q.detailed_explanation || '',
-                topic_tag: q.topic_tag || a.topic_tag || 'General',
-                attemptedAt: a.submitted_at || a.started_at || a.created_at || new Date().toISOString(),
-                attemptType: a.type || 'practice',
+                explanation: q.explanation || q.detailed_explanation || '',
               });
             }
           }
         });
       });
+
       const incorrectLog = Array.from(incorrectLogMap.values());
+
+      const leaderboardStudents = (db.users || [])
+        .filter((u) => u.locked_course_id && String(u.locked_course_id) === courseId)
+        .map((u) => ({
+          id: u._id,
+          name: u.name,
+          xp: u.xp_total || 0,
+          rank: 0,
+        }))
+        .sort((a, b) => b.xp - a.xp);
+
+      leaderboardStudents.forEach((s, idx) => {
+        s.rank = idx + 1;
+      });
+
+      const currentStudentRankObj = leaderboardStudents.find((s) => String(s.id) === String(user._id));
+      const rank = currentStudentRankObj ? currentStudentRankObj.rank : 1;
 
       return NextResponse.json({
         user: {
@@ -122,11 +140,6 @@ export async function GET() {
     }
 
     // Mongoose mode
-    const user = await User.findById(auth.userId);
-    if (!user || !user.locked_course_id) {
-      return NextResponse.json({ needsCourseSelection: true }, { status: 200 });
-    }
-
     const rawCourseId = user.locked_course_id;
     const courseId = typeof rawCourseId === 'object' && rawCourseId?._id 
       ? rawCourseId._id.toString() 

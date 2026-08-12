@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
 import { User, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export async function GET() {
   const auth = getAuthenticatedUser();
@@ -11,35 +11,35 @@ export async function GET() {
   }
 
   try {
-    const { isMemoryMode } = await dbConnect();
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user: currentUser, isMemoryMode } = authResult;
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => u._id === auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
       const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
       // Find all profiles matching this main account email
       const family = (db.users || []).filter(
-        (u) =>
-          u.email.toLowerCase() === mainEmail ||
+        (u: any) =>
+          (u.email && u.email.toLowerCase() === mainEmail) ||
           (u.account_email && u.account_email.toLowerCase() === mainEmail) ||
-          (currentUser.email.toLowerCase() === (u.account_email || '').toLowerCase())
+          (currentUser.email && currentUser.email.toLowerCase() === (u.account_email || '').toLowerCase())
       );
 
-      const profiles = family.map((u) => {
-        const lockedCourse = (db.courses || []).find((c) => String(c._id) === String(u.locked_course_id)) || null;
+      const profiles = family.map((u: any) => {
+        const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id)) || null;
         return {
-          id: u._id,
+          id: String(u._id),
           name: u.name,
           email: u.email,
           accountEmail: u.account_email || u.email,
           lockedCourseId: u.locked_course_id || null,
           lockedCourseName: lockedCourse?.name || null,
-          isActive: u._id === auth.userId,
+          isActive: String(u._id) === String(currentUser._id),
           isPrimary: u.email.toLowerCase() === mainEmail,
           xp_total: u.xp_total || 0,
         };
@@ -49,11 +49,6 @@ export async function GET() {
     }
 
     // Mongoose mode
-    const currentUser = await User.findById(auth.userId);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
     const family = await User.find({
@@ -74,13 +69,14 @@ export async function GET() {
       accountEmail: u.account_email || u.email,
       lockedCourseId: u.locked_course_id ? u.locked_course_id.toString() : null,
       lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id.toString()) || null) : null,
-      isActive: u._id.toString() === auth.userId,
+      isActive: u._id.toString() === currentUser._id.toString(),
       isPrimary: u.email.toLowerCase() === mainEmail,
       xp_total: u.xp_total || 0,
     }));
 
     return NextResponse.json({ success: true, profiles });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to list profiles' }, { status: 500 });
   }
 }
+

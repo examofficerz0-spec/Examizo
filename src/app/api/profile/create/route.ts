@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export async function POST(req: Request) {
   try {
@@ -17,21 +17,21 @@ export async function POST(req: Request) {
     }
 
     const cleanName = name.trim();
-    const { isMemoryMode } = await dbConnect();
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user: currentUser, isMemoryMode } = authResult;
 
     if (isMemoryMode) {
       const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => u._id === auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
       const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
       // Check max profiles (limit 4 per account)
       const existingProfiles = (db.users || []).filter(
-        (u) =>
-          u.email.toLowerCase() === mainEmail ||
+        (u: any) =>
+          (u.email && u.email.toLowerCase() === mainEmail) ||
           (u.account_email && u.account_email.toLowerCase() === mainEmail)
       );
 
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
       // Sign JWT token for the newly created profile
       const token = signUserToken({
-        userId: newProfile._id,
+        userId: String(newProfile._id),
         email: newProfile.email,
         name: newProfile.name,
         lockedCourseId: null,
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       const response = NextResponse.json({
         success: true,
         profile: {
-          id: newProfile._id,
+          id: String(newProfile._id),
           name: newProfile.name,
           email: newProfile.email,
           lockedCourseId: null,
@@ -95,11 +95,6 @@ export async function POST(req: Request) {
     }
 
     // Mongoose Mode
-    const currentUser = await User.findById(auth.userId);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
     const existingCount = await User.countDocuments({
@@ -161,6 +156,7 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create profile' }, { status: 500 });
   }
 }
+

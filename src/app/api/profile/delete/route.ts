@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 
 export async function POST(req: Request) {
   try {
@@ -16,22 +16,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 });
     }
 
-    if (profileId === auth.userId) {
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user: currentUser, isMemoryMode } = authResult;
+
+    if (String(profileId) === String(currentUser._id) || String(profileId) === String(auth.userId)) {
       return NextResponse.json({ error: 'Cannot delete active profile. Switch to another profile first.' }, { status: 400 });
     }
 
-    const { isMemoryMode } = await dbConnect();
-
     if (isMemoryMode) {
       const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => u._id === auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
       const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
-      const targetProfile = (db.users || []).find((u) => u._id === profileId);
+      const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId));
       if (!targetProfile) {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
@@ -45,21 +45,22 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Unauthorized profile deletion' }, { status: 403 });
       }
 
-      db.users = db.users.filter((u) => u._id !== profileId);
+      db.users = (db.users || []).filter((u: any) => String(u._id) !== String(profileId));
       writeSharedDb(db);
 
       return NextResponse.json({ success: true });
     }
 
     // Mongoose Mode
-    const currentUser = await User.findById(auth.userId);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
-    const targetProfile = await User.findById(profileId);
+    let targetProfile = null;
+    try {
+      targetProfile = await User.findById(profileId);
+    } catch (e) {
+      targetProfile = await User.findOne({ _id: profileId });
+    }
+
     if (!targetProfile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to delete profile' }, { status: 500 });
   }
 }
+
