@@ -38,6 +38,7 @@ const HERO_IMAGES = [
 
 export default function LandingPage() {
   const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   
   // Typewriter + Backspacing animation state
   const [textIndex, setTextIndex] = useState(0);
@@ -53,7 +54,6 @@ export default function LandingPage() {
     }, 3000);
     return () => clearInterval(heroTimer);
   }, []);
-
 
   useEffect(() => {
     const targetWord = TYPEWRITER_PHRASES[textIndex];
@@ -88,7 +88,8 @@ export default function LandingPage() {
         if (data.courses && Array.isArray(data.courses)) {
           // Filter out school / K-12 courses (Class 3 to 12)
           const isSchoolCourse = (name: string, category?: string) => {
-            if (category === 'school') return true;
+            const catLower = (category || '').toLowerCase();
+            if (catLower.includes('school') || catLower.includes('board') || catLower.includes('class')) return true;
             const lower = (name || '').toLowerCase();
             return /\b(class|grade|cbse|icse|board|school|3rd|4th|5th|6th|7th|8th|9th|10th|11th|12th)\b/.test(lower) ||
                    /\bclass\s*(3|4|5|6|7|8|9|10|11|12)\b/.test(lower);
@@ -98,7 +99,8 @@ export default function LandingPage() {
           setCourses(competitive);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoadingCourses(false));
   }, []);
 
   // Purely dynamic competitive courses from Admin DB (up to 5 max, no dummy data)
@@ -426,7 +428,11 @@ export default function LandingPage() {
             </div>
 
             {/* Dynamic Self-Adjusting Competitive Courses Flex Layout */}
-            {displayCompetitive.length > 0 ? (
+            {loadingCourses ? (
+              <div className="text-center py-10 text-slate-400 font-semibold text-sm animate-pulse">
+                Loading active competitive courses...
+              </div>
+            ) : displayCompetitive.length > 0 ? (
               <div className="flex flex-wrap items-stretch justify-center gap-5 max-w-6xl mx-auto">
                 {displayCompetitive.map((exam, i) => (
                   <div
@@ -451,8 +457,19 @@ export default function LandingPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-slate-500 font-semibold text-sm">
-                Loading active competitive courses...
+              <div className="max-w-xl mx-auto p-8 rounded-3xl bg-gradient-to-b from-blue-50/70 via-indigo-50/40 to-white border border-blue-200/80 text-center space-y-4 shadow-xs">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-600/10 text-blue-600 border border-blue-200 flex items-center justify-center">
+                  <Sparkles className="w-7 h-7 animate-pulse text-blue-600" />
+                </div>
+                <div className="space-y-1.5">
+                  <span className="inline-block px-3.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-black uppercase tracking-wider">
+                    Coming Soon
+                  </span>
+                  <h3 className="text-xl font-black text-slate-900">New Competitive Courses Launching Soon!</h3>
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 max-w-md mx-auto leading-relaxed">
+                    Our academic team is currently preparing dynamic competitive entrance exam tracks. New courses added in the Admin Portal will appear here automatically (up to 5 max).
+                  </p>
+                </div>
               </div>
             )}
 
