@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       response.cookies.set('student_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       });
@@ -110,6 +111,7 @@ export async function POST(req: Request) {
     response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
