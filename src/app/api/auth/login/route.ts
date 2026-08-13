@@ -3,11 +3,11 @@ import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
+import { queryD1, executeD1 } from '@/lib/d1';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    const { isMemoryMode } = await dbConnect();
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -16,6 +16,58 @@ export async function POST(req: Request) {
 
     const lowerEmail = email.toLowerCase().trim();
 
+    // 1. Try Cloudflare D1 lookup first
+    try {
+      const d1Users = await queryD1('SELECT * FROM users WHERE email = ? LIMIT 1', [lowerEmail]);
+      if (d1Users && d1Users.length > 0) {
+        const u = d1Users[0];
+        if (u.status === 'Suspended') {
+          return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
+        }
+
+        let isMatch = false;
+        try {
+          isMatch = await bcrypt.compare(password, u.password_hash);
+        } catch (e) {}
+
+        if (!isMatch && u.password_hash === password) {
+          isMatch = true;
+          const newHash = await bcrypt.hash(password, 10);
+          await executeD1('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, u.id]);
+        }
+
+        if (!isMatch) {
+          return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+
+        const token = signUserToken({
+          userId: u.id,
+          email: u.email,
+          name: u.name,
+          lockedCourseId: u.locked_course_id || null,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          user: { id: u.id, name: u.name, email: u.email, lockedCourseId: u.locked_course_id || null },
+        });
+
+        response.cookies.set('student_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
+      }
+    } catch (e) {
+      console.warn('[Login D1 Warning]:', e);
+    }
+
+    // 2. Memory / Shared DB Fallback
+    const { isMemoryMode } = await dbConnect();
     if (isMemoryMode) {
       const db = readSharedDb();
       const user = db.users.find((u) => u.email.toLowerCase() === lowerEmail);
@@ -65,7 +117,7 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Mongoose / Atlas mode
+    // 3. Mongoose / Atlas mode
     const user = await User.findOne({ email: lowerEmail });
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });

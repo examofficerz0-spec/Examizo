@@ -3,11 +3,11 @@ import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
+import { queryD1, executeD1 } from '@/lib/d1';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    const { isMemoryMode } = await dbConnect();
     const { name, email, password, confirmPassword } = await req.json();
 
     if (!name || !email || !password) {
@@ -23,7 +23,50 @@ export async function POST(req: Request) {
     }
 
     const lowerEmail = email.toLowerCase().trim();
+    const newUserId = generateId();
+    const password_hash = await bcrypt.hash(password, 10);
 
+    // 1. Try Cloudflare D1 registration
+    try {
+      const existing = await queryD1('SELECT id FROM users WHERE email = ? LIMIT 1', [lowerEmail]);
+      if (existing && existing.length > 0) {
+        return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
+      }
+
+      const d1Success = await executeD1(
+        'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, name, lowerEmail, password_hash, 'Active', 0, null]
+      );
+
+      if (d1Success) {
+        const token = signUserToken({
+          userId: newUserId,
+          email: lowerEmail,
+          name,
+          lockedCourseId: null,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          user: { id: newUserId, name, email: lowerEmail, lockedCourseId: null },
+        });
+
+        response.cookies.set('student_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
+      }
+    } catch (e) {
+      console.warn('[Register D1 Warning]:', e);
+    }
+
+    // 2. Memory DB fallback
+    const { isMemoryMode } = await dbConnect();
     if (isMemoryMode) {
       const db = readSharedDb();
       const existing = db.users.find((u) => u.email.toLowerCase() === lowerEmail);
@@ -31,8 +74,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
       }
 
-      const password_hash = await bcrypt.hash(password, 10);
-      const newUserId = generateId();
       const newUser = {
         _id: newUserId,
         name,
@@ -75,13 +116,12 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Atlas Mongoose mode
+    // 3. Atlas Mongoose mode
     const existing = await User.findOne({ email: lowerEmail });
     if (existing) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       name,
       email: lowerEmail,

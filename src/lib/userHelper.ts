@@ -2,44 +2,61 @@ import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { UserPayload } from '@/lib/auth';
+import { queryD1 } from '@/lib/d1';
 import mongoose from 'mongoose';
 
 export interface UserLookupResult {
   user: any;
   isMemoryMode: boolean;
+  isD1?: boolean;
 }
 
 export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLookupResult | null> {
   if (!auth) return null;
 
-  const { isMemoryMode } = await dbConnect();
   const emailLower = auth.email ? auth.email.toLowerCase().trim() : '';
+  const userIdStr = auth.userId ? String(auth.userId) : '';
 
-  // 1. Try Mongoose Mode lookup first if Mongo is connected or available
+  // 1. Try Cloudflare D1 database lookup first
   try {
+    const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [userIdStr, emailLower]);
+    if (d1Users && d1Users.length > 0) {
+      const u = d1Users[0];
+      return {
+        user: {
+          _id: u.id,
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          locked_course_id: u.locked_course_id || null,
+          status: u.status || 'Active',
+          xp_total: u.xp_total || 0,
+        },
+        isMemoryMode: false,
+        isD1: true,
+      };
+    }
+  } catch (e) {
+    console.warn('[getUserFromAuth] D1 lookup warning:', e);
+  }
+
+  // 2. Try Mongoose Mode lookup if Mongo connection is present
+  try {
+    const { isMemoryMode } = await dbConnect();
     if ((mongoose.connection.readyState as number) === 1 || !isMemoryMode) {
       let user = null;
-
-      // Try lookup by auth.userId if valid ObjectId
       if (auth.userId && mongoose.Types.ObjectId.isValid(auth.userId)) {
         user = await User.findById(auth.userId);
       }
-
-      // Try lookup by auth.userId string
       if (!user && auth.userId) {
         user = await User.findOne({ _id: auth.userId });
       }
-
-      // Fallback lookup by email
       if (!user && emailLower) {
         user = await User.findOne({ email: emailLower });
       }
-
-      // Fallback lookup by account_email
       if (!user && emailLower) {
         user = await User.findOne({ account_email: emailLower });
       }
-
       if (user) {
         return { user, isMemoryMode: false };
       }
@@ -48,12 +65,12 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     console.warn('[getUserFromAuth] Mongoose lookup warning:', e);
   }
 
-  // 2. Try Memory DB mode lookup
+  // 3. Memory DB mode lookup
   try {
     const db = readSharedDb();
     if (db && db.users) {
       let memUser = db.users.find(
-        (u: any) => String(u._id) === String(auth.userId) || String(u.id) === String(auth.userId)
+        (u: any) => String(u._id) === userIdStr || String(u.id) === userIdStr
       );
 
       if (!memUser && emailLower) {
@@ -70,25 +87,6 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     }
   } catch (e) {
     console.warn('[getUserFromAuth] Memory DB lookup warning:', e);
-  }
-
-  // 3. Fallback: If Mongoose connection was offline during initial check, try connecting once more if MONGODB_URI exists
-  try {
-    if (process.env.MONGODB_URI && (mongoose.connection.readyState as number) !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-      let user = null;
-      if (auth.userId && mongoose.Types.ObjectId.isValid(auth.userId)) {
-        user = await User.findById(auth.userId);
-      }
-      if (!user && emailLower) {
-        user = await User.findOne({ email: emailLower });
-      }
-      if (user) {
-        return { user, isMemoryMode: false };
-      }
-    }
-  } catch (e) {
-    // Secondary connection retry failed, ignore
   }
 
   return null;

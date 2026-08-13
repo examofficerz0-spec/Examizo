@@ -3,6 +3,7 @@ import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 function parseJwtPayload(token: string) {
   try {
@@ -37,6 +38,57 @@ export async function POST(req: Request) {
     email = (email || 'student.google@exammaster.com').toLowerCase();
     name = name || email.split('@')[0];
 
+    // 1. Try Cloudflare D1 Google Auth
+    try {
+      const existing = await queryD1('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
+      let user: any = existing && existing.length > 0 ? existing[0] : null;
+
+      if (!user) {
+        const userId = generateId();
+        const created = await executeD1(
+          'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [userId, name, email, 'google_oauth_authenticated', 'Active', 100, null]
+        );
+
+        if (created) {
+          user = { id: userId, name, email, locked_course_id: null };
+        }
+      }
+
+      if (user) {
+        const token = signUserToken({
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            lockedCourseId: user.locked_course_id || null,
+          },
+        });
+
+        response.cookies.set({
+          name: 'student_token',
+          value: token,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
+      }
+    } catch (e) {
+      console.warn('[Google D1 Warning]:', e);
+    }
+
+    // 2. Memory Mode Fallback
     const { isMemoryMode } = await dbConnect();
 
     if (isMemoryMode) {
@@ -46,7 +98,6 @@ export async function POST(req: Request) {
       let user = db.users.find((u) => u.email?.toLowerCase() === email);
 
       if (!user) {
-        // Auto-register Google student user
         user = {
           _id: generateId(),
           name,
@@ -91,7 +142,7 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Mongoose Mode
+    // 3. Mongoose Mode Fallback
     let user = await User.findOne({ email });
 
     if (!user) {
