@@ -670,26 +670,32 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const handleFinalSubmit = async (submissionType: 'manual' | 'auto' = 'manual') => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/mock-tests/${test._id}/submit`, {
+      const targetTestId = test?._id || test?.id || testId;
+      const res = await fetch(`/api/mock-tests/${targetTestId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userAnswers: userState, submissionType }),
       });
 
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.result) {
         setResult(data.result);
         setShowConfirmModal(false);
         setShowLockWarning(false);
         setShowBackWarning(false);
-        setShowCompletionWindow(true); // SHOW POST-TEST COMPLETION WINDOW
+        setShowCompletionWindow(true);
         exitFullscreen();
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
         }
+      } else {
+        alert(data.error || 'Submission failed. Please try again.');
+        setShowLockWarning(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert('Error submitting test: ' + (err?.message || 'Network error'));
+      setShowLockWarning(false);
     } finally {
       setSubmitting(false);
     }
