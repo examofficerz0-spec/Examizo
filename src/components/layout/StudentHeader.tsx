@@ -148,6 +148,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           setUserName(active.name);
           setCurrentUserEmail(active.accountEmail || active.email);
           setCurrentCourseName(active.lockedCourseName || null);
+          if (active.lockedCourseName && typeof window !== 'undefined') {
+            sessionStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
+          }
         }
       }
     } catch (e) {

@@ -11,25 +11,39 @@ interface DigiLockerModalProps {
   courseName?: string;
 }
 
-export function isAbove10thClass(courseName?: string): boolean {
-  if (!courseName) return true; // Default to mandatory for competitive exam aspirants
-  const lower = courseName.toLowerCase();
-  
-  // Class 3 to 10 are school classes <= 10th
+export function isAbove10thClass(courseName?: string | null): boolean {
+  let name = courseName;
+  if (!name && typeof window !== 'undefined') {
+    name = sessionStorage.getItem('examizo_cached_course_name') || '';
+  }
+  if (!name) return false; // Default: do not lock if course is not yet confirmed
+
+  const lower = name.toLowerCase().trim();
+
+  // Class 3 to 10 are school classes <= 10th -> EXEMPT (return false)
   const isSchoolBelow10 =
     /\bclass\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
-    /\b(3rd|4th|5th|6th|7th|8th|9th|10th)\s*class\b/.test(lower) ||
-    /\bclass\s*7th\b/.test(lower) ||
-    /\bclass\s*8th\b/.test(lower) ||
-    /\bclass\s*9th\b/.test(lower) ||
-    /\bclass\s*10th\b/.test(lower);
+    /\bclass\s*(3rd|4th|5th|6th|7th|8th|9th|10th)\b/.test(lower) ||
+    /\b(3rd|4th|5th|6th|7th|8th|9th|10th)\s*(class|grade|standard|std|exam|cbse|icse|state)?\b/.test(lower) ||
+    /\b(classs?\s*7th|classs?\s*8th|classs?\s*9th|classs?\s*10th)\b/.test(lower) ||
+    /\bgrade\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
+    /\bstd\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
+    /\bprimary\b/.test(lower) ||
+    /\bmiddle\s*school\b/.test(lower) ||
+    /\bsecondary\b/.test(lower) ||
+    /\bfoundation\b/.test(lower);
 
   if (isSchoolBelow10) {
-    return false; // Not mandatory for <= 10th
+    return false; // Not mandatory for Class 3-10
   }
 
-  // Class 11, 12, JEE, NEET, GATE, UPSC, SSC, Banking etc. are > 10th
-  return true;
+  // Only Class 11, Class 12, and Competitive Exams (JEE, NEET, GATE, UPSC, SSC, Banking, RRB, etc.) are > 10th
+  const isHigherOrCompetitive =
+    /\bclass\s*(11|12|11th|12th)\b/.test(lower) ||
+    /\b(11th|12th)\s*(class|grade|standard|std)?\b/.test(lower) ||
+    /\b(jee|neet|gate|upsc|ssc|banking|rrb|railway|cat|nda|cds|cuet|clat|ias|ips)\b/.test(lower);
+
+  return isHigherOrCompetitive;
 }
 
 export function getDigiLockerStatus(): boolean {
@@ -271,7 +285,6 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   const [isSubProfileUser, setIsSubProfileUser] = useState<boolean>(getCachedIsSubProfile());
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
 
   const checkStatus = () => {
     setIsVerified(getDigiLockerStatus());
@@ -289,15 +302,15 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
           const activeProf = data.profiles.find((p: any) => p.isActive);
           const isSub = activeProf && activeProf.isPrimary === false;
           setIsSubProfileUser(Boolean(isSub));
+          if (activeProf?.lockedCourseName) {
+            sessionStorage.setItem('examizo_cached_course_name', activeProf.lockedCourseName);
+          }
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('examizo_is_sub_profile', isSub ? 'true' : 'false');
           }
         }
       })
-      .catch(console.error)
-      .finally(() => {
-        setIsProfileLoading(false);
-      });
+      .catch(console.error);
 
     const handleStorage = () => checkStatus();
     window.addEventListener('storage', handleStorage);
@@ -308,11 +321,13 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
     };
   }, []);
 
-  // Sub-profiles are EXEMPT from DigiLocker verification requirements
+  // Sub-profiles and Class 3-10 students are EXEMPT from DigiLocker verification requirements
   const isMandatory = isAbove10thClass(courseName) && !isSubProfileUser;
 
-  // Prevent flash: do NOT show lock guard overlay while unmounted OR while initial profile status is still being checked
-  if (!mounted || isProfileLoading) return <>{children}</>;
+  // Immediate synchronous render if verified or exempt (0 delay, no popup flashing)
+  if (!isMandatory || isVerified) return <>{children}</>;
+
+  if (!mounted) return <>{children}</>;
 
   // Handle 1-Click Instant Verification Unlock
   const handleInstantUnlock = () => {
