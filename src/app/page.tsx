@@ -208,23 +208,28 @@ export default function LandingPage() {
         {/* 2. FULL-SCREEN HERO SECTION WITH BOTTOM GRADIENT FADE */}
         <section className="relative z-10 w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#070B16] pt-24 sm:pt-28 pb-14 sm:pb-20">
           
-          {/* Edge-to-Edge Sliding Background Carousel */}
+          {/* Edge-to-Edge Continuous One-Direction Carousel */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <div
-              className="flex w-full h-full transition-transform duration-700 ease-out"
-              style={{ transform: `translateX(-${heroImgIndex * 100}%)` }}
-            >
-              {HERO_IMAGES.map((src) => (
+            {HERO_IMAGES.map((src, idx) => {
+              const isActive = idx === heroImgIndex;
+              const isPrev = idx === (heroImgIndex - 1 + HERO_IMAGES.length) % HERO_IMAGES.length;
+              return (
                 <div
                   key={src}
-                  className="w-full h-full shrink-0 bg-cover bg-center"
+                  className={`absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-1000 ease-in-out ${
+                    isActive
+                      ? 'opacity-100 translate-x-0 z-10'
+                      : isPrev
+                      ? 'opacity-0 -translate-x-full z-0'
+                      : 'opacity-0 translate-x-full z-0'
+                  }`}
                   style={{ backgroundImage: `url(${src})` }}
                 />
-              ))}
-            </div>
+              );
+            })}
             {/* Deep Dark Glass Overlay */}
-            <div className="absolute inset-0 bg-[#070B16]/82 backdrop-blur-[1.5px]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/85 via-[#070B16]/88 to-transparent" />
+            <div className="absolute inset-0 bg-[#070B16]/82 backdrop-blur-[1.5px] z-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/85 via-[#070B16]/88 to-transparent z-20" />
           </div>
 
           {/* Smooth Fade at Bottom to Match Main Page Background Color (#F8FAFC) */}
