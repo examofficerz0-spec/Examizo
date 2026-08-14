@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Megaphone,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface StudentHeaderProps {
@@ -307,6 +308,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     { label: 'Daily Practice', href: '/practice', icon: HelpCircle },
     { label: 'Resources', href: '/resources', icon: Folder },
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { label: 'Gallery', href: '/gallery', icon: ImageIcon },
   ];
 
   const profileColors = ['bg-[#044B3B]', 'bg-[#0F766E]', 'bg-[#15803D]', 'bg-[#1e293b]'];

@@ -9,12 +9,13 @@ export const GlobalHeader: React.FC = () => {
   const pathname = usePathname();
   const { onBack, hideNav } = useHeader();
 
-  // Hide top header on auth, course-selection, landing page, and active mock test execution
+  // Hide top header on auth, course-selection, landing page, gallery, and active mock test execution
   if (
     pathname === '/login' ||
     pathname === '/register' ||
     pathname === '/course-selection' ||
     pathname === '/' ||
+    pathname === '/gallery' ||
     (pathname.startsWith('/mock-tests/') && pathname !== '/mock-tests')
   ) {
     return null;
