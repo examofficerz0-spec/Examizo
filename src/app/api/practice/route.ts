@@ -80,7 +80,10 @@ export async function GET(req: Request) {
         });
       }
 
+      const isGkGsName = (name: string) => /^(?:gk\/?gs|gk|gs|general\s*(?:knowledge|studies|awareness))/i.test(name.trim());
       const hasScience = Array.from(subjectSet).some((s) => s.toLowerCase().trim() === 'science');
+      const hasGkGs = Array.from(subjectSet).some((s) => isGkGsName(s));
+      const gkSubKeywords = ['general knowledge', 'environment', 'general science', 'indian economy', 'world geography', 'indian geography', 'indian history', 'indian polity', 'history', 'geography', 'polity', 'economy', 'ecology', 'static gk'];
 
       questions.forEach((q: any) => {
         let subName = '';
@@ -96,6 +99,8 @@ export async function GET(req: Request) {
           const subLower = subName.toLowerCase();
           if (hasScience && ['physics', 'chemistry', 'biology', 'botany', 'zoology'].includes(subLower)) {
             // Keep physics/chemistry/biology inside Science for school tracks
+          } else if (hasGkGs && gkSubKeywords.some((k) => subLower.includes(k))) {
+            // Keep GK/GS sub-domains inside GK/GS
           } else {
             subjectSet.add(subName);
           }
@@ -118,11 +123,18 @@ export async function GET(req: Request) {
       });
 
       if (subject) {
-        questions = questions.filter(
-          (q) =>
+        const isGk = isGkGsName(subject);
+        questions = questions.filter((q) => {
+          if (isGk) {
+            const tagL = (q.topic_tag || '').toLowerCase();
+            const subL = (q.subject || '').toLowerCase();
+            return isGkGsName(subL) || isGkGsName(tagL) || gkSubKeywords.some((k) => tagL.includes(k) || subL.includes(k));
+          }
+          return (
             (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
             (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
-        );
+          );
+        });
       }
 
       if (topic) {
@@ -217,7 +229,10 @@ export async function GET(req: Request) {
       });
     }
 
+    const isGkGsName = (name: string) => /^(?:gk\/?gs|gk|gs|general\s*(?:knowledge|studies|awareness))/i.test(name.trim());
     const hasScience = Array.from(subjectSet).some((s) => s.toLowerCase().trim() === 'science');
+    const hasGkGs = Array.from(subjectSet).some((s) => isGkGsName(s));
+    const gkSubKeywords = ['general knowledge', 'environment', 'general science', 'indian economy', 'world geography', 'indian geography', 'indian history', 'indian polity', 'history', 'geography', 'polity', 'economy', 'ecology', 'static gk'];
 
     questions.forEach((q: any) => {
       let subName = '';
@@ -233,6 +248,8 @@ export async function GET(req: Request) {
         const subLower = subName.toLowerCase();
         if (hasScience && ['physics', 'chemistry', 'biology', 'botany', 'zoology'].includes(subLower)) {
           // Keep physics/chemistry/biology inside Science for school tracks
+        } else if (hasGkGs && gkSubKeywords.some((k) => subLower.includes(k))) {
+          // Keep GK/GS sub-domains inside GK/GS
         } else {
           subjectSet.add(subName);
         }
@@ -246,11 +263,18 @@ export async function GET(req: Request) {
     const courseSubjects = Array.from(subjectSet);
 
     if (subject) {
-      questions = questions.filter(
-        (q: any) =>
+      const isGk = isGkGsName(subject);
+      questions = questions.filter((q: any) => {
+        if (isGk) {
+          const tagL = (q.topic_tag || '').toLowerCase();
+          const subL = (q.subject || '').toLowerCase();
+          return isGkGsName(subL) || isGkGsName(tagL) || gkSubKeywords.some((k) => tagL.includes(k) || subL.includes(k));
+        }
+        return (
           (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
           (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
-      );
+        );
+      });
     }
 
     if (topic) {

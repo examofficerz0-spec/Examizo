@@ -632,7 +632,49 @@ export default function PracticeSetsPage() {
       if (scienceKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
     }
 
-    // 3. Specific Subject Keyword Classification
+    // 3. GK / GS check
+    const isGkGsTarget = (
+      sLower === 'gk/gs' ||
+      sLower === 'gk / gs' ||
+      sLower === 'gk-gs' ||
+      sLower === 'gk gs' ||
+      sLower === 'gk' ||
+      sLower === 'gs' ||
+      sLower.includes('gk') ||
+      sLower.includes('general studies') ||
+      sLower.includes('general awareness')
+    );
+
+    if (isGkGsTarget) {
+      const gkKeywords = [
+        'general knowledge',
+        'environment',
+        'general science',
+        'indian economy',
+        'world geography',
+        'indian geography',
+        'indian history',
+        'indian polity',
+        'history',
+        'geography',
+        'polity',
+        'economy',
+        'economics',
+        'ecology',
+        'static gk',
+        'constitution',
+        'civics',
+        'ancient india',
+        'medieval india',
+        'modern india',
+        'freedom movement',
+        'gk',
+        'gs',
+      ];
+      if (gkKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+
+    // 4. Specific Subject Keyword Classification
     const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'electricity', 'electrostatics', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'semiconductor'];
     const chemistryKeywords = ['chemistry', 'chemical', 'acid', 'base', 'reaction', 'organic', 'inorganic', 'physical chemistry', 'alkane', 'alkene', 'thermodynamics', 'thermochemistry', 'electrochemistry', 'environmental chemistry', 'periodic', 'bonding', 'solution', 'equilibrium', 'mole', 'gas', 'solid state'];
     const mathKeywords = ['math', 'mathematics', 'calculus', 'algebra', 'vector', 'matrix', 'matrices', 'determinant', 'integral', 'integration', 'derivative', 'differentiation', 'trigonometry', 'geometry', 'probability', 'statistics', 'permutation', 'combination', 'complex number', 'relation', 'function'];
@@ -672,6 +714,27 @@ export default function PracticeSetsPage() {
     if (!rawTopicTag || typeof rawTopicTag !== 'string') return 'General Practice Set';
 
     let tag = rawTopicTag.trim();
+
+    // Check GK/GS canonical module names
+    const isCurrentGkGs = /^(?:gk\/?gs|gk|gs|general\s*(?:knowledge|studies|awareness))/i.test(currentSubject || '');
+    if (isCurrentGkGs) {
+      const cleanGkTag = tag.replace(/^(?:gk\/?gs|gk|gs|general\s*studies)\s*[\-\:\.]\s*/i, '').trim();
+      const gkModules = [
+        { match: /^(?:general\s*knowledge|static\s*gk|gk)/i, name: 'General Knowledge' },
+        { match: /^(?:environment(?:al\s*(?:studies|science))?|ecology)/i, name: 'Environment' },
+        { match: /^(?:general\s*science|science)/i, name: 'General Science' },
+        { match: /^(?:indian\s*economy|economy|economics)/i, name: 'Indian Economy' },
+        { match: /^(?:world\s*geography)/i, name: 'World Geography' },
+        { match: /^(?:indian\s*geography|geography)/i, name: 'Indian Geography' },
+        { match: /^(?:indian\s*history|ancient\s*india|medieval\s*india|modern\s*india|freedom\s*movement|history)/i, name: 'Indian History' },
+        { match: /^(?:indian\s*polity|polity|constitution|civics)/i, name: 'Indian Polity' },
+      ];
+      for (const mod of gkModules) {
+        if (mod.match.test(cleanGkTag) || mod.match.test(cleanGkTag.split('-')[0].trim())) {
+          return mod.name;
+        }
+      }
+    }
 
     // 1. Remove subject prefix if present (e.g. "Physics - Kinematics" -> "Kinematics", "Chemistry - Thermodynamics" -> "Thermodynamics")
     const knownSubjectPrefixes = ['chemistry', 'physics', 'mathematics', 'math', 'biology', 'science', 'social studies'];
