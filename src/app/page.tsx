@@ -174,82 +174,119 @@ export default function LandingPage() {
       {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
       <main className="relative z-10 flex-1 pt-20">
         
-        {/* FULL-WIDTH EDGE-TO-EDGE HERO BACKGROUND SLIDING CAROUSEL (Full Screen Height 100vh) */}
-        <div
-          className="absolute -top-20 inset-x-0 w-full h-[calc(100vh+80px)] min-h-[750px] z-0 overflow-hidden pointer-events-none"
-        >
-          {/* Horizontal Sliding Track */}
-          <div
-            className="flex w-full h-full transition-transform duration-700 ease-out"
-            style={{ transform: `translateX(-${heroImgIndex * 100}%)` }}
-          >
-            {HERO_IMAGES.map((src) => (
+        {/* 2. HERO SECTION CONTENT (Styled as Sleek Dark Proctored Card Container) */}
+        <section className="relative z-10 pt-4 sm:pt-6 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="relative rounded-3xl sm:rounded-[2.25rem] bg-[#070B16] border border-white/10 shadow-2xl shadow-slate-900/30 overflow-hidden p-6 sm:p-10 lg:p-12 min-h-[580px] lg:min-h-[640px] flex flex-col justify-between">
+            
+            {/* Background Sliding Carousel with Deep Dark Tint */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
               <div
-                key={src}
-                className="w-full h-full shrink-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${src})` }}
-              />
-            ))}
-          </div>
+                className="flex w-full h-full transition-transform duration-700 ease-out"
+                style={{ transform: `translateX(-${heroImgIndex * 100}%)` }}
+              >
+                {HERO_IMAGES.map((src) => (
+                  <div
+                    key={src}
+                    className="w-full h-full shrink-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${src})` }}
+                  />
+                ))}
+              </div>
+              {/* Deep Dark Glass Overlay */}
+              <div className="absolute inset-0 bg-[#070B16]/82 backdrop-blur-[1.5px]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/75 via-[#070B16]/88 to-[#070B16]" />
+            </div>
 
-          {/* Subtle Light Tint Overlay for Crisp Text Contrast without washing out photos */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent dark:from-slate-950/30 dark:via-transparent dark:to-transparent" />
+            {/* Top Bar inside Hero Card */}
+            <div className="relative z-10 flex items-center justify-between gap-3 w-full mb-6 sm:mb-8">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-600 text-white text-xs font-black shadow-md shadow-blue-600/30">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Proctored Hall Simulation</span>
+              </div>
 
-          {/* Fade Strictly at the Very Bottom End of the Screen Fold into Main Page Background Color (#F8FAFC) */}
-          <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/70 to-transparent" />
-        </div>
+              <div className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-[11px] font-black uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>NEXT-GEN COMPETITIVE EXAM PORTAL</span>
+              </div>
 
-        {/* 2. HERO SECTION CONTENT (Occupies 100% of First Viewport Screen Height) */}
-        <section className="relative z-10 h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="w-full max-w-4xl mx-auto text-center space-y-7">
-            {/* Animated Headline with Smaller Dynamic Sub-phrase & Blinking Cursor */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.2]">
-              <span>Master Competitive Exams with</span>
-              <span className="block mt-3 text-2xl sm:text-4xl lg:text-5xl font-black tracking-normal min-h-[1.3em]">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 font-black">
-                  {currentText || '\u00A0'}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Auto • {heroImgIndex + 1} / {HERO_IMAGES.length}</span>
+              </div>
+            </div>
+
+            {/* Center Content */}
+            <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6 my-auto">
+              <div className="sm:hidden inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-[10px] font-black uppercase tracking-wider mb-2">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>NEXT-GEN COMPETITIVE EXAM PORTAL</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15]">
+                <span>Master Competitive Exams with</span>
+                <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl font-black min-h-[1.3em]">
+                  <span className="text-white font-black">
+                    {currentText || '\u00A0'}
+                  </span>
+                  <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-500 ml-2 rounded-full animate-cursor-blink align-baseline shadow-md shadow-blue-400/80" />
                 </span>
-                <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-600 ml-2 rounded-full animate-cursor-blink align-baseline shadow-xs shadow-blue-500/50" />
-              </span>
-            </h1>
+              </h1>
 
-            {/* Subheadline */}
-            <p className="text-base sm:text-xl text-slate-900 font-extrabold max-w-2xl mx-auto leading-relaxed">
-              Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
-            </p>
+              <p className="text-sm sm:text-base text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+                Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
+              </p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
-              <Link
-                href="/register"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
-              >
-                <span>Start Free Practice Now</span>
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/login"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-base border border-slate-700 shadow-md transition-all flex items-center justify-center gap-2"
-              >
-                <span>Sign In to Account</span>
-              </Link>
-            </div>
-
-            {/* Trust Badges */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-black text-slate-900">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                <span>Free Registration</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                <span>Full Pattern Mock Exams</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                <span>Instant Score & Rank Analytics</span>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2.5"
+                >
+                  <span>Start Free Practice Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#121827] hover:bg-[#1C253C] text-white font-black text-sm sm:text-base border border-slate-700/80 shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Sign In to Account</span>
+                </Link>
               </div>
             </div>
+
+            {/* Bottom Bar: Trust Badges & Carousel Dots */}
+            <div className="relative z-10 pt-8 mt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-medium text-slate-300">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+                  <span>Free Registration</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+                  <span>Full Pattern Mock Exams</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+                  <span>Instant Score &amp; Rank Analytics</span>
+                </div>
+              </div>
+
+              {/* Pagination indicators on bottom right */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {HERO_IMAGES.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setHeroImgIndex(idx)}
+                    className={`transition-all duration-300 rounded-full ${
+                      idx === heroImgIndex ? 'w-6 h-1.5 bg-blue-500' : 'w-1.5 h-1.5 bg-slate-700 hover:bg-slate-600'
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
           </div>
         </section>
 
