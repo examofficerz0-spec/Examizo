@@ -128,12 +128,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Smoothly switch to white navbar once user scrolls down towards content
-      if (window.scrollY > 200) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      // Switch to white navbar smoothly when scrolling out of the dark hero into the white section
+      const threshold = Math.max(300, (window.innerHeight || 700) - 140);
+      setIsScrolled(window.scrollY > threshold);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -151,12 +148,12 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Pure Transparent on Hero -> Smooth Frosted White on Scroll) */}
+      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Synchronized Lockstep Transition on Scroll) */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
+        className={`fixed top-0 left-0 right-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ease-out ${
           isScrolled
-            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5'
-            : 'bg-transparent border-b-0 shadow-none'
+            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl backdrop-saturate-150 border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5'
+            : 'bg-transparent border-transparent shadow-none backdrop-blur-none'
         }`}
       >
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
@@ -174,7 +171,7 @@ export default function LandingPage() {
               <a
                 key={i}
                 href={link.href}
-                className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 group flex items-center justify-center overflow-hidden ${
+                className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-colors duration-300 group flex items-center justify-center overflow-hidden ${
                   isScrolled
                     ? 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50/80 dark:hover:bg-slate-800/80'
                     : 'text-white/90 hover:text-white hover:bg-white/15'
