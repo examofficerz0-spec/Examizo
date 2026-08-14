@@ -238,10 +238,10 @@ export default function LandingPage() {
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.15]">
                 <span>Master Competitive Exams with</span>
                 <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl font-black min-h-[1.3em]">
-                  <span className="text-white font-black">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300 drop-shadow-[0_0_20px_rgba(56,189,248,0.35)]">
                     {currentText || '\u00A0'}
                   </span>
-                  <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-blue-500 ml-2 rounded-full animate-cursor-blink align-baseline shadow-md shadow-blue-400/80" />
+                  <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-sky-400 ml-2 rounded-full animate-cursor-blink align-baseline shadow-md shadow-sky-400/80" />
                 </span>
               </h1>
 
