@@ -15,8 +15,16 @@ export async function GET() {
 
   try {
     const authResult = await getUserFromAuth(auth);
-    if (!authResult || !authResult.user || authResult.user.status === 'Deleted' || authResult.user.name === 'Deleted User') {
-      const res = NextResponse.json({ authenticated: false, error: 'User deleted or not found' }, { status: 401 });
+    if (
+      !authResult ||
+      !authResult.user ||
+      authResult.user.status === 'Deleted' ||
+      authResult.user.name === 'Deleted User' ||
+      authResult.user.status === 'Suspended' ||
+      authResult.user.status === 'suspended' ||
+      authResult.user.status === 'SUSPENDED'
+    ) {
+      const res = NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
       res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
       return res;
     }

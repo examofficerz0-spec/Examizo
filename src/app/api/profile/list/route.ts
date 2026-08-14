@@ -18,8 +18,16 @@ export async function GET() {
 
   try {
     const authResult = await getUserFromAuth(auth);
-    if (!authResult || !authResult.user || authResult.user.status === 'Deleted' || authResult.user.name === 'Deleted User') {
-      const res = NextResponse.json({ error: 'User deleted or not found' }, { status: 401 });
+    if (
+      !authResult ||
+      !authResult.user ||
+      authResult.user.status === 'Deleted' ||
+      authResult.user.name === 'Deleted User' ||
+      authResult.user.status === 'Suspended' ||
+      authResult.user.status === 'suspended' ||
+      authResult.user.status === 'SUSPENDED'
+    ) {
+      const res = NextResponse.json({ error: 'User deleted or suspended' }, { status: 401 });
       res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
       return res;
     }
@@ -30,7 +38,7 @@ export async function GET() {
     try {
       const mainEmail = (currentUser.account_email || currentUser.email || auth.email).toLowerCase().trim();
       const d1Users = await queryD1(
-        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User'",
+        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended'",
         [mainEmail, `${mainEmail.split('@')[0]}+%`, String(currentUser._id || currentUser.id || auth.userId)]
       );
 

@@ -22,7 +22,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [userIdStr, emailLower]);
     if (d1Users && d1Users.length > 0) {
       const u = d1Users[0];
-      if (u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'))) {
+      const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
+      const isDeleted = u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'));
+      if (isDeleted || isSuspended) {
         return null;
       }
       return {
@@ -61,7 +63,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         user = await User.findOne({ account_email: emailLower });
       }
       if (user) {
-        if (user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'))) {
+        const isSuspended = String(user.status || '').toLowerCase() === 'suspended';
+        const isDeleted = String(user.status || '').toLowerCase() === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+        if (isDeleted || isSuspended) {
           return null;
         }
         return { user, isMemoryMode: false };
@@ -88,7 +92,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
       }
 
       if (memUser) {
-        if (memUser.status === 'Deleted' || memUser.name === 'Deleted User' || (memUser.email && memUser.email.startsWith('deleted_'))) {
+        const isSuspended = memUser.status === 'Suspended' || memUser.status === 'suspended' || memUser.status === 'SUSPENDED';
+        const isDeleted = memUser.status === 'Deleted' || memUser.name === 'Deleted User' || (memUser.email && memUser.email.startsWith('deleted_'));
+        if (isDeleted || isSuspended) {
           return null;
         }
         return { user: memUser, isMemoryMode: true };

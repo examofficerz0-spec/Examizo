@@ -21,8 +21,14 @@ export async function POST(req: Request) {
       const d1Users = await queryD1('SELECT * FROM users WHERE email = ? LIMIT 1', [lowerEmail]);
       if (d1Users && d1Users.length > 0) {
         const u = d1Users[0];
-        if (u.status === 'Suspended') {
-          return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
+        const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
+        const isDeleted = u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'));
+        
+        if (isDeleted) {
+          return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+        if (isSuspended) {
+          return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
         }
 
         let isMatch = false;
@@ -75,8 +81,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
 
-      if (user.status === 'Suspended') {
-        return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
+      const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
+      const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+
+      if (isDeleted) {
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      }
+      if (isSuspended) {
+        return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
       }
 
       let isMatch = false;
@@ -123,8 +135,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    if (user.status === 'Suspended') {
-      return NextResponse.json({ error: 'Your account has been suspended. Contact support.' }, { status: 403 });
+    const isSuspended = String(user.status || '').toLowerCase() === 'suspended';
+    const isDeleted = String(user.status || '').toLowerCase() === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+
+    if (isDeleted) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+    if (isSuspended) {
+      return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
     }
 
     let isMatch = false;
