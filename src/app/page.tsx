@@ -151,12 +151,12 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Ultra-Clean Transparent on Image -> Smooth Frosted White on Scroll) */}
+      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Pure Transparent on Hero -> Smooth Frosted White on Scroll) */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
           isScrolled
-            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5 py-0'
-            : 'bg-gradient-to-b from-black/50 via-black/20 to-transparent border-b border-transparent shadow-none py-1'
+            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5'
+            : 'bg-transparent border-b-0 shadow-none'
         }`}
       >
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
@@ -205,11 +205,11 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* MAIN CONTENT (pt-20 compensates for fixed header) */}
-      <main className="relative z-10 flex-1 pt-20">
+      {/* MAIN CONTENT */}
+      <main className="relative z-10 flex-1">
         
         {/* 2. FULL-SCREEN HERO SECTION WITH BOTTOM GRADIENT FADE */}
-        <section className="relative z-10 w-full min-h-[calc(100vh-80px)] sm:min-h-screen flex flex-col justify-between overflow-hidden bg-[#070B16] -mt-20 pt-24 sm:pt-28 pb-14 sm:pb-20">
+        <section className="relative z-10 w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#070B16] pt-24 sm:pt-28 pb-14 sm:pb-20">
           
           {/* Edge-to-Edge Sliding Background Carousel */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
