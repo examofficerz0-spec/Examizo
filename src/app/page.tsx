@@ -167,6 +167,7 @@ export default function LandingPage() {
               { name: 'Features', href: '#features' },
               { name: 'Exams Covered', href: '#exams' },
               { name: 'How It Works', href: '#how-it-works' },
+              { name: 'Gallery', href: '/gallery' },
             ].map((link, i) => (
               <a
                 key={i}
@@ -617,6 +618,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 font-bold text-slate-600">
             <Link href="/login" className="hover:text-blue-600 transition-colors">Sign In</Link>
             <Link href="/register" className="hover:text-blue-600 transition-colors">Register</Link>
+            <Link href="/gallery" className="hover:text-blue-600 transition-colors">Gallery</Link>
             <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
             <a href="#exams" className="hover:text-blue-600 transition-colors">Exams</a>
           </div>
