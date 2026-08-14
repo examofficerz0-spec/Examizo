@@ -267,32 +267,16 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Bottom Bar: Trust Badges & Carousel Dots */}
-            <div className="pt-8 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-medium text-slate-300">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
-                  <span>Free Registration</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
-                  <span>Full Pattern Mock Exams</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
-                  <span>Instant Score &amp; Rank Analytics</span>
-                </div>
-              </div>
-
-              {/* Pagination indicators on bottom right */}
-              <div className="flex items-center gap-1.5 shrink-0">
+            {/* Carousel Dots Indicator */}
+            <div className="pt-8 flex items-center justify-center">
+              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-sm">
                 {HERO_IMAGES.map((_, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setHeroImgIndex(idx)}
                     className={`transition-all duration-300 rounded-full ${
-                      idx === heroImgIndex ? 'w-6 h-1.5 bg-blue-500' : 'w-1.5 h-1.5 bg-slate-700 hover:bg-slate-600'
+                      idx === heroImgIndex ? 'w-6 h-1.5 bg-blue-500' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
