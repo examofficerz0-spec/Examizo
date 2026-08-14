@@ -492,7 +492,7 @@ export default function StudentDashboardPage() {
           </div>
         </div>
 
-        {/* Row 4: Total Experience Bar with Sparkline Graphic */}
+        {/* Row 4: Total Experience Bar */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -508,20 +508,6 @@ export default function StudentDashboardPage() {
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Keep practicing to level up your skills!
             </p>
-          </div>
-
-          {/* Sparkline Graphic Visualization */}
-          <div className="w-48 h-12 flex items-center justify-end">
-            <svg className="w-full h-full text-blue-500" viewBox="0 0 100 30" fill="none">
-              <path
-                d="M 0 25 Q 20 22, 40 18 T 80 10 L 95 4"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <circle cx="95" cy="4" r="3.5" fill="currentColor" />
-            </svg>
           </div>
         </div>
 
