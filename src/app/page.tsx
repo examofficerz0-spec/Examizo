@@ -229,11 +229,16 @@ export default function LandingPage() {
             })}
             {/* Deep Dark Glass Overlay */}
             <div className="absolute inset-0 bg-[#070B16]/82 backdrop-blur-[1.5px] z-20" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/85 via-[#070B16]/88 to-transparent z-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/85 via-[#070B16]/75 to-transparent z-20" />
           </div>
 
-          {/* Smooth Fade at Bottom to Match Main Page Background Color (#F8FAFC) */}
-          <div className="absolute bottom-0 inset-x-0 h-36 sm:h-48 bg-gradient-to-t from-slate-50 via-slate-50/70 to-transparent pointer-events-none z-10" />
+          {/* Ultra-Smooth Natural Bottom Fade into Page Background */}
+          <div
+            className="absolute bottom-0 inset-x-0 h-24 sm:h-32 pointer-events-none z-30"
+            style={{
+              background: 'linear-gradient(to top, #F8FAFC 0%, rgba(248, 250, 252, 0.75) 25%, rgba(248, 250, 252, 0.3) 55%, rgba(248, 250, 252, 0.05) 80%, transparent 100%)',
+            }}
+          />
 
           {/* Inner Content Container */}
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center relative z-20">
