@@ -18,33 +18,149 @@ function shuffleArray<T>(arr: T[]): T[] {
   return shuffled;
 }
 
+const isGkGsName = (name: string) => {
+  if (!name || typeof name !== 'string') return false;
+  const n = name.trim().toLowerCase();
+  return (
+    n === 'gk/gs' ||
+    n === 'gk/ gs' ||
+    n === 'gk / gs' ||
+    n === 'gk-gs' ||
+    n === 'gk gs' ||
+    n === 'gk' ||
+    n === 'gs' ||
+    n === 'general knowledge' ||
+    n === 'general studies' ||
+    n === 'general awareness' ||
+    n.includes('gk') ||
+    n.includes('general studies') ||
+    n.includes('general awareness')
+  );
+};
+
+const GK_GS_CANONICAL_MODULES: { match: RegExp; name: string }[] = [
+  { match: /^(?:general\s*knowledge|static\s*gk|gk)/i, name: 'General Knowledge' },
+  { match: /^(?:environment(?:al\s*(?:studies|science))?|ecology)/i, name: 'Environment' },
+  { match: /^(?:general\s*science|science)/i, name: 'General Science' },
+  { match: /^(?:indian\s*economy|economy|economics)/i, name: 'Indian Economy' },
+  { match: /^(?:world\s*geography)/i, name: 'World Geography' },
+  { match: /^(?:indian\s*geography|geography)/i, name: 'Indian Geography' },
+  { match: /^(?:indian\s*history|ancient\s*india|medieval\s*india|modern\s*india|freedom\s*movement|history)/i, name: 'Indian History' },
+  { match: /^(?:indian\s*polity|polity|constitution|civics)/i, name: 'Indian Polity' },
+];
+
 function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
   if (!q) return { subject: 'General', topic: 'General Topics' };
-  const tag = (q.topic_tag || '').trim();
-  let subject = 'General';
-  let topic = tag;
 
-  for (const s of courseSubjects) {
-    if (s && tag.toLowerCase().includes(s.toLowerCase())) {
-      subject = s;
-      try {
-        const escapedS = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const rest = tag.replace(new RegExp(escapedS, 'i'), '').replace(/^[\s\-:]+/, '').trim();
-        topic = rest || tag;
-      } catch (e) {
-        topic = tag;
+  const validCourseSubjects = Array.isArray(courseSubjects) && courseSubjects.length > 0
+    ? courseSubjects
+    : ['Physics', 'Chemistry', 'Mathematics', 'Biology'];
+
+  const configuredGkGs = validCourseSubjects.find((s) => isGkGsName(s));
+  const hasAdvanceArith = validCourseSubjects.find((s) => /^(?:advance\s*arithm[ae]tic|advanced\s*math)/i.test(s));
+  const hasArithmatics = validCourseSubjects.find((s) => /^(?:arithm[ae]tics?|math(?:ematics)?|quant(?:itative\s*aptitude)?)$/i.test(s));
+  const hasReasoning = validCourseSubjects.find((s) => /^(?:reasoning|logical\s*reasoning|general\s*intelligence)/i.test(s));
+  const hasCurrentAffairs = validCourseSubjects.find((s) => /^(?:current\s*aff[ai]+rs?)/i.test(s));
+  const hasScience = validCourseSubjects.some((s) => s.toLowerCase() === 'science');
+  const hasPhysicsOrChem = validCourseSubjects.some((s) => ['physics', 'chemistry'].includes(s.toLowerCase()));
+  const isScienceCourse = hasScience && !hasPhysicsOrChem;
+
+  const tag = (q.topic_tag || '').trim();
+  const qSub = (q.subject || '').toString().trim();
+  const rawPrefix = tag.includes('-') ? tag.split('-')[0].trim() : tag;
+
+  let resolvedSubject = '';
+  let resolvedTopic = tag;
+
+  // 1. Direct configured exact match on qSub or rawPrefix
+  const directMatch = validCourseSubjects.find((s) => s.toLowerCase() === qSub.toLowerCase() || s.toLowerCase() === rawPrefix.toLowerCase());
+  if (directMatch) {
+    resolvedSubject = directMatch;
+  }
+
+  // 2. GK / GS check (if course has GK/GS subject, group all GK/GS sub-domains)
+  if (!resolvedSubject && configuredGkGs) {
+    const isExplicitlyOther = validCourseSubjects.some(
+      (cs) => !isGkGsName(cs) && (cs.toLowerCase() === qSub.toLowerCase() || cs.toLowerCase() === rawPrefix.toLowerCase())
+    );
+    if (!isExplicitlyOther) {
+      if (
+        isGkGsName(qSub) ||
+        isGkGsName(rawPrefix) ||
+        isGkGsName(tag) ||
+        GK_GS_CANONICAL_MODULES.some((mod) => mod.match.test(rawPrefix) || mod.match.test(qSub) || mod.match.test(tag))
+      ) {
+        resolvedSubject = configuredGkGs;
       }
-      break;
     }
   }
 
-  if (subject === 'General' && tag.includes('-')) {
-    const parts = tag.split('-');
-    subject = parts[0].trim();
-    topic = parts.slice(1).join('-').trim();
+  // 3. Advance Arithmetic check
+  if (!resolvedSubject && hasAdvanceArith) {
+    if (/^(?:advance\s*arithm[ae]tic|advanced\s*math)/i.test(qSub) || /^(?:advance\s*arithm[ae]tic|advanced\s*math)/i.test(rawPrefix) || /advance/i.test(tag)) {
+      resolvedSubject = hasAdvanceArith;
+    }
   }
 
-  return { subject, topic: topic || 'General Topics' };
+  // 4. Arithmetic / Mathematics / Quant check
+  if (!resolvedSubject && hasArithmatics) {
+    if (
+      /^(?:arithm[ae]tics?|math(?:ematics)?|quant(?:itative\s*aptitude)?)/i.test(qSub) ||
+      /^(?:arithm[ae]tics?|math(?:ematics)?|quant(?:itative\s*aptitude)?)/i.test(rawPrefix) ||
+      /(?:average|fraction|hcf|lcm|percentage|profit and loss|ratio|simple interest|simplification|time and work|arithm|math|quant)/i.test(tag)
+    ) {
+      resolvedSubject = hasArithmatics;
+    }
+  }
+
+  // 5. Reasoning check
+  if (!resolvedSubject && hasReasoning) {
+    if (/^(?:reasoning|logical\s*reasoning|general\s*intelligence)/i.test(qSub) || /^(?:reasoning|logical\s*reasoning|general\s*intelligence)/i.test(rawPrefix) || /reasoning/i.test(tag)) {
+      resolvedSubject = hasReasoning;
+    }
+  }
+
+  // 6. Current Affairs check
+  if (!resolvedSubject && hasCurrentAffairs) {
+    if (/^(?:current\s*aff[ai]+rs?)/i.test(qSub) || /^(?:current\s*aff[ai]+rs?)/i.test(rawPrefix) || /current\s*affair/i.test(tag)) {
+      resolvedSubject = hasCurrentAffairs;
+    }
+  }
+
+  // 7. Science check
+  if (!resolvedSubject && isScienceCourse) {
+    if (/(?:science|physics|chemistry|biology|botany|zoology)/i.test(qSub) || /(?:science|physics|chemistry|biology|botany|zoology)/i.test(tag)) {
+      resolvedSubject = 'Science';
+    }
+  }
+
+  // 8. Other configured subjects substring
+  if (!resolvedSubject) {
+    for (const s of validCourseSubjects) {
+      if (s && (tag.toLowerCase().includes(s.toLowerCase()) || qSub.toLowerCase().includes(s.toLowerCase()))) {
+        resolvedSubject = s;
+        break;
+      }
+    }
+  }
+
+  // 9. Fallback if not matched
+  if (!resolvedSubject) {
+    if (tag.includes('-')) {
+      resolvedSubject = tag.split('-')[0].trim();
+    } else {
+      resolvedSubject = qSub || validCourseSubjects[0] || 'General';
+    }
+  }
+
+  // Extract clean topic
+  if (resolvedSubject && tag.toLowerCase().startsWith(resolvedSubject.toLowerCase())) {
+    resolvedTopic = tag.slice(resolvedSubject.length).replace(/^[\s\-:]+/, '').trim() || tag;
+  } else if (tag.includes('-')) {
+    resolvedTopic = tag.split('-').slice(1).join('-').trim() || tag;
+  }
+
+  return { subject: resolvedSubject, topic: resolvedTopic || 'General Topics' };
 }
 
 export default function MockTestExecutionPage({ params }: { params: { id: string } }) {
@@ -442,32 +558,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const courseSubjects: string[] = test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology'];
 
   const getQuestionSubjectAndTopic = (q: any) => {
-    if (!q) return { subject: 'General', topic: '' };
-    const tag = (q.topic_tag || '').trim();
-    let subject = 'General';
-    let topic = tag;
-
-    for (const s of courseSubjects) {
-      if (s && tag.toLowerCase().includes(s.toLowerCase())) {
-        subject = s;
-        try {
-          const escapedS = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const rest = tag.replace(new RegExp(escapedS, 'i'), '').replace(/^[\s\-:]+/, '').trim();
-          topic = rest || tag;
-        } catch (e) {
-          topic = tag;
-        }
-        break;
-      }
-    }
-
-    if (subject === 'General' && tag.includes('-')) {
-      const parts = tag.split('-');
-      subject = parts[0].trim();
-      topic = parts.slice(1).join('-').trim();
-    }
-
-    return { subject, topic: topic || 'General Topics' };
+    return getQuestionSubjectAndTopicHelper(q, courseSubjects);
   };
 
   const subjectGroupedQuestions = React.useMemo(() => {
@@ -484,7 +575,14 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     return map;
   }, [questions, courseSubjects]);
 
-  const testSubjects = Object.keys(subjectGroupedQuestions);
+  const testSubjects = Object.keys(subjectGroupedQuestions).sort((a, b) => {
+    const idxA = courseSubjects.indexOf(a);
+    const idxB = courseSubjects.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return a.localeCompare(b);
+  });
   const currentQInfo = currentQ ? getQuestionSubjectAndTopic(currentQ) : { subject: 'General', topic: '' };
 
 
