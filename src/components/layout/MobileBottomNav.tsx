@@ -27,13 +27,15 @@ export const MobileBottomNav: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Hide on auth / course-selection / landing / gallery pages
+  // Hide on auth / course-selection / landing / gallery / privacy / terms pages
   if (
     pathname === '/login' ||
     pathname === '/register' ||
     pathname === '/course-selection' ||
     pathname === '/' ||
-    pathname === '/gallery'
+    pathname === '/gallery' ||
+    pathname === '/privacy' ||
+    pathname === '/terms'
   ) {
     return null;
   }

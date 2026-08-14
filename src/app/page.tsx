@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 import { 
   BookOpen, 
   Trophy, 
@@ -608,26 +609,7 @@ export default function LandingPage() {
       </main>
 
       {/* 8. PUBLIC FOOTER */}
-      <footer className="bg-white border-t border-slate-200/80 text-slate-500 py-10 px-4 sm:px-6 lg:px-8 relative z-10 text-xs">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <Logo size={32} />
-            <span className="text-slate-400 font-medium">| Academic Precision Portal</span>
-          </div>
-
-          <div className="flex items-center gap-6 font-bold text-slate-600">
-            <Link href="/login" className="hover:text-blue-600 transition-colors">Sign In</Link>
-            <Link href="/register" className="hover:text-blue-600 transition-colors">Register</Link>
-            <Link href="/gallery" className="hover:text-blue-600 transition-colors">Gallery</Link>
-            <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-            <a href="#exams" className="hover:text-blue-600 transition-colors">Exams</a>
-          </div>
-
-          <p className="text-slate-400 font-medium">
-            © 2026 Examizo. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <PublicFooter />
 
     </div>
   );
