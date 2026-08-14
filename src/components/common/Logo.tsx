@@ -6,12 +6,14 @@ interface LogoProps {
   size?: number;
   showText?: boolean;
   subtitle?: string;
+  textColor?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
   size = 36,
   showText = true,
+  textColor,
 }) => {
   return (
     <div className={`flex items-center gap-2.5 group ${className}`}>
@@ -23,7 +25,11 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       {showText && (
-        <span className="font-black text-lg tracking-tight text-slate-900 dark:text-white font-sans group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <span
+          className={`font-black text-lg tracking-tight font-sans group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors ${
+            textColor || 'text-slate-900 dark:text-white'
+          }`}
+        >
           Examizo
         </span>
       )}

@@ -123,6 +123,23 @@ export default function LandingPage() {
       badge: badges[idx % badges.length],
     }));
   }, [courses]);
+  // Scroll position state for dynamic navbar color transition
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 80) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
       
@@ -133,11 +150,17 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. FIXED HEADER NAVBAR WITH FROSTED GLASS EFFECT */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#070B16]/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/10 shadow-sm shadow-black/30 transition-all duration-300">
+      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Transparent Dark on Hero -> Crisp Frosted White on Scroll) */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5'
+            : 'bg-[#070B16]/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/10 shadow-sm shadow-black/30'
+        }`}
+      >
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <Logo size={38} />
+            <Logo size={38} textColor={isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'} />
           </Link>
 
           {/* Animated Nav Links */}
@@ -150,10 +173,20 @@ export default function LandingPage() {
               <a
                 key={i}
                 href={link.href}
-                className="relative px-4 py-2 rounded-xl text-slate-200 font-bold text-sm hover:text-white hover:bg-white/10 transition-all duration-200 group flex items-center justify-center overflow-hidden"
+                className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 group flex items-center justify-center overflow-hidden ${
+                  isScrolled
+                    ? 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50/80 dark:hover:bg-slate-800/80'
+                    : 'text-slate-200 hover:text-white hover:bg-white/10'
+                }`}
               >
                 <span className="relative z-10 group-hover:scale-105 transition-transform duration-200">{link.name}</span>
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300 group-hover:w-3/4" />
+                <span
+                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] rounded-full transition-all duration-300 group-hover:w-3/4 ${
+                    isScrolled
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600'
+                      : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                  }`}
+                />
               </a>
             ))}
           </nav>
