@@ -227,9 +227,9 @@ export default function LandingPage() {
                 />
               );
             })}
-            {/* Deep Dark Glass Overlay */}
-            <div className="absolute inset-0 bg-[#070B16]/82 backdrop-blur-[1.5px] z-20" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/85 via-[#070B16]/75 to-transparent z-20" />
+            {/* Crisp Image Visibility Dark Overlay with High Text Contrast */}
+            <div className="absolute inset-0 bg-[#070B16]/48 z-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/60 via-[#070B16]/35 to-[#070B16]/55 z-20" />
           </div>
 
           {/* Ultra-Smooth Natural Bottom Fade into Page Background */}
@@ -245,17 +245,17 @@ export default function LandingPage() {
 
             {/* Center Content */}
             <div className="max-w-4xl mx-auto text-center space-y-6 my-auto">
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.15]">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.15] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]">
                 <span>Master Competitive Exams with</span>
                 <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl font-black min-h-[1.3em]">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300 drop-shadow-[0_0_20px_rgba(56,189,248,0.35)]">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300 drop-shadow-[0_0_20px_rgba(56,189,248,0.45)]">
                     {currentText || '\u00A0'}
                   </span>
                   <span className="inline-block w-1 sm:w-1.5 h-[0.8em] bg-sky-400 ml-2 rounded-full animate-cursor-blink align-baseline shadow-md shadow-sky-400/80" />
                 </span>
               </h1>
 
-              <p className="text-sm sm:text-base text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-200 font-semibold max-w-2xl mx-auto leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
                 Examizo provides topic-wise practice sets, full-length timed mock tests, instant analytics, and national leaderboards engineered for top aspirants.
               </p>
 
