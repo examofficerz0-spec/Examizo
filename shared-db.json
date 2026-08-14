@@ -200,6 +200,60 @@
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
       "created_at": "2026-08-13T04:46:08.706Z"
+    },
+    {
+      "_id": "60a8qqr3zmsr4ep91",
+      "id": "60a8qqr3zmsr4ep91",
+      "name": "Deleted User",
+      "email": "deleted_60a8qqr3zmsr4ep91@anonymized.local",
+      "locked_course_id": "1339osvcems5xpvjb",
+      "status": "Deleted",
+      "xp_total": 0
+    },
+    {
+      "_id": "kczxyn3demsr4rjht",
+      "id": "kczxyn3demsr4rjht",
+      "name": "Deleted User",
+      "email": "deleted_kczxyn3demsr4rjht@anonymized.local",
+      "locked_course_id": "1339osvcems5xpvjb",
+      "status": "Deleted",
+      "xp_total": 0
+    },
+    {
+      "_id": "qn51vw7sfmsr4t22i",
+      "id": "qn51vw7sfmsr4t22i",
+      "name": "Deleted User",
+      "email": "deleted_qn51vw7sfmsr4t22i@anonymized.local",
+      "locked_course_id": null,
+      "status": "Deleted",
+      "xp_total": 100
+    },
+    {
+      "_id": "v12letozamsr4xz49",
+      "id": "v12letozamsr4xz49",
+      "name": "Deleted User",
+      "email": "deleted_v12letozamsr4xz49@anonymized.local",
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "status": "Deleted",
+      "xp_total": 100
+    },
+    {
+      "_id": "ad86mjj2cmsrl4o11",
+      "id": "ad86mjj2cmsrl4o11",
+      "name": "Ashish Raj",
+      "email": "ar6373354@gmail.com",
+      "locked_course_id": null,
+      "status": "Active",
+      "xp_total": 100
+    },
+    {
+      "_id": "tplyzr87ymssib1sg",
+      "id": "tplyzr87ymssib1sg",
+      "name": "Dony Banks",
+      "email": "donybanks01@gmail.com",
+      "locked_course_id": "0lyb29vramsr8o0z6",
+      "status": "Active",
+      "xp_total": 100
     }
   ],
   "courses": [
@@ -216,11 +270,12 @@
         "Social Studies"
       ],
       "marking_scheme": {
-        "marks_per_correct": 1,
-        "penalty_per_incorrect": 0
+        "marks_per_correct": 4,
+        "penalty_per_incorrect": 1
       },
       "is_active": true,
-      "created_at": "2026-08-11T06:17:11.723Z"
+      "created_at": "2026-08-11T06:17:11.723Z",
+      "id": "rk0cw5w0imso9pyqz"
     },
     {
       "_id": "kjx0k9x51msd3o1gr",
@@ -238,7 +293,8 @@
       "board": "ICSE",
       "curriculum": "CISCE Class 8 Foundation Curriculum",
       "is_active": true,
-      "created_at": "2026-08-03T10:42:16.299Z"
+      "created_at": "2026-08-03T10:42:16.299Z",
+      "id": "kjx0k9x51msd3o1gr"
     },
     {
       "_id": "ynzp9kszdms7g1ytt",
@@ -302,13 +358,14 @@
         "Social Studies"
       ],
       "marking_scheme": {
-        "marks_per_correct": 1,
-        "penalty_per_incorrect": 0
+        "marks_per_correct": 4,
+        "penalty_per_incorrect": 1
       },
       "board": "CBSE",
       "curriculum": "Central Board of Secondary Education - NCERT Aligned Curriculum",
       "is_active": true,
-      "created_at": "2026-08-03T16:00:00.000Z"
+      "created_at": "2026-08-03T16:00:00.000Z",
+      "id": "course_class_10_2027"
     },
     {
       "_id": "course_class_12_2027",
@@ -322,13 +379,57 @@
         "Biology"
       ],
       "marking_scheme": {
-        "marks_per_correct": 1,
-        "penalty_per_incorrect": 0
+        "marks_per_correct": 4,
+        "penalty_per_incorrect": 1
       },
       "board": "CBSE",
       "curriculum": "Central Board of Secondary Education - Grade 12 Science Stream",
       "is_active": true,
-      "created_at": "2026-08-03T16:05:00.000Z"
+      "created_at": "2026-08-03T16:05:00.000Z",
+      "id": "course_class_12_2027"
+    },
+    {
+      "_id": "cgn81lce1msr8m4ck",
+      "id": "cgn81lce1msr8m4ck",
+      "name": "RRB JE",
+      "description": "Practice questions for CBT 1 and CBT 2",
+      "category": "Competitive Exams",
+      "board": "N/A",
+      "curriculum": "",
+      "subjects": [
+        "Arithmatics",
+        "Reasoning",
+        "GK/GS",
+        "Current Affairs",
+        "General Science",
+        "Computer basics"
+      ],
+      "marking_scheme": {
+        "marks_per_correct": 1,
+        "penalty_per_incorrect": 0.75
+      },
+      "is_active": true
+    },
+    {
+      "_id": "0lyb29vramsr8o0z6",
+      "id": "0lyb29vramsr8o0z6",
+      "name": "RRB Technician Grad 1 signal",
+      "description": "Practice questions and mock test ",
+      "category": "Competitive Exams",
+      "board": "N/A",
+      "curriculum": "",
+      "subjects": [
+        "Arithmatics",
+        "Advance Arithmatic",
+        "Reasoning",
+        "Gk/GS",
+        "Current Affirs"
+      ],
+      "marking_scheme": {
+        "marks_per_correct": 1,
+        "penalty_per_incorrect": 0.75
+      },
+      "is_active": true
     }
   ],
   "questions": [
@@ -346,9 +447,13 @@
       ],
       "correct_option": 0,
       "explanation": "For an object beyond 2F, a convex lens forms a real, inverted, diminished image between F and 2F.",
-      "detailed_explanation": "Step 1: Consider the principal rays from the object through the convex lens.\nStep 2: Their intersection occurs on the opposite side between F and 2F.\nStep 3: The image is real, inverted, and smaller than the object.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "xty012unmmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "o5ryaayt8mso9r8ot",
@@ -364,9 +469,13 @@
       ],
       "correct_option": 2,
       "explanation": "The angle of incidence equals the angle of reflection when both are measured from the normal.",
-      "detailed_explanation": "Step 1: Draw the normal perpendicular to the reflecting surface.\nStep 2: Measure both angles from the normal.\nStep 3: The law of reflection states θi = θr.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "o5ryaayt8mso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "z7niswhfsmso9r8ot",
@@ -382,9 +491,13 @@
       ],
       "correct_option": 2,
       "explanation": "Wave speed is given by v = fλ, so the speed is 100 m/s.",
-      "detailed_explanation": "Step 1: Frequency f = 50 Hz and wavelength λ = 2 m.\nStep 2: Use v = fλ.\nStep 3: v = 50 × 2 = 100 m/s.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "z7niswhfsmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "up6oo9pztmso9r8ot",
@@ -400,9 +513,13 @@
       ],
       "correct_option": 2,
       "explanation": "Gravitational potential energy is mgh, giving 100 J.",
-      "detailed_explanation": "Step 1: Mass m = 2 kg, height h = 5 m, and g = 10 m/s².\nStep 2: PE = mgh.\nStep 3: PE = 2 × 10 × 5 = 100 J.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "up6oo9pztmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "2anhmejlfmso9r8ot",
@@ -418,9 +535,13 @@
       ],
       "correct_option": 2,
       "explanation": "Kinetic energy is proportional to the square of velocity.",
-      "detailed_explanation": "Step 1: Kinetic energy is KE = ½mv².\nStep 2: If velocity becomes 2v, then KE' = ½m(2v)².\nStep 3: Therefore, KE' = 4KE.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "2anhmejlfmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "8jruhkh3zmso9r8ot",
@@ -436,9 +557,13 @@
       ],
       "correct_option": 2,
       "explanation": "Work done by a constant force in the direction of displacement is W = Fd.",
-      "detailed_explanation": "Step 1: Force F = 10 N and displacement d = 5 m.\nStep 2: The angle between force and displacement is 0°.\nStep 3: W = Fd cos 0° = 10 × 5 = 50 J.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "8jruhkh3zmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "5420czqn5mso9r8ot",
@@ -454,9 +579,13 @@
       ],
       "correct_option": 1,
       "explanation": "Linear momentum is conserved when the net external force on the system is zero.",
-      "detailed_explanation": "Step 1: For an isolated system, external impulse is zero.\nStep 2: Therefore, total momentum before the collision equals total momentum after it.\nStep 3: Hence, linear momentum is conserved.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "5420czqn5mso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "297gw6bf1mso9r8ot",
@@ -472,9 +601,13 @@
       ],
       "correct_option": 2,
       "explanation": "The vertical acceleration of a projectile is determined by gravity.",
-      "detailed_explanation": "Step 1: Horizontal and vertical motions are independent.\nStep 2: Gravity acts downward throughout the flight.\nStep 3: Therefore, the vertical acceleration is approximately g = 9.8 m/s² downward.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "297gw6bf1mso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "oo23ind6umso9r8ot",
@@ -490,9 +623,13 @@
       ],
       "correct_option": 1,
       "explanation": "Newton's second law gives F = ma, so a = F/m = 4 m/s².",
-      "detailed_explanation": "Step 1: Force F = 20 N and mass m = 5 kg.\nStep 2: From F = ma, a = F/m.\nStep 3: a = 20/5 = 4 m/s².",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "oo23ind6umso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "as8y2lw2jmso9r8ot",
@@ -508,9 +645,13 @@
       ],
       "correct_option": 1,
       "explanation": "Using v = u + at, the final velocity is 10 m/s.",
-      "detailed_explanation": "Step 1: Initial velocity u = 0 m/s.\nStep 2: Acceleration a = 2 m/s² and time t = 5 s.\nStep 3: v = 0 + (2)(5) = 10 m/s.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "id": "as8y2lw2jmso9r8ot",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "u9vmexfdcmsn5z53n",
@@ -526,9 +667,13 @@
       ],
       "correct_option": 1,
       "explanation": "Faraday's first law states that the mass of a substance deposited or liberated during electrolysis is directly proportional to the quantity of electricity passed.",
-      "detailed_explanation": "Step 1: The charge passed is Q = It.\nStep 2: More charge means more electrons are transferred.\nStep 3: Therefore, the amount of substance deposited is proportional to the quantity of electricity passed.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "u9vmexfdcmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "6311e57svmsn5z53n",
@@ -544,9 +689,13 @@
       ],
       "correct_option": 0,
       "explanation": "Electrode potential describes the tendency of an electrode system to gain or lose electrons and is expressed as an electrical potential.",
-      "detailed_explanation": "Step 1: Redox reactions involve transfer of electrons.\nStep 2: The tendency of an electrode to undergo reduction is represented by its electrode potential.\nStep 3: The potential difference between suitable electrodes gives the cell potential.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "6311e57svmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "gpr7dcercmsn5z53n",
@@ -562,9 +711,13 @@
       ],
       "correct_option": 1,
       "explanation": "The salt bridge allows ion migration that maintains electrical neutrality in the two half-cells.",
-      "detailed_explanation": "Step 1: Oxidation and reduction cause charge imbalances in the half-cells.\nStep 2: Ions from the salt bridge migrate to compensate for these charge changes.\nStep 3: This maintains electrical neutrality and allows the cell reaction to continue.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "gpr7dcercmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "gef98q0kqmsn5z53n",
@@ -580,9 +733,13 @@
       ],
       "correct_option": 0,
       "explanation": "Oxidation always occurs at the anode.",
-      "detailed_explanation": "Step 1: Oxidation means loss of electrons.\nStep 2: In a galvanic cell, the anode is the electrode where oxidation takes place.\nStep 3: The electrons released at the anode flow through the external circuit toward the cathode.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "gef98q0kqmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "tuxkdv1h8msn5z53n",
@@ -598,9 +755,13 @@
       ],
       "correct_option": 3,
       "explanation": "A catalyst changes the rates of both forward and reverse reactions but does not change the equilibrium constant.",
-      "detailed_explanation": "Step 1: A catalyst lowers the activation energy for both directions.\nStep 2: It helps the system reach equilibrium faster.\nStep 3: The equilibrium composition and K remain unchanged at a fixed temperature.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "tuxkdv1h8msn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "mxp4qyxh6msn5z53n",
@@ -616,9 +777,13 @@
       ],
       "correct_option": 2,
       "explanation": "At dynamic equilibrium, the forward and reverse reactions continue but occur at equal rates.",
-      "detailed_explanation": "Step 1: Equilibrium is dynamic, not static.\nStep 2: Both forward and reverse reactions continue at the same time.\nStep 3: Their rates become equal, so macroscopic concentrations remain constant.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "mxp4qyxh6msn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "u51hb8b9nmsn5z53n",
@@ -634,9 +799,13 @@
       ],
       "correct_option": 1,
       "explanation": "According to Le Chatelier's principle, increasing pressure favors the side with fewer moles of gaseous species.",
-      "detailed_explanation": "Step 1: The reactant side contains 4 moles of gas (1 N₂ + 3 H₂).\nStep 2: The product side contains 2 moles of gas.\nStep 3: Higher pressure shifts equilibrium toward the side with fewer gas moles, producing more NH₃.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "u51hb8b9nmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "gppvt62dpmsn5z53n",
@@ -652,9 +821,13 @@
       ],
       "correct_option": 1,
       "explanation": "A catalyst provides an alternative reaction pathway with lower activation energy.",
-      "detailed_explanation": "Step 1: A catalyst offers a different reaction mechanism.\nStep 2: This pathway has a lower activation energy than the uncatalyzed pathway.\nStep 3: Therefore, the reaction can proceed faster without changing the overall enthalpy change.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "gppvt62dpmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "r7hb5tznlmsn5z53n",
@@ -670,9 +843,13 @@
       ],
       "correct_option": 0,
       "explanation": "For a first-order reaction, the rate constant has the unit of inverse time.",
-      "detailed_explanation": "Step 1: A first-order rate law is rate = k[A].\nStep 2: Rate has units of concentration per time.\nStep 3: Dividing rate by concentration leaves k with units of time⁻¹, or s⁻¹.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "r7hb5tznlmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "z9qp81waqmsn5z53n",
@@ -688,9 +865,13 @@
       ],
       "correct_option": 2,
       "explanation": "An increase in temperature generally increases reaction rate because a larger fraction of molecules can overcome the activation energy.",
-      "detailed_explanation": "Step 1: Increasing temperature increases the average kinetic energy of molecules.\nStep 2: More molecules then have energy equal to or greater than the activation energy.\nStep 3: The number of successful collisions increases, so the reaction rate increases.",
+      "detailed_explanation": "",
       "is_active": true,
-      "created_at": "2026-08-10T11:44:35.219Z"
+      "created_at": "2026-08-10T11:44:35.219Z",
+      "id": "z9qp81waqmsn5z53n",
+      "question_type": "MCQ",
+      "sample_answer": "",
+      "marks": 1
     },
     {
       "_id": "q_class10_sa_01",
@@ -700,11 +881,14 @@
       "question_text": "State the law of conservation of mass in a chemical reaction and give one example.",
       "options": [],
       "correct_option": 0,
-      "sample_answer": "1. Law: Mass can neither be created nor destroyed in a chemical reaction. Total mass of reactants equals total mass of products.\n2. Example: C + O2 -> CO2 (12g Carbon + 32g Oxygen = 44g Carbon Dioxide).",
-      "marks": 2,
+      "sample_answer": "",
+      "marks": 1,
       "explanation": "Mass of reactants before reaction is equal to mass of products after reaction.",
       "is_active": true,
-      "created_at": "2026-08-04T11:20:00.000Z"
+      "created_at": "2026-08-04T11:20:00.000Z",
+      "id": "q_class10_sa_01",
+      "subject": "Science",
+      "detailed_explanation": ""
     },
     {
       "_id": "q_class10_la_01",
@@ -713,11 +897,15 @@
       "question_text": "State Ohm's Law. Draw a circuit diagram to verify Ohm's law and explain how resistance depends on length and area of cross-section of a conductor.",
       "options": [],
       "correct_option": 0,
-      "sample_answer": "1. Ohm's Law: Current (I) flowing through a conductor is directly proportional to potential difference (V) across its ends at constant temperature: V = I * R.\n2. Circuit Diagram: Battery, Ammeter in series, Voltmeter in parallel across resistor, Rheostat, and Key.\n3. Dependence of Resistance:\n   - Directly proportional to length (R ∝ L)\n   - Inversely proportional to cross-sectional area (R ∝ 1/A)\n   - R = ρ * (L / A), where ρ is resistivity.",
-      "marks": 5,
+      "sample_answer": "",
+      "marks": 1,
       "explanation": "V=IR formula derivation, factors affecting resistance, circuit component positioning.",
       "is_active": true,
-      "created_at": "2026-08-04T11:21:00.000Z"
+      "created_at": "2026-08-04T11:21:00.000Z",
+      "id": "q_class10_la_01",
+      "subject": "Science",
+      "question_type": "MCQ",
+      "detailed_explanation": ""
     },
     {
       "_id": "6599spcqtmsb5ht6l",
@@ -3294,6 +3482,4206 @@
       "explanation": "According to Coulomb's Law, the electrostatic force between two point charges is directly proportional to the product of the charges.",
       "is_active": true,
       "created_at": "2026-07-29T11:43:58.608Z"
+    },
+    {
+      "_id": "lln6bub8omsrg8le3",
+      "id": "lln6bub8omsrg8le3",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Constitution",
+      "question_type": "MCQ",
+      "question_text": "Who is known as the chief architect of the Indian Constitution?",
+      "options": [
+        "R. Ambedkar",
+        "Jawaharlal Nehru",
+        "Sardar Patel",
+        "Rajendra Prasad"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Dr. B. R. Ambedkar chaired the Drafting Committee of the Constituent Assembly.",
+      "detailed_explanation": "Step 1: The Constituent Assembly formed a Drafting Committee in 1947.\nStep 2: Dr. B. R. Ambedkar was appointed its chairman.\nStep 3: He played a central role in preparing the Constitution.",
+      "is_active": true
+    },
+    {
+      "_id": "w5srn5dfmmsrg8le6",
+      "id": "w5srn5dfmmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Constitution",
+      "question_type": "MCQ",
+      "question_text": "When did the Constitution of India come into effect?",
+      "options": [
+        "15 August 1947",
+        "26 January 1950",
+        "26 November 1949",
+        "2 October 1950"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Constitution came into force on 26 January 1950.",
+      "detailed_explanation": "Step 1: The Constitution was adopted on 26 November 1949.\nStep 2: It came into force on 26 January 1950.\nStep 3: India celebrates this date as Republic Day.",
+      "is_active": true
+    },
+    {
+      "_id": "x0bi4c6mbmsrg8le6",
+      "id": "x0bi4c6mbmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Fundamental Rights",
+      "question_type": "MCQ",
+      "question_text": "Which Fundamental Right is guaranteed by Article 21 of the Indian Constitution?",
+      "options": [
+        "Right to Equality",
+        "Right to Freedom of Religion",
+        "Right to Life and Personal Liberty",
+        "Cultural and Educational Rights"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Article 21 protects life and personal liberty.",
+      "detailed_explanation": "Step 1: Article 21 is part of the Fundamental Rights.\nStep 2: It states that no person shall be deprived of life or personal liberty except according to procedure established by law.",
+      "is_active": true
+    },
+    {
+      "_id": "7o1unylmumsrg8le6",
+      "id": "7o1unylmumsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Parliament",
+      "question_type": "MCQ",
+      "question_text": "What is the maximum strength of the Lok Sabha as provided by the Constitution?",
+      "options": [
+        "500",
+        "545",
+        "550",
+        "552"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Constitution provides for a maximum of 550 elected members from the States and Union Territories after the relevant constitutional changes.",
+      "detailed_explanation": "Step 1: The Lok Sabha is the lower house of Parliament.\nStep 2: Constitutional provisions determine its maximum composition.\nStep 3: The current constitutional limit is 550 members.",
+      "is_active": true
+    },
+    {
+      "_id": "gjfzrm4scmsrg8le6",
+      "id": "gjfzrm4scmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Rajya Sabha",
+      "question_type": "MCQ",
+      "question_text": "Who is the ex-officio Chairman of the Rajya Sabha?",
+      "options": [
+        "President of India",
+        "Vice-President of India",
+        "Prime Minister",
+        "Speaker of Lok Sabha"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Vice-President of India serves as the ex-officio Chairman of the Rajya Sabha.",
+      "detailed_explanation": "Step 1: The Vice-President holds a dual constitutional role.\nStep 2: Article 64 makes the Vice-President the ex-officio Chairman of the Council of States.",
+      "is_active": true
+    },
+    {
+      "_id": "cfp5quk8hmsrg8le6",
+      "id": "cfp5quk8hmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Judiciary",
+      "question_type": "MCQ",
+      "question_text": "Which is the highest court in India?",
+      "options": [
+        "High Court",
+        "Supreme Court",
+        "District Court",
+        "Constitutional Court"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Supreme Court of India is the country's highest judicial authority.",
+      "detailed_explanation": "Step 1: India has an integrated judicial system.\nStep 2: The Supreme Court stands at the apex of this system.",
+      "is_active": true
+    },
+    {
+      "_id": "zl01zd3y4msrg8le6",
+      "id": "zl01zd3y4msrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Local Government",
+      "question_type": "MCQ",
+      "question_text": "The 73rd Constitutional Amendment is mainly related to which institution?",
+      "options": [
+        "Municipalities",
+        "Panchayati Raj Institutions",
+        "High Courts",
+        "Election Commission"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The 73rd Amendment gave constitutional status to Panchayati Raj Institutions.",
+      "detailed_explanation": "Step 1: The amendment was enacted in 1992.\nStep 2: It introduced Part IX concerning Panchayats.",
+      "is_active": true
+    },
+    {
+      "_id": "0ol9k7m7wmsrg8le6",
+      "id": "0ol9k7m7wmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Local Government",
+      "question_type": "MCQ",
+      "question_text": "The 74th Constitutional Amendment is associated with:",
+      "options": [
+        "Urban local bodies",
+        "State legislatures",
+        "Cooperative societies",
+        "Fundamental Duties"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The 74th Amendment deals with municipalities and urban local government.",
+      "detailed_explanation": "Step 1: It was enacted in 1992.\nStep 2: It constitutionalized urban local bodies through Part IX-A.",
+      "is_active": true
+    },
+    {
+      "_id": "1h5uz72vxmsrg8le6",
+      "id": "1h5uz72vxmsrg8le6",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Election Commission",
+      "question_type": "MCQ",
+      "question_text": "Which body conducts elections to the Lok Sabha and state legislative assemblies?",
+      "options": [
+        "Finance Commission",
+        "Election Commission of India",
+        "Union Public Service Commission",
+        "NITI Aayog"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Election Commission of India conducts elections to Parliament and state legislatures.",
+      "detailed_explanation": "Step 1: Article 324 provides for the Election Commission.\nStep 2: It supervises and controls these elections.",
+      "is_active": true
+    },
+    {
+      "_id": "96ewsrhz9msrg8le7",
+      "id": "96ewsrhz9msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Polity",
+      "topic_tag": "Indian Polity - Fundamental Duties",
+      "question_type": "MCQ",
+      "question_text": "How many Fundamental Duties are currently listed in the Indian Constitution?",
+      "options": [
+        "10",
+        "11",
+        "12",
+        "14"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "There are 11 Fundamental Duties.",
+      "detailed_explanation": "Step 1: Ten duties were originally added by the 42nd Amendment in 1976.\nStep 2: An additional duty concerning education was added by the 86th Amendment in 2002.",
+      "is_active": true
+    },
+    {
+      "_id": "zi5utm06tmsrg8le7",
+      "id": "zi5utm06tmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Ancient India",
+      "question_type": "MCQ",
+      "question_text": "Which ancient Indian civilization is associated with Harappa and Mohenjo-daro?",
+      "options": [
+        "Vedic Civilization",
+        "Indus Valley Civilization",
+        "Mauryan Civilization",
+        "Gupta Civilization"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Harappa and Mohenjo-daro were major cities of the Indus Valley Civilization.",
+      "detailed_explanation": "Step 1: Archaeological discoveries revealed planned urban settlements.\nStep 2: Harappa and Mohenjo-daro are among its best-known sites.",
+      "is_active": true
+    },
+    {
+      "_id": "59tjfnqf4msrg8le7",
+      "id": "59tjfnqf4msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Ancient India",
+      "question_type": "MCQ",
+      "question_text": "Who founded the Maurya Empire?",
+      "options": [
+        "Ashoka",
+        "Chandragupta Maurya",
+        "Bindusara",
+        "Samudragupta"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Chandragupta Maurya founded the Maurya Empire around 322 BCE.",
+      "detailed_explanation": "Step 1: Chandragupta overthrew the Nanda dynasty.\nStep 2: He established the Mauryan state with the guidance of Chanakya.",
+      "is_active": true
+    },
+    {
+      "_id": "2eei08yfdmsrg8le7",
+      "id": "2eei08yfdmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Ancient India",
+      "question_type": "MCQ",
+      "question_text": "Which emperor embraced Buddhism after the Kalinga War?",
+      "options": [
+        "Chandragupta Maurya",
+        "Ashoka",
+        "Harsha",
+        "Kanishka"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Emperor Ashoka embraced and promoted Buddhism after the Kalinga War.",
+      "detailed_explanation": "Step 1: The Kalinga War caused immense loss of life.\nStep 2: Ashoka was deeply affected and turned toward Dhamma and Buddhism.",
+      "is_active": true
+    },
+    {
+      "_id": "tvckbxsfcmsrg8le7",
+      "id": "tvckbxsfcmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Ancient India",
+      "question_type": "MCQ",
+      "question_text": "Who wrote the Arthashastra?",
+      "options": [
+        "Kalidasa",
+        "Chanakya",
+        "Banabhatta",
+        "Megasthenes"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Arthashastra is traditionally attributed to Chanakya, also known as Kautilya.",
+      "detailed_explanation": "Step 1: The text discusses statecraft, administration and economics.\nStep 2: Kautilya is traditionally identified as its author.",
+      "is_active": true
+    },
+    {
+      "_id": "1lyo342bpmsrg8le7",
+      "id": "1lyo342bpmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Medieval India",
+      "question_type": "MCQ",
+      "question_text": "Who founded the Mughal Empire in India?",
+      "options": [
+        "Akbar",
+        "Babur",
+        "Humayun",
+        "Aurangzeb"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Babur founded the Mughal Empire after defeating Ibrahim Lodi at the First Battle of Panipat in 1526.",
+      "detailed_explanation": "Step 1: Babur invaded northern India from Central Asia.\nStep 2: His victory at Panipat established Mughal rule.",
+      "is_active": true
+    },
+    {
+      "_id": "39e74m7dgmsrg8le7",
+      "id": "39e74m7dgmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Medieval India",
+      "question_type": "MCQ",
+      "question_text": "Who built the Red Fort in Delhi?",
+      "options": [
+        "Shah Jahan",
+        "Akbar",
+        "Jahangir",
+        "Aurangzeb"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Mughal emperor Shah Jahan commissioned the Red Fort in Delhi.",
+      "detailed_explanation": "Step 1: Shah Jahan shifted his capital to Shahjahanabad.\nStep 2: The Red Fort was built as the palace-fort complex of the new capital.",
+      "is_active": true
+    },
+    {
+      "_id": "hurs0o7i3msrg8le7",
+      "id": "hurs0o7i3msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Medieval India",
+      "question_type": "MCQ",
+      "question_text": "Who founded the Sikh religion?",
+      "options": [
+        "Guru Arjan Dev",
+        "Guru Gobind Singh",
+        "Guru Nanak",
+        "Guru Tegh Bahadur"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Guru Nanak founded the Sikh tradition in the late 15th century.",
+      "detailed_explanation": "Step 1: Guru Nanak preached devotion to one God and social equality.\nStep 2: His teachings formed the foundation of Sikhism.",
+      "is_active": true
+    },
+    {
+      "_id": "zyl8v4f73msrg8le7",
+      "id": "zyl8v4f73msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Modern India",
+      "question_type": "MCQ",
+      "question_text": "Who founded the Brahmo Samaj?",
+      "options": [
+        "Swami Vivekananda",
+        "Raja Ram Mohan Roy",
+        "Dayanand Saraswati",
+        "Ishwar Chandra Vidyasagar"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Raja Ram Mohan Roy founded the Brahmo Sabha in 1828, later known as the Brahmo Samaj.",
+      "detailed_explanation": "Step 1: The movement promoted monotheism and social reform.\nStep 2: Raja Ram Mohan Roy was its principal founder.",
+      "is_active": true
+    },
+    {
+      "_id": "3otdskzdbmsrg8le7",
+      "id": "3otdskzdbmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Freedom Movement",
+      "question_type": "MCQ",
+      "question_text": "The Non-Cooperation Movement was launched under the leadership of:",
+      "options": [
+        "Subhas Chandra Bose",
+        "Mahatma Gandhi",
+        "Bal Gangadhar Tilak",
+        "Bhagat Singh"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Mahatma Gandhi launched the Non-Cooperation Movement in 1920.",
+      "detailed_explanation": "Step 1: The movement aimed to withdraw cooperation from colonial institutions.\nStep 2: It became a major mass movement against British rule.",
+      "is_active": true
+    },
+    {
+      "_id": "3qpgzathnmsrg8le7",
+      "id": "3qpgzathnmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Freedom Movement",
+      "question_type": "MCQ",
+      "question_text": "In which year did the Quit India Movement begin?",
+      "options": [
+        "1919",
+        "1927",
+        "1942",
+        "1947"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Quit India Movement was launched in August 1942.",
+      "detailed_explanation": "Step 1: The All India Congress Committee adopted the Quit India resolution in Bombay.\nStep 2: Gandhi gave the call of 'Do or Die'.",
+      "is_active": true
+    },
+    {
+      "_id": "bez9wrryzmsrg8le7",
+      "id": "bez9wrryzmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Freedom Movement",
+      "question_type": "MCQ",
+      "question_text": "Who gave the slogan 'Jai Hind' prominence during India's freedom struggle?",
+      "options": [
+        "Subhas Chandra Bose",
+        "Mahatma Gandhi",
+        "Lala Lajpat Rai",
+        "Gopal Krishna Gokhale"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Subhas Chandra Bose popularized 'Jai Hind' as a patriotic salutation.",
+      "detailed_explanation": "Step 1: Bose led the Indian National Army.\nStep 2: 'Jai Hind' became closely associated with the INA and the freedom movement.",
+      "is_active": true
+    },
+    {
+      "_id": "1ynl5qqslmsrg8le7",
+      "id": "1ynl5qqslmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Freedom Movement",
+      "question_type": "MCQ",
+      "question_text": "The Dandi March of 1930 was associated with which issue?",
+      "options": [
+        "Land revenue",
+        "Salt tax",
+        "Education reform",
+        "Separate electorates"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Dandi March protested the British monopoly and tax on salt.",
+      "detailed_explanation": "Step 1: Gandhi began the march from Sabarmati Ashram.\nStep 2: He reached Dandi and broke the salt law.",
+      "is_active": true
+    },
+    {
+      "_id": "53jwpljvbmsrg8le7",
+      "id": "53jwpljvbmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian History",
+      "topic_tag": "Indian History - Freedom Movement",
+      "question_type": "MCQ",
+      "question_text": "Who was the first Indian woman to become president of the Indian National Congress?",
+      "options": [
+        "Sarojini Naidu",
+        "Annie Besant",
+        "Aruna Asaf Ali",
+        "Vijaya Lakshmi Pandit"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Sarojini Naidu became the first Indian woman president of the Indian National Congress in 1925.",
+      "detailed_explanation": "Step 1: Annie Besant was the first woman president of the Congress, in 1917.\nStep 2: Sarojini Naidu was the first Indian woman to hold that position.",
+      "is_active": true
+    },
+    {
+      "_id": "ot5hzn4jnmsrg8le7",
+      "id": "ot5hzn4jnmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Physical Geography",
+      "question_type": "MCQ",
+      "question_text": "Which is the longest river in India?",
+      "options": [
+        "Yamuna",
+        "Ganga",
+        "Godavari",
+        "Narmada"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Ganga is generally regarded as the longest river within India.",
+      "detailed_explanation": "Step 1: The Ganga system extends across northern India.\nStep 2: Its main stem is longer within India than the other listed rivers.",
+      "is_active": true
+    },
+    {
+      "_id": "e8hohyiozmsrg8le7",
+      "id": "e8hohyiozmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Rivers",
+      "question_type": "MCQ",
+      "question_text": "Which river is known as the 'Sorrow of Bihar'?",
+      "options": [
+        "Kosi",
+        "Godavari",
+        "Mahanadi",
+        "Tapi"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Kosi is known as the 'Sorrow of Bihar' because of its frequent flooding and shifting course.",
+      "detailed_explanation": "Step 1: The Kosi carries large sediment loads.\nStep 2: Its channel has historically shifted frequently, causing destructive floods.",
+      "is_active": true
+    },
+    {
+      "_id": "k7idp3iujmsrg8le7",
+      "id": "k7idp3iujmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Mountains",
+      "question_type": "MCQ",
+      "question_text": "Which is the highest mountain peak entirely within India?",
+      "options": [
+        "Nanda Devi",
+        "Kanchenjunga",
+        "Anamudi",
+        "Kamet"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Nanda Devi is the highest peak entirely within India's borders.",
+      "detailed_explanation": "Step 1: Nanda Devi is located in Uttarakhand.\nStep 2: Its elevation is about 7,816 metres.",
+      "is_active": true
+    },
+    {
+      "_id": "ef8idoffdmsrg8le7",
+      "id": "ef8idoffdmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Plateaus",
+      "question_type": "MCQ",
+      "question_text": "The Deccan Plateau is mainly located in which part of India?",
+      "options": [
+        "Northern India",
+        "Peninsular India",
+        "Northeastern India",
+        "Coastal India only"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Deccan Plateau occupies a large part of Peninsular India.",
+      "detailed_explanation": "Step 1: It lies south of the Narmada River.\nStep 2: It forms a major portion of the Indian Peninsular Plateau.",
+      "is_active": true
+    },
+    {
+      "_id": "autz2t8h3msrg8le7",
+      "id": "autz2t8h3msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Climate",
+      "question_type": "MCQ",
+      "question_text": "Which Indian region receives the highest average annual rainfall?",
+      "options": [
+        "Western Rajasthan",
+        "Mawsynram region",
+        "Ladakh",
+        "Kutch"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Mawsynram in Meghalaya is renowned for extremely high annual rainfall.",
+      "detailed_explanation": "Step 1: Moist monsoon winds from the Bay of Bengal reach Meghalaya.\nStep 2: The Khasi Hills force the moist air upward, producing heavy rainfall.",
+      "is_active": true
+    },
+    {
+      "_id": "hclfcxqx2msrg8le7",
+      "id": "hclfcxqx2msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Soils",
+      "question_type": "MCQ",
+      "question_text": "Which soil is especially suitable for growing cotton?",
+      "options": [
+        "Black soil",
+        "Laterite soil",
+        "Desert soil",
+        "Mountain soil"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Black soil has high moisture-retention capacity and is well suited to cotton cultivation.",
+      "detailed_explanation": "Step 1: Black soil is rich in clay.\nStep 2: Its moisture-retaining properties benefit cotton plants.",
+      "is_active": true
+    },
+    {
+      "_id": "28xilpm0wmsrg8le7",
+      "id": "28xilpm0wmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Agriculture",
+      "question_type": "MCQ",
+      "question_text": "Which crop is known as the 'golden fibre'?",
+      "options": [
+        "Cotton",
+        "Jute",
+        "Wheat",
+        "Tea"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Jute is called the golden fibre because of its colour and economic value.",
+      "detailed_explanation": "Step 1: Jute is a natural fibre obtained from plant stems.\nStep 2: It is widely used for sacks, ropes and other products.",
+      "is_active": true
+    },
+    {
+      "_id": "t20ssdpa7msrg8le7",
+      "id": "t20ssdpa7msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - States",
+      "question_type": "MCQ",
+      "question_text": "Which Indian state has the longest coastline?",
+      "options": [
+        "Tamil Nadu",
+        "Gujarat",
+        "Maharashtra",
+        "Andhra Pradesh"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Gujarat has India's longest coastline among the states.",
+      "detailed_explanation": "Step 1: Gujarat borders the Arabian Sea.\nStep 2: Its coastline includes the Kathiawar Peninsula and the Gulf of Kutch.",
+      "is_active": true
+    },
+    {
+      "_id": "3murnqoo4msrg8le7",
+      "id": "3murnqoo4msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Transport",
+      "question_type": "MCQ",
+      "question_text": "Which pass connects Srinagar with Leh by road?",
+      "options": [
+        "Nathu La",
+        "Zoji La",
+        "Shipki La",
+        "Bum La"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Zoji La is an important mountain pass on the route between Srinagar and Leh.",
+      "detailed_explanation": "Step 1: It crosses the Himalayan range.\nStep 2: It provides a key road connection between Kashmir and Ladakh.",
+      "is_active": true
+    },
+    {
+      "_id": "4defvyogkmsrg8le7",
+      "id": "4defvyogkmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Geography",
+      "topic_tag": "Indian Geography - Islands",
+      "question_type": "MCQ",
+      "question_text": "The Andaman and Nicobar Islands are located in which body of water?",
+      "options": [
+        "Arabian Sea",
+        "Bay of Bengal",
+        "Indian Ocean only",
+        "Lakshadweep Sea"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Andaman and Nicobar Islands are situated in the Bay of Bengal.",
+      "detailed_explanation": "Step 1: They form an island group in the eastern Indian Ocean region.\nStep 2: Geographically, they are located in the Bay of Bengal.",
+      "is_active": true
+    },
+    {
+      "_id": "aoehygh9jmsrg8le7",
+      "id": "aoehygh9jmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Continents",
+      "question_type": "MCQ",
+      "question_text": "Which is the largest continent by area?",
+      "options": [
+        "Africa",
+        "Asia",
+        "Europe",
+        "North America"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Asia is the largest continent by both area and population.",
+      "detailed_explanation": "Step 1: Asia covers roughly one-third of Earth's land area.\nStep 2: It also contains more than half of the world's population.",
+      "is_active": true
+    },
+    {
+      "_id": "u9geo1ew6msrg8le7",
+      "id": "u9geo1ew6msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Oceans",
+      "question_type": "MCQ",
+      "question_text": "Which is the largest ocean on Earth?",
+      "options": [
+        "Atlantic Ocean",
+        "Indian Ocean",
+        "Pacific Ocean",
+        "Arctic Ocean"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Pacific Ocean is the largest and deepest ocean.",
+      "detailed_explanation": "Step 1: It extends between Asia/Australia and the Americas.\nStep 2: Its area is greater than that of the Atlantic and Indian Oceans.",
+      "is_active": true
+    },
+    {
+      "_id": "qm27kp8yhmsrg8le7",
+      "id": "qm27kp8yhmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Rivers",
+      "question_type": "MCQ",
+      "question_text": "Which is the longest river in South America?",
+      "options": [
+        "Amazon",
+        "Nile",
+        "Parana",
+        "Orinoco"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Amazon is the longest river in South America and has the largest discharge of any river.",
+      "detailed_explanation": "Step 1: It flows across the Amazon Basin.\nStep 2: It empties into the Atlantic Ocean.",
+      "is_active": true
+    },
+    {
+      "_id": "eroi0rfo3msrg8le7",
+      "id": "eroi0rfo3msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Deserts",
+      "question_type": "MCQ",
+      "question_text": "Which is the largest hot desert in the world?",
+      "options": [
+        "Gobi",
+        "Sahara",
+        "Kalahari",
+        "Atacama"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Sahara is the world's largest hot desert.",
+      "detailed_explanation": "Step 1: It covers much of North Africa.\nStep 2: It stretches across several countries south of the Mediterranean.",
+      "is_active": true
+    },
+    {
+      "_id": "x64nxhm33msrg8le7",
+      "id": "x64nxhm33msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Mountains",
+      "question_type": "MCQ",
+      "question_text": "Which mountain range contains Mount Everest?",
+      "options": [
+        "Andes",
+        "Alps",
+        "Himalayas",
+        "Rockies"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Mount Everest is part of the Himalayan mountain system.",
+      "detailed_explanation": "Step 1: Everest lies on the Nepal-Tibet border region.\nStep 2: The Himalayas contain many of the world's highest peaks.",
+      "is_active": true
+    },
+    {
+      "_id": "b06gt625wmsrg8le7",
+      "id": "b06gt625wmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Countries",
+      "question_type": "MCQ",
+      "question_text": "Which country is known as the 'Land of the Rising Sun'?",
+      "options": [
+        "China",
+        "Japan",
+        "South Korea",
+        "Thailand"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Japan is traditionally known as the 'Land of the Rising Sun'.",
+      "detailed_explanation": "Step 1: Japan lies east of the Asian mainland.\nStep 2: Its traditional name reflects the direction of sunrise.",
+      "is_active": true
+    },
+    {
+      "_id": "0ll4e9tjxmsrg8le7",
+      "id": "0ll4e9tjxmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Straits",
+      "question_type": "MCQ",
+      "question_text": "Which strait separates India and Sri Lanka?",
+      "options": [
+        "Strait of Malacca",
+        "Palk Strait",
+        "Bering Strait",
+        "Sunda Strait"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Palk Strait separates southeastern India from northern Sri Lanka.",
+      "detailed_explanation": "Step 1: It lies between Tamil Nadu and Sri Lanka.\nStep 2: The Palk Bay and Gulf of Mannar are connected through this region.",
+      "is_active": true
+    },
+    {
+      "_id": "e9mqzcxynmsrg8le7",
+      "id": "e9mqzcxynmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "World Geography",
+      "topic_tag": "World Geography - Equator",
+      "question_type": "MCQ",
+      "question_text": "Which continent is crossed by the Equator, the Tropic of Cancer and the Tropic of Capricorn?",
+      "options": [
+        "Asia",
+        "Africa",
+        "Europe",
+        "Australia"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Africa is crossed by all three of these major latitude lines.",
+      "detailed_explanation": "Step 1: The Equator crosses central Africa.\nStep 2: The Tropic of Cancer and Tropic of Capricorn cross its northern and southern portions.",
+      "is_active": true
+    },
+    {
+      "_id": "uh07fv0vkmsrg8le7",
+      "id": "uh07fv0vkmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Banking",
+      "question_type": "MCQ",
+      "question_text": "Which institution is India's central bank?",
+      "options": [
+        "SBI",
+        "RBI",
+        "SEBI",
+        "NABARD"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Reserve Bank of India is India's central bank.",
+      "detailed_explanation": "Step 1: RBI manages monetary policy and currency issuance.\nStep 2: It also regulates the banking system.",
+      "is_active": true
+    },
+    {
+      "_id": "x4ead9y6vmsrg8le7",
+      "id": "x4ead9y6vmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Banking",
+      "question_type": "MCQ",
+      "question_text": "What does GDP stand for?",
+      "options": [
+        "Gross Domestic Product",
+        "General Development Plan",
+        "Gross Development Percentage",
+        "Government Domestic Production"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "GDP stands for Gross Domestic Product.",
+      "detailed_explanation": "Step 1: GDP measures the monetary value of final goods and services produced within an economy.\nStep 2: It is widely used to assess economic activity.",
+      "is_active": true
+    },
+    {
+      "_id": "xkj10dzvfmsrg8le7",
+      "id": "xkj10dzvfmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Taxation",
+      "question_type": "MCQ",
+      "question_text": "GST stands for:",
+      "options": [
+        "General Sales Tax",
+        "Goods and Services Tax",
+        "Government Service Tariff",
+        "Gross State Tax"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "GST means Goods and Services Tax.",
+      "detailed_explanation": "Step 1: GST is an indirect tax on the supply of goods and services.\nStep 2: India implemented GST nationally in 2017.",
+      "is_active": true
+    },
+    {
+      "_id": "s49p7doa5msrg8le7",
+      "id": "s49p7doa5msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Institutions",
+      "question_type": "MCQ",
+      "question_text": "Which institution replaced the Planning Commission?",
+      "options": [
+        "Finance Commission",
+        "NITI Aayog",
+        "RBI",
+        "SEBI"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "NITI Aayog replaced the Planning Commission in 2015.",
+      "detailed_explanation": "Step 1: The Planning Commission was established in 1950.\nStep 2: NITI Aayog was created as a policy think tank with a more cooperative federal approach.",
+      "is_active": true
+    },
+    {
+      "_id": "uxrc8b6l3msrg8le7",
+      "id": "uxrc8b6l3msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Inflation",
+      "question_type": "MCQ",
+      "question_text": "A sustained increase in the general price level is called:",
+      "options": [
+        "Deflation",
+        "Inflation",
+        "Recession",
+        "Stagflation"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Inflation refers to a sustained rise in the general price level of goods and services.",
+      "detailed_explanation": "Step 1: Inflation reduces the purchasing power of money.\nStep 2: It is commonly measured using price indices.",
+      "is_active": true
+    },
+    {
+      "_id": "56is2d435msrg8le7",
+      "id": "56is2d435msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Banking",
+      "question_type": "MCQ",
+      "question_text": "What is the full form of ATM?",
+      "options": [
+        "Automated Teller Machine",
+        "Automatic Transfer Method",
+        "Advanced Transaction Machine",
+        "Automated Tax Machine"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "ATM stands for Automated Teller Machine.",
+      "detailed_explanation": "Step 1: ATMs allow customers to perform basic banking transactions.\nStep 2: Common services include cash withdrawal and balance inquiry.",
+      "is_active": true
+    },
+    {
+      "_id": "mzheb2ddomsrg8le7",
+      "id": "mzheb2ddomsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Finance",
+      "question_type": "MCQ",
+      "question_text": "Which market deals primarily with long-term securities?",
+      "options": [
+        "Money market",
+        "Capital market",
+        "Foreign exchange market",
+        "Commodity spot market"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The capital market deals mainly with medium- and long-term financial instruments.",
+      "detailed_explanation": "Step 1: Equity shares and long-term bonds are capital-market instruments.\nStep 2: Money markets focus mainly on short-term instruments.",
+      "is_active": true
+    },
+    {
+      "_id": "af1py1hqymsrg8le7",
+      "id": "af1py1hqymsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Financial Regulation",
+      "question_type": "MCQ",
+      "question_text": "SEBI primarily regulates which sector in India?",
+      "options": [
+        "Securities market",
+        "Banking sector",
+        "Insurance sector",
+        "Railways"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "SEBI regulates India's securities market.",
+      "detailed_explanation": "Step 1: SEBI stands for Securities and Exchange Board of India.\nStep 2: It protects investors and promotes orderly development of the securities market.",
+      "is_active": true
+    },
+    {
+      "_id": "vtmiuqyp4msrg8le7",
+      "id": "vtmiuqyp4msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Indian Economy",
+      "topic_tag": "Indian Economy - Banking",
+      "question_type": "MCQ",
+      "question_text": "Which bank is known as India's largest public sector bank by assets?",
+      "options": [
+        "Bank of Baroda",
+        "State Bank of India",
+        "Punjab National Bank",
+        "Canara Bank"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "State Bank of India is India's largest public sector bank by assets.",
+      "detailed_explanation": "Step 1: SBI is a major commercial bank with nationwide operations.\nStep 2: It has the largest asset base among Indian public sector banks.",
+      "is_active": true
+    },
+    {
+      "_id": "s7oo00qwzmsrg8le7",
+      "id": "s7oo00qwzmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Physics",
+      "question_type": "MCQ",
+      "question_text": "What is the SI unit of force?",
+      "options": [
+        "Joule",
+        "Newton",
+        "Pascal",
+        "Watt"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The SI unit of force is the newton.",
+      "detailed_explanation": "Step 1: Force is related to mass and acceleration by F = ma.\nStep 2: One newton is the force required to accelerate one kilogram by one metre per second squared.",
+      "is_active": true
+    },
+    {
+      "_id": "qsa6oyuf4msrg8le7",
+      "id": "qsa6oyuf4msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Physics",
+      "question_type": "MCQ",
+      "question_text": "Which instrument is used to measure atmospheric pressure?",
+      "options": [
+        "Thermometer",
+        "Barometer",
+        "Hygrometer",
+        "Ammeter"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A barometer measures atmospheric pressure.",
+      "detailed_explanation": "Step 1: Atmospheric pressure is the force exerted by air.\nStep 2: Barometers measure this pressure using mercury or aneroid mechanisms.",
+      "is_active": true
+    },
+    {
+      "_id": "jf5jxx7bpmsrg8le7",
+      "id": "jf5jxx7bpmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Physics",
+      "question_type": "MCQ",
+      "question_text": "Which phenomenon explains the blue colour of the sky?",
+      "options": [
+        "Reflection",
+        "Refraction",
+        "Scattering of light",
+        "Diffraction"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rayleigh scattering causes shorter blue wavelengths to be scattered strongly in the atmosphere.",
+      "detailed_explanation": "Step 1: Sunlight contains many wavelengths.\nStep 2: Atmospheric molecules scatter shorter wavelengths more efficiently.\nStep 3: This makes the sky appear blue.",
+      "is_active": true
+    },
+    {
+      "_id": "mrsrr7ct4msrg8le7",
+      "id": "mrsrr7ct4msrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Physics",
+      "question_type": "MCQ",
+      "question_text": "What is the speed of light in vacuum approximately?",
+      "options": [
+        "3 × 10^6 m/s",
+        "3 × 10^7 m/s",
+        "3 × 10^8 m/s",
+        "3 × 10^9 m/s"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Light travels in vacuum at approximately 3 × 10^8 metres per second.",
+      "detailed_explanation": "Step 1: The speed of light is a fundamental physical constant.\nStep 2: Its approximate value is 299,792,458 m/s.",
+      "is_active": true
+    },
+    {
+      "_id": "m46nhfb1fmsrg8le7",
+      "id": "m46nhfb1fmsrg8le7",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Chemistry",
+      "question_type": "MCQ",
+      "question_text": "What is the chemical symbol for gold?",
+      "options": [
+        "Ag",
+        "Au",
+        "Gd",
+        "Go"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Au is the chemical symbol for gold.",
+      "detailed_explanation": "Step 1: The symbol comes from the Latin word 'aurum'.\nStep 2: Gold has atomic number 79.",
+      "is_active": true
+    },
+    {
+      "_id": "lcf70rr9umsrg8le8",
+      "id": "lcf70rr9umsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Chemistry",
+      "question_type": "MCQ",
+      "question_text": "Which gas is most abundant in Earth's atmosphere?",
+      "options": [
+        "Oxygen",
+        "Nitrogen",
+        "Carbon dioxide",
+        "Argon"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Nitrogen makes up about 78% of Earth's atmosphere.",
+      "detailed_explanation": "Step 1: Atmospheric gases include nitrogen, oxygen, argon and trace gases.\nStep 2: Nitrogen is the largest component.",
+      "is_active": true
+    },
+    {
+      "_id": "uqi2ivgg9msrg8le8",
+      "id": "uqi2ivgg9msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Chemistry",
+      "question_type": "MCQ",
+      "question_text": "A solution with a pH below 7 is generally:",
+      "options": [
+        "Neutral",
+        "Acidic",
+        "Basic",
+        "Saline"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A pH below 7 indicates an acidic solution at standard conditions.",
+      "detailed_explanation": "Step 1: pH measures hydrogen-ion activity.\nStep 2: Acidic solutions have pH values below 7 on the conventional scale.",
+      "is_active": true
+    },
+    {
+      "_id": "omeb3lal0msrg8le8",
+      "id": "omeb3lal0msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Chemistry",
+      "question_type": "MCQ",
+      "question_text": "Which element has the chemical symbol Na?",
+      "options": [
+        "Nitrogen",
+        "Sodium",
+        "Neon",
+        "Nickel"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Na is the symbol for sodium.",
+      "detailed_explanation": "Step 1: The symbol comes from the Latin name 'natrium'.\nStep 2: Sodium has atomic number 11.",
+      "is_active": true
+    },
+    {
+      "_id": "t0w34d2yomsrg8le8",
+      "id": "t0w34d2yomsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which organelle is known as the powerhouse of the cell?",
+      "options": [
+        "Nucleus",
+        "Ribosome",
+        "Mitochondrion",
+        "Golgi apparatus"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Mitochondria produce much of the cell's ATP through cellular respiration.",
+      "detailed_explanation": "Step 1: ATP is the major energy currency of cells.\nStep 2: Mitochondria generate ATP efficiently through oxidative phosphorylation.",
+      "is_active": true
+    },
+    {
+      "_id": "kc052tu6qmsrg8le8",
+      "id": "kc052tu6qmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which blood group is known as the universal red-cell donor in the ABO and Rh system?",
+      "options": [
+        "AB positive",
+        "O negative",
+        "A positive",
+        "B negative"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "O negative red blood cells can generally be transfused to people of other ABO/Rh groups in emergencies.",
+      "detailed_explanation": "Step 1: O red cells lack A and B antigens.\nStep 2: O negative cells also lack the Rh D antigen.",
+      "is_active": true
+    },
+    {
+      "_id": "8witz21g6msrg8le8",
+      "id": "8witz21g6msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which vitamin is mainly produced in the skin after exposure to sunlight?",
+      "options": [
+        "Vitamin A",
+        "Vitamin B12",
+        "Vitamin C",
+        "Vitamin D"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Sunlight helps the skin synthesize vitamin D.",
+      "detailed_explanation": "Step 1: Ultraviolet B radiation acts on a cholesterol-derived precursor in the skin.\nStep 2: The resulting compounds are converted into active vitamin D forms.",
+      "is_active": true
+    },
+    {
+      "_id": "b4tghan2pmsrg8le8",
+      "id": "b4tghan2pmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which part of the human brain controls balance and coordination?",
+      "options": [
+        "Cerebrum",
+        "Cerebellum",
+        "Medulla",
+        "Hypothalamus"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The cerebellum plays a major role in balance, posture and coordination.",
+      "detailed_explanation": "Step 1: It receives sensory information about body position.\nStep 2: It helps coordinate precise movements.",
+      "is_active": true
+    },
+    {
+      "_id": "aii56x4bkmsrg8le8",
+      "id": "aii56x4bkmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which is the largest organ of the human body?",
+      "options": [
+        "Liver",
+        "Brain",
+        "Skin",
+        "Lung"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The skin is the largest organ of the human body by surface area and mass.",
+      "detailed_explanation": "Step 1: Skin covers and protects the body.\nStep 2: It also helps regulate temperature and sensation.",
+      "is_active": true
+    },
+    {
+      "_id": "dgfxzpdm8msrg8le8",
+      "id": "dgfxzpdm8msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Photosynthesis mainly occurs in which cell organelle?",
+      "options": [
+        "Mitochondria",
+        "Chloroplasts",
+        "Lysosomes",
+        "Centrioles"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Photosynthesis occurs mainly in chloroplasts of plant cells and algae.",
+      "detailed_explanation": "Step 1: Chlorophyll is located in chloroplasts.\nStep 2: It captures light energy used to synthesize organic compounds.",
+      "is_active": true
+    },
+    {
+      "_id": "3cu3ffbzlmsrg8le8",
+      "id": "3cu3ffbzlmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which blood cells help the body fight infections?",
+      "options": [
+        "Red blood cells",
+        "White blood cells",
+        "Platelets",
+        "Plasma cells only"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "White blood cells are key components of the immune system.",
+      "detailed_explanation": "Step 1: Leukocytes identify and respond to pathogens.\nStep 2: Different types perform different immune functions.",
+      "is_active": true
+    },
+    {
+      "_id": "lx5y50z0emsrg8le8",
+      "id": "lx5y50z0emsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Science",
+      "topic_tag": "General Science - Biology",
+      "question_type": "MCQ",
+      "question_text": "Which disease is caused by a deficiency of vitamin C?",
+      "options": [
+        "Rickets",
+        "Scurvy",
+        "Beriberi",
+        "Night blindness"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Vitamin C deficiency causes scurvy.",
+      "detailed_explanation": "Step 1: Vitamin C is important for collagen synthesis.\nStep 2: Severe deficiency can cause bleeding gums, poor wound healing and other symptoms.",
+      "is_active": true
+    },
+    {
+      "_id": "94mcl2um8msrg8le8",
+      "id": "94mcl2um8msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Ecology",
+      "question_type": "MCQ",
+      "question_text": "What is the main cause of the enhanced greenhouse effect in the modern era?",
+      "options": [
+        "Increased volcanic activity",
+        "Human emissions of greenhouse gases",
+        "Ocean tides",
+        "Earth's rotation"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Human activities have greatly increased atmospheric greenhouse gas concentrations.",
+      "detailed_explanation": "Step 1: Burning fossil fuels releases large amounts of carbon dioxide.\nStep 2: Methane and other greenhouse gases also contribute to warming.",
+      "is_active": true
+    },
+    {
+      "_id": "0yftmdku4msrg8le8",
+      "id": "0yftmdku4msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Ecology",
+      "question_type": "MCQ",
+      "question_text": "Which gas is a major contributor to human-caused global warming?",
+      "options": [
+        "Oxygen",
+        "Carbon dioxide",
+        "Helium",
+        "Neon"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Carbon dioxide is a major long-lived greenhouse gas emitted by human activities.",
+      "detailed_explanation": "Step 1: Fossil fuel combustion is a major source of CO2.\nStep 2: CO2 absorbs outgoing infrared radiation and contributes to the greenhouse effect.",
+      "is_active": true
+    },
+    {
+      "_id": "rly0dotnsmsrg8le8",
+      "id": "rly0dotnsmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Biodiversity",
+      "question_type": "MCQ",
+      "question_text": "The Red Data Book is associated with information about:",
+      "options": [
+        "Weather forecasts",
+        "Threatened species",
+        "Mineral reserves",
+        "Population census"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Red Data Books provide information on threatened and endangered species.",
+      "detailed_explanation": "Step 1: They compile conservation-related information.\nStep 2: The IUCN Red List is a major global system for assessing species extinction risk.",
+      "is_active": true
+    },
+    {
+      "_id": "8ida4vu0vmsrg8le8",
+      "id": "8ida4vu0vmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Conservation",
+      "question_type": "MCQ",
+      "question_text": "Project Tiger was launched in India in which year?",
+      "options": [
+        "1969",
+        "1973",
+        "1980",
+        "1986"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Project Tiger was launched in 1973 to conserve tigers and their habitats.",
+      "detailed_explanation": "Step 1: The programme began with nine tiger reserves.\nStep 2: It later expanded across India.",
+      "is_active": true
+    },
+    {
+      "_id": "qptjh557pmsrg8le8",
+      "id": "qptjh557pmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Pollution",
+      "question_type": "MCQ",
+      "question_text": "Which pollutant is most directly associated with acid rain?",
+      "options": [
+        "Sulfur dioxide",
+        "Oxygen",
+        "Helium",
+        "Hydrogen"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Sulfur dioxide is a major precursor of acid rain.",
+      "detailed_explanation": "Step 1: SO2 can be oxidized in the atmosphere.\nStep 2: It forms sulfuric acid and related compounds that contribute to acidic precipitation.",
+      "is_active": true
+    },
+    {
+      "_id": "v525c8e52msrg8le8",
+      "id": "v525c8e52msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Ozone",
+      "question_type": "MCQ",
+      "question_text": "The ozone layer is mainly found in which atmospheric layer?",
+      "options": [
+        "Troposphere",
+        "Stratosphere",
+        "Mesosphere",
+        "Thermosphere"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Most atmospheric ozone is concentrated in the stratosphere.",
+      "detailed_explanation": "Step 1: The stratosphere lies above the troposphere.\nStep 2: Ozone there absorbs much of the Sun's harmful ultraviolet radiation.",
+      "is_active": true
+    },
+    {
+      "_id": "qvugke90jmsrg8le8",
+      "id": "qvugke90jmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Forests",
+      "question_type": "MCQ",
+      "question_text": "Which type of forest is characteristic of regions with heavy rainfall and high biodiversity?",
+      "options": [
+        "Tropical rainforest",
+        "Tundra",
+        "Desert scrub",
+        "Mediterranean woodland"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Tropical rainforests occur in warm, very wet regions and support exceptional biodiversity.",
+      "detailed_explanation": "Step 1: High rainfall supports dense vegetation.\nStep 2: Stable warm conditions allow many species to coexist.",
+      "is_active": true
+    },
+    {
+      "_id": "jd214mxtymsrg8le8",
+      "id": "jd214mxtymsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Renewable Energy",
+      "question_type": "MCQ",
+      "question_text": "Which of the following is a renewable source of energy?",
+      "options": [
+        "Coal",
+        "Petroleum",
+        "Solar energy",
+        "Natural gas"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Solar energy is renewable because sunlight is continuously replenished on human timescales.",
+      "detailed_explanation": "Step 1: Renewable resources are naturally replenished.\nStep 2: Solar radiation is continuously available from the Sun.",
+      "is_active": true
+    },
+    {
+      "_id": "bxyfxtjtbmsrg8le8",
+      "id": "bxyfxtjtbmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Environment",
+      "topic_tag": "Environment - Climate",
+      "question_type": "MCQ",
+      "question_text": "Which international agreement aims to limit global warming well below 2°C above pre-industrial levels?",
+      "options": [
+        "Montreal Protocol",
+        "Paris Agreement",
+        "Kyoto Protocol only",
+        "Ramsar Convention"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Paris Agreement seeks to hold warming well below 2°C and pursue efforts toward 1.5°C.",
+      "detailed_explanation": "Step 1: It was adopted in 2015 under the UN climate framework.\nStep 2: Countries submit and update national climate commitments.",
+      "is_active": true
+    },
+    {
+      "_id": "jgsczs5ywmsrg8le8",
+      "id": "jgsczs5ywmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Awards",
+      "question_type": "MCQ",
+      "question_text": "Which is the highest civilian award of India?",
+      "options": [
+        "Padma Shri",
+        "Bharat Ratna",
+        "Padma Bhushan",
+        "Param Vir Chakra"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Bharat Ratna is India's highest civilian award.",
+      "detailed_explanation": "Step 1: It was instituted in 1954.\nStep 2: It recognizes exceptional service or performance of the highest order in various fields.",
+      "is_active": true
+    },
+    {
+      "_id": "6a58vvcoamsrg8le8",
+      "id": "6a58vvcoamsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - National Symbols",
+      "question_type": "MCQ",
+      "question_text": "What is the national animal of India?",
+      "options": [
+        "Lion",
+        "Bengal tiger",
+        "Elephant",
+        "Leopard"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Bengal tiger is India's national animal.",
+      "detailed_explanation": "Step 1: The tiger symbolizes India's rich wildlife heritage.\nStep 2: It was adopted as the national animal in 1973.",
+      "is_active": true
+    },
+    {
+      "_id": "m1dmrdh6tmsrg8le8",
+      "id": "m1dmrdh6tmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - National Symbols",
+      "question_type": "MCQ",
+      "question_text": "What is the national aquatic animal of India?",
+      "options": [
+        "Blue whale",
+        "Ganges river dolphin",
+        "Crocodile",
+        "Olive ridley turtle"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Ganges river dolphin is India's national aquatic animal.",
+      "detailed_explanation": "Step 1: It is a freshwater cetacean found in river systems.\nStep 2: It is an important indicator species for river ecosystems.",
+      "is_active": true
+    },
+    {
+      "_id": "dur0e391jmsrg8le8",
+      "id": "dur0e391jmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - National Symbols",
+      "question_type": "MCQ",
+      "question_text": "What is the national flower of India?",
+      "options": [
+        "Rose",
+        "Lotus",
+        "Jasmine",
+        "Sunflower"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The lotus is the national flower of India.",
+      "detailed_explanation": "Step 1: The lotus has cultural significance in India.\nStep 2: It is associated with purity and resilience.",
+      "is_active": true
+    },
+    {
+      "_id": "wpe9vwel8msrg8le8",
+      "id": "wpe9vwel8msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - National Symbols",
+      "question_type": "MCQ",
+      "question_text": "Which is India's national song?",
+      "options": [
+        "Jana Gana Mana",
+        "Vande Mataram",
+        "Saare Jahan Se Achha",
+        "Ae Mere Watan"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Vande Mataram is India's national song.",
+      "detailed_explanation": "Step 1: It was composed by Bankim Chandra Chattopadhyay.\nStep 2: It played an important role in India's freedom movement.",
+      "is_active": true
+    },
+    {
+      "_id": "zod23y4gsmsrg8le8",
+      "id": "zod23y4gsmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - National Symbols",
+      "question_type": "MCQ",
+      "question_text": "Who wrote India's national anthem 'Jana Gana Mana'?",
+      "options": [
+        "Rabindranath Tagore",
+        "Bankim Chandra Chattopadhyay",
+        "Sarojini Naidu",
+        "Muhammad Iqbal"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rabindranath Tagore wrote 'Jana Gana Mana'.",
+      "detailed_explanation": "Step 1: Tagore composed the original Bengali song.\nStep 2: The first stanza was adopted as India's national anthem in 1950.",
+      "is_active": true
+    },
+    {
+      "_id": "d12n29zwjmsrg8le8",
+      "id": "d12n29zwjmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Sports",
+      "question_type": "MCQ",
+      "question_text": "How many players are on the field for one cricket team at a time?",
+      "options": [
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A cricket team has 11 players on the field when fielding.",
+      "detailed_explanation": "Step 1: Each side normally consists of 11 players.\nStep 2: During an innings, one team bats while the other fields.",
+      "is_active": true
+    },
+    {
+      "_id": "h9se9c3aimsrg8le8",
+      "id": "h9se9c3aimsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Sports",
+      "question_type": "MCQ",
+      "question_text": "Which country hosted the first modern Olympic Games in 1896?",
+      "options": [
+        "France",
+        "Greece",
+        "Italy",
+        "United Kingdom"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The first modern Olympic Games were held in Athens, Greece, in 1896.",
+      "detailed_explanation": "Step 1: The modern Olympic movement was revived in the 19th century.\nStep 2: Athens hosted the inaugural modern Games.",
+      "is_active": true
+    },
+    {
+      "_id": "aaq9fjs39msrg8le8",
+      "id": "aaq9fjs39msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Books",
+      "question_type": "MCQ",
+      "question_text": "Who wrote the novel 'Gitanjali'?",
+      "options": [
+        "Rabindranath Tagore",
+        "Premchand",
+        "R. K. Narayan",
+        "Mulk Raj Anand"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rabindranath Tagore wrote Gitanjali, a collection of poems.",
+      "detailed_explanation": "Step 1: Tagore's English translation of Gitanjali received international recognition.\nStep 2: He was awarded the Nobel Prize in Literature in 1913.",
+      "is_active": true
+    },
+    {
+      "_id": "d0i5z8sqzmsrg8le8",
+      "id": "d0i5z8sqzmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Books",
+      "question_type": "MCQ",
+      "question_text": "Who wrote 'The Discovery of India'?",
+      "options": [
+        "Mahatma Gandhi",
+        "Jawaharlal Nehru",
+        "Sardar Patel",
+        "R. Ambedkar"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Jawaharlal Nehru wrote 'The Discovery of India' while imprisoned during the freedom struggle.",
+      "detailed_explanation": "Step 1: The book explores India's history and civilization.\nStep 2: Nehru wrote it during his imprisonment in the 1940s.",
+      "is_active": true
+    },
+    {
+      "_id": "j00ie9y0omsrg8le8",
+      "id": "j00ie9y0omsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Space",
+      "question_type": "MCQ",
+      "question_text": "Which Indian organization is responsible for the country's space programme?",
+      "options": [
+        "DRDO",
+        "ISRO",
+        "BARC",
+        "CSIR"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "ISRO is the Indian Space Research Organisation.",
+      "detailed_explanation": "Step 1: ISRO develops launch vehicles and spacecraft.\nStep 2: It conducts missions for communication, Earth observation, navigation and exploration.",
+      "is_active": true
+    },
+    {
+      "_id": "zl0n3i8immsrg8le8",
+      "id": "zl0n3i8immsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Space",
+      "question_type": "MCQ",
+      "question_text": "What was India's first artificial satellite?",
+      "options": [
+        "Aryabhata",
+        "Rohini",
+        "INSAT-1A",
+        "Chandrayaan-1"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Aryabhata was India's first satellite, launched in 1975.",
+      "detailed_explanation": "Step 1: It was built by Indian scientists and engineers.\nStep 2: The satellite was launched by a Soviet rocket from Kapustin Yar.",
+      "is_active": true
+    },
+    {
+      "_id": "jldwvjtbbmsrg8le8",
+      "id": "jldwvjtbbmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Space",
+      "question_type": "MCQ",
+      "question_text": "Chandrayaan-3 successfully demonstrated a soft landing on which celestial body?",
+      "options": [
+        "Mars",
+        "Moon",
+        "Venus",
+        "Asteroid"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Chandrayaan-3 successfully landed on the Moon in August 2023.",
+      "detailed_explanation": "Step 1: The mission included a lander and rover.\nStep 2: The lander achieved a controlled soft landing near the lunar south polar region.",
+      "is_active": true
+    },
+    {
+      "_id": "llhk49wyymsrg8le8",
+      "id": "llhk49wyymsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Computers",
+      "question_type": "MCQ",
+      "question_text": "What does CPU stand for?",
+      "options": [
+        "Central Processing Unit",
+        "Computer Processing Utility",
+        "Central Program Unit",
+        "Core Processing User"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "CPU stands for Central Processing Unit.",
+      "detailed_explanation": "Step 1: The CPU executes program instructions.\nStep 2: It performs arithmetic, logic and control operations.",
+      "is_active": true
+    },
+    {
+      "_id": "gcg4m8bqemsrg8le8",
+      "id": "gcg4m8bqemsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Computers",
+      "question_type": "MCQ",
+      "question_text": "Which number system is primarily used internally by digital computers?",
+      "options": [
+        "Decimal",
+        "Binary",
+        "Octal only",
+        "Roman"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Digital computers fundamentally use the binary number system.",
+      "detailed_explanation": "Step 1: Digital circuits represent information using discrete states.\nStep 2: These states are commonly represented as 0 and 1.",
+      "is_active": true
+    },
+    {
+      "_id": "57tbksvfjmsrg8le8",
+      "id": "57tbksvfjmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Internet",
+      "question_type": "MCQ",
+      "question_text": "What does URL stand for?",
+      "options": [
+        "Uniform Resource Locator",
+        "Universal Routing Link",
+        "Unified Reference Language",
+        "User Resource Line"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "URL stands for Uniform Resource Locator.",
+      "detailed_explanation": "Step 1: A URL identifies the location of a resource on a network.\nStep 2: Web addresses are common examples of URLs.",
+      "is_active": true
+    },
+    {
+      "_id": "1ctxnobafmsrg8le8",
+      "id": "1ctxnobafmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Organizations",
+      "question_type": "MCQ",
+      "question_text": "Where is the headquarters of the United Nations located?",
+      "options": [
+        "Geneva",
+        "New York City",
+        "Paris",
+        "London"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The headquarters of the United Nations is in New York City.",
+      "detailed_explanation": "Step 1: The UN has several major offices around the world.\nStep 2: Its principal headquarters complex is in Manhattan, New York.",
+      "is_active": true
+    },
+    {
+      "_id": "vp0myxjrymsrg8le8",
+      "id": "vp0myxjrymsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Organizations",
+      "question_type": "MCQ",
+      "question_text": "Where is the headquarters of the World Health Organization?",
+      "options": [
+        "Rome",
+        "Geneva",
+        "Vienna",
+        "Nairobi"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The WHO headquarters is in Geneva, Switzerland.",
+      "detailed_explanation": "Step 1: WHO is a specialized agency of the United Nations.\nStep 2: Its main headquarters is located in Geneva.",
+      "is_active": true
+    },
+    {
+      "_id": "qzhrj8ridmsrg8le8",
+      "id": "qzhrj8ridmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Organizations",
+      "question_type": "MCQ",
+      "question_text": "What does UNESCO stand for?",
+      "options": [
+        "United Nations Educational, Scientific and Cultural Organization",
+        "United Nations Economic and Social Cooperation Organization",
+        "Universal Network for Education, Science and Culture",
+        "United Nations Environmental Science Council Organization"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "UNESCO stands for United Nations Educational, Scientific and Cultural Organization.",
+      "detailed_explanation": "Step 1: UNESCO works in education, science, culture and information.\nStep 2: It was established in 1945.",
+      "is_active": true
+    },
+    {
+      "_id": "loyyukvm8msrg8le8",
+      "id": "loyyukvm8msrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Days",
+      "question_type": "MCQ",
+      "question_text": "When is World Environment Day observed?",
+      "options": [
+        "5 June",
+        "22 April",
+        "16 September",
+        "21 March"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "World Environment Day is observed on 5 June each year.",
+      "detailed_explanation": "Step 1: It is led globally by the United Nations Environment Programme.\nStep 2: The day raises awareness about environmental protection.",
+      "is_active": true
+    },
+    {
+      "_id": "555rervmqmsrg8le8",
+      "id": "555rervmqmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Days",
+      "question_type": "MCQ",
+      "question_text": "When is International Yoga Day observed?",
+      "options": [
+        "21 June",
+        "5 June",
+        "15 August",
+        "2 October"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "International Day of Yoga is observed on 21 June.",
+      "detailed_explanation": "Step 1: The United Nations proclaimed 21 June as the International Day of Yoga in 2014.\nStep 2: The first observance took place in 2015.",
+      "is_active": true
+    },
+    {
+      "_id": "s77i9vbiomsrg8le8",
+      "id": "s77i9vbiomsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Days",
+      "question_type": "MCQ",
+      "question_text": "National Science Day in India is observed on which date?",
+      "options": [
+        "28 February",
+        "14 November",
+        "15 August",
+        "11 May"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "National Science Day is observed on 28 February to commemorate the discovery of the Raman Effect.",
+      "detailed_explanation": "Step 1: C. V. Raman announced his discovery in 1928.\nStep 2: India observes National Science Day on 28 February.",
+      "is_active": true
+    },
+    {
+      "_id": "apwkg38hymsrg8le8",
+      "id": "apwkg38hymsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Important Places",
+      "question_type": "MCQ",
+      "question_text": "The Gateway of India is located in:",
+      "options": [
+        "Kolkata",
+        "Mumbai",
+        "Chennai",
+        "Kochi"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Gateway of India is a famous monument in Mumbai.",
+      "detailed_explanation": "Step 1: It stands on the waterfront at Apollo Bunder.\nStep 2: It was built during the British colonial period.",
+      "is_active": true
+    },
+    {
+      "_id": "hwkqmdf3qmsrg8le8",
+      "id": "hwkqmdf3qmsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Important Places",
+      "question_type": "MCQ",
+      "question_text": "The Sun Temple at Konark is located in which Indian state?",
+      "options": [
+        "Odisha",
+        "Gujarat",
+        "Rajasthan",
+        "Bihar"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Konark Sun Temple is located in Odisha.",
+      "detailed_explanation": "Step 1: The temple was built in the 13th century.\nStep 2: It is dedicated to the Sun God and is a UNESCO World Heritage Site.",
+      "is_active": true
+    },
+    {
+      "_id": "rzsxighnamsrg8le8",
+      "id": "rzsxighnamsrg8le8",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "General Knowledge",
+      "topic_tag": "General Knowledge - Important Places",
+      "question_type": "MCQ",
+      "question_text": "Sanchi Stupa is located in which state?",
+      "options": [
+        "Madhya Pradesh",
+        "Uttar Pradesh",
+        "Maharashtra",
+        "Odisha"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The Sanchi Stupa is located in Madhya Pradesh.",
+      "detailed_explanation": "Step 1: Sanchi is an important Buddhist heritage site.\nStep 2: Its major monuments were developed under Mauryan and later patronage.",
+      "is_active": true
+    },
+    {
+      "_id": "jvnw5a8hpmsshvp7s",
+      "id": "jvnw5a8hpmsshvp7s",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 48 + 37 − 25?",
+      "options": [
+        "55",
+        "50",
+        "65",
+        "60"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add 48 and 37, then subtract 25.",
+      "detailed_explanation": "Step 1: 48 + 37 = 85.\nStep 2: 85 − 25 = 60.",
+      "is_active": true
+    },
+    {
+      "_id": "1nghe85hqmsshvp7t",
+      "id": "1nghe85hqmsshvp7t",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 125 × 8 ÷ 5?",
+      "options": [
+        "250",
+        "175",
+        "200",
+        "150"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiplication and division are evaluated from left to right.",
+      "detailed_explanation": "Step 1: 125 × 8 = 1000.\nStep 2: 1000 ÷ 5 = 200.",
+      "is_active": true
+    },
+    {
+      "_id": "xh9tfrkklmsshvp7u",
+      "id": "xh9tfrkklmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 72 ÷ 9 + 16 × 2?",
+      "options": [
+        "32",
+        "48",
+        "36",
+        "40"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Division and multiplication are performed before addition.",
+      "detailed_explanation": "Step 1: 72 ÷ 9 = 8.\nStep 2: 16 × 2 = 32.\nStep 3: 8 + 32 = 40.",
+      "is_active": true
+    },
+    {
+      "_id": "7n67m1awvmsshvp7u",
+      "id": "7n67m1awvmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is (35 + 15) × 4 − 60?",
+      "options": [
+        "120",
+        "130",
+        "140",
+        "160"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Evaluate the bracket first.",
+      "detailed_explanation": "Step 1: 35 + 15 = 50.\nStep 2: 50 × 4 = 200.\nStep 3: 200 − 60 = 140.",
+      "is_active": true
+    },
+    {
+      "_id": "5bxsen7cimsshvp7u",
+      "id": "5bxsen7cimsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 96 ÷ (8 × 2)?",
+      "options": [
+        "8",
+        "10",
+        "12",
+        "6"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The multiplication inside the bracket is done first.",
+      "detailed_explanation": "Step 1: 8 × 2 = 16.\nStep 2: 96 ÷ 16 = 6.",
+      "is_active": true
+    },
+    {
+      "_id": "5sqi0us90msshvp7u",
+      "id": "5sqi0us90msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 15² − 10²?",
+      "options": [
+        "100",
+        "150",
+        "115",
+        "125"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Subtract the squares of 10 from 15.",
+      "detailed_explanation": "Step 1: 15² = 225.\nStep 2: 10² = 100.\nStep 3: 225 − 100 = 125.",
+      "is_active": true
+    },
+    {
+      "_id": "j2l343y9gmsshvp7u",
+      "id": "j2l343y9gmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 3 × (18 + 7) + 5?",
+      "options": [
+        "75",
+        "70",
+        "80",
+        "85"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "First evaluate the bracket, then multiply and add.",
+      "detailed_explanation": "Step 1: 18 + 7 = 25.\nStep 2: 3 × 25 = 75.\nStep 3: 75 + 5 = 80.",
+      "is_active": true
+    },
+    {
+      "_id": "92bnlvcq5msshvp7u",
+      "id": "92bnlvcq5msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 144 ÷ 12 + 7 × 3?",
+      "options": [
+        "27",
+        "36",
+        "33",
+        "30"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Apply multiplication and division before addition.",
+      "detailed_explanation": "Step 1: 144 ÷ 12 = 12.\nStep 2: 7 × 3 = 21.\nStep 3: 12 + 21 = 33.",
+      "is_active": true
+    },
+    {
+      "_id": "gnis3f3scmsshvp7u",
+      "id": "gnis3f3scmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is 250 − 45 × 3?",
+      "options": [
+        "115",
+        "125",
+        "105",
+        "145"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiplication is performed before subtraction.",
+      "detailed_explanation": "Step 1: 45 × 3 = 135.\nStep 2: 250 − 135 = 115.",
+      "is_active": true
+    },
+    {
+      "_id": "7g7hulv63msshvp7u",
+      "id": "7g7hulv63msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simplification",
+      "question_type": "MCQ",
+      "question_text": "What is (84 − 24) ÷ 6 + 9?",
+      "options": [
+        "18",
+        "21",
+        "19",
+        "17"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Evaluate the bracket before division and addition.",
+      "detailed_explanation": "Step 1: 84 − 24 = 60.\nStep 2: 60 ÷ 6 = 10.\nStep 3: 10 + 9 = 19.",
+      "is_active": true
+    },
+    {
+      "_id": "q4qclq48omsshvp7u",
+      "id": "q4qclq48omsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 3/4 + 1/8?",
+      "options": [
+        "3/4",
+        "5/8",
+        "9/8",
+        "7/8"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Convert the fractions to a common denominator of 8.",
+      "detailed_explanation": "Step 1: 3/4 = 6/8.\nStep 2: 6/8 + 1/8 = 7/8.",
+      "is_active": true
+    },
+    {
+      "_id": "j9f1y4x13msshvp7u",
+      "id": "j9f1y4x13msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 5/6 − 1/3?",
+      "options": [
+        "5/9",
+        "2/3",
+        "1/3",
+        "1/2"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Convert 1/3 to 2/6.",
+      "detailed_explanation": "Step 1: 1/3 = 2/6.\nStep 2: 5/6 − 2/6 = 3/6 = 1/2.",
+      "is_active": true
+    },
+    {
+      "_id": "bsfduuex5msshvp7u",
+      "id": "bsfduuex5msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 2/5 × 15/4?",
+      "options": [
+        "2",
+        "1",
+        "3/2",
+        "5/4"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiply the numerators and denominators, then simplify.",
+      "detailed_explanation": "Step 1: (2 × 15)/(5 × 4) = 30/20.\nStep 2: 30/20 = 3/2.",
+      "is_active": true
+    },
+    {
+      "_id": "aebfk07d5msshvp7u",
+      "id": "aebfk07d5msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 7/8 ÷ 7/16?",
+      "options": [
+        "7/4",
+        "3",
+        "1",
+        "2"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Dividing by a fraction is equivalent to multiplying by its reciprocal.",
+      "detailed_explanation": "Step 1: 7/8 × 16/7 = 16/8.\nStep 2: 16/8 = 2.",
+      "is_active": true
+    },
+    {
+      "_id": "wdifo4jagmsshvp7u",
+      "id": "wdifo4jagmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 0.75 + 1.25?",
+      "options": [
+        "2",
+        "5",
+        "25",
+        "75"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add the decimal values directly.",
+      "detailed_explanation": "Step 1: 0.75 + 1.25 = 2.00.",
+      "is_active": true
+    },
+    {
+      "_id": "oshur9carmsshvp7u",
+      "id": "oshur9carmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 2.5 × 0.4?",
+      "options": [
+        "2",
+        "1",
+        "8",
+        "1"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiply the decimals.",
+      "detailed_explanation": "Step 1: 25 × 4 = 100.\nStep 2: There are two decimal places in total, so the result is 1.00.",
+      "is_active": true
+    },
+    {
+      "_id": "fe30i53pwmsshvp7u",
+      "id": "fe30i53pwmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 3.6 ÷ 0.6?",
+      "options": [
+        "3",
+        "7",
+        "5",
+        "6"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Move the decimal one place in both numbers.",
+      "detailed_explanation": "Step 1: 3.6 ÷ 0.6 = 36 ÷ 6.\nStep 2: 36 ÷ 6 = 6.",
+      "is_active": true
+    },
+    {
+      "_id": "t7h9onavrmsshvp7u",
+      "id": "t7h9onavrmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 5/12 + 1/6?",
+      "options": [
+        "1/2",
+        "3/4",
+        "7/12",
+        "2/3"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Convert 1/6 to 2/12.",
+      "detailed_explanation": "Step 1: 1/6 = 2/12.\nStep 2: 5/12 + 2/12 = 7/12.",
+      "is_active": true
+    },
+    {
+      "_id": "op7jrubj2msshvp7u",
+      "id": "op7jrubj2msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 9/10 − 0.35?",
+      "options": [
+        "65",
+        "50",
+        "45",
+        "55"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Convert 9/10 to decimal form.",
+      "detailed_explanation": "Step 1: 9/10 = 0.90.\nStep 2: 0.90 − 0.35 = 0.55.",
+      "is_active": true
+    },
+    {
+      "_id": "3x9jl5uycmsshvp7u",
+      "id": "3x9jl5uycmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Fractions",
+      "question_type": "MCQ",
+      "question_text": "What is 1.2 + 0.08 + 2.35?",
+      "options": [
+        "63",
+        "53",
+        "58",
+        "73"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Align the decimal places before adding.",
+      "detailed_explanation": "Step 1: 1.20 + 0.08 = 1.28.\nStep 2: 1.28 + 2.35 = 3.63.",
+      "is_active": true
+    },
+    {
+      "_id": "wjwa2qz2dmsshvp7u",
+      "id": "wjwa2qz2dmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "What is 20% of 250?",
+      "options": [
+        "50",
+        "45",
+        "60",
+        "40"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "20% means 20/100 of the number.",
+      "detailed_explanation": "Step 1: 20% of 250 = (20/100) × 250.\nStep 2: = 50.",
+      "is_active": true
+    },
+    {
+      "_id": "lhzn857p7msshvp7u",
+      "id": "lhzn857p7msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "A number increases from 80 to 100. What is the percentage increase?",
+      "options": [
+        "25%",
+        "30%",
+        "22.5%",
+        "20%"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Percentage increase is increase divided by original value × 100.",
+      "detailed_explanation": "Step 1: Increase = 100 − 80 = 20.\nStep 2: 20/80 × 100 = 25%.",
+      "is_active": true
+    },
+    {
+      "_id": "zfeut78lcmsshvp7u",
+      "id": "zfeut78lcmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "What is 15% of 360?",
+      "options": [
+        "45",
+        "60",
+        "48",
+        "54"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Calculate 15/100 of 360.",
+      "detailed_explanation": "Step 1: 360 × 15/100 = 54.",
+      "is_active": true
+    },
+    {
+      "_id": "ognq62566msshvp7u",
+      "id": "ognq62566msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "A shirt priced at ₹800 is discounted by 10%. What is the sale price?",
+      "options": [
+        "₹710",
+        "₹740",
+        "₹720",
+        "₹700"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A 10% discount reduces the price by ₹80.",
+      "detailed_explanation": "Step 1: Discount = 10% of ₹800 = ₹80.\nStep 2: Sale price = ₹800 − ₹80 = ₹720.",
+      "is_active": true
+    },
+    {
+      "_id": "i4bab9xfgmsshvp7u",
+      "id": "i4bab9xfgmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "If 40% of a number is 72, what is the number?",
+      "options": [
+        "170",
+        "180",
+        "160",
+        "200"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide 72 by 0.40.",
+      "detailed_explanation": "Step 1: 0.40 × number = 72.\nStep 2: Number = 72/0.40 = 180.",
+      "is_active": true
+    },
+    {
+      "_id": "zebjzi6olmsshvp7u",
+      "id": "zebjzi6olmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "What is 12.5% of 240?",
+      "options": [
+        "24",
+        "36",
+        "30",
+        "28"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "12.5% equals 1/8.",
+      "detailed_explanation": "Step 1: 12.5% = 1/8.\nStep 2: 240 ÷ 8 = 30.",
+      "is_active": true
+    },
+    {
+      "_id": "2y9dv9drnmsshvp7u",
+      "id": "2y9dv9drnmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "A value of 500 is decreased by 20%. What is the new value?",
+      "options": [
+        "420",
+        "390",
+        "380",
+        "400"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A 20% decrease leaves 80% of the original.",
+      "detailed_explanation": "Step 1: 20% of 500 = 100.\nStep 2: 500 − 100 = 400.",
+      "is_active": true
+    },
+    {
+      "_id": "rn4tnxak3msshvp7u",
+      "id": "rn4tnxak3msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "is what percentage of 200?",
+      "options": [
+        "10%",
+        "20%",
+        "12.5%",
+        "15%"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Percentage = part/whole × 100.",
+      "detailed_explanation": "Step 1: 25/200 × 100 = 12.5%.",
+      "is_active": true
+    },
+    {
+      "_id": "8mnh4o8a7msshvp7u",
+      "id": "8mnh4o8a7msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "A number is increased by 10% from 150. What is the new number?",
+      "options": [
+        "170",
+        "155",
+        "165",
+        "160"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add 10% of 150 to 150.",
+      "detailed_explanation": "Step 1: 10% of 150 = 15.\nStep 2: 150 + 15 = 165.",
+      "is_active": true
+    },
+    {
+      "_id": "ii38kof30msshvp7u",
+      "id": "ii38kof30msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Percentage",
+      "question_type": "MCQ",
+      "question_text": "If 75% of a number is 90, what is the number?",
+      "options": [
+        "120",
+        "110",
+        "115",
+        "125"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide 90 by 0.75.",
+      "detailed_explanation": "Step 1: 0.75 × number = 90.\nStep 2: Number = 90/0.75 = 120.",
+      "is_active": true
+    },
+    {
+      "_id": "70qsyvfr7msshvp7u",
+      "id": "70qsyvfr7msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "Simplify the ratio 24:36.",
+      "options": [
+        "5",
+        "3",
+        "6",
+        "4"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide both terms by their greatest common divisor, 12.",
+      "detailed_explanation": "Step 1: GCD of 24 and 36 = 12.\nStep 2: 24:36 = 2:3.",
+      "is_active": true
+    },
+    {
+      "_id": "tggq9a2kjmsshvp7u",
+      "id": "tggq9a2kjmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "If 3 pens cost ₹45, what is the cost of 7 pens?",
+      "options": [
+        "₹105",
+        "₹110",
+        "₹95",
+        "₹90"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the unit cost and multiply by 7.",
+      "detailed_explanation": "Step 1: Cost of one pen = ₹45/3 = ₹15.\nStep 2: Cost of 7 pens = ₹15 × 7 = ₹105.",
+      "is_active": true
+    },
+    {
+      "_id": "exgyhtnebmsshvp7u",
+      "id": "exgyhtnebmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "Divide ₹360 in the ratio 2:3. What is the smaller share?",
+      "options": [
+        "₹144",
+        "₹120",
+        "₹135",
+        "₹150"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The total ratio is 5 parts.",
+      "detailed_explanation": "Step 1: Total parts = 2 + 3 = 5.\nStep 2: One part = ₹360/5 = ₹72.\nStep 3: Smaller share = 2 × ₹72 = ₹144.",
+      "is_active": true
+    },
+    {
+      "_id": "f0soxhw5fmsshvp7u",
+      "id": "f0soxhw5fmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "If 5 workers complete a task in 12 days at the same rate, how many days will 10 workers take?",
+      "options": [
+        "4 days",
+        "10 days",
+        "6 days",
+        "8 days"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "For the same work, workers and days are inversely proportional.",
+      "detailed_explanation": "Step 1: Workers × days = constant.\nStep 2: 5 × 12 = 60 worker-days.\nStep 3: 60/10 = 6 days.",
+      "is_active": true
+    },
+    {
+      "_id": "1dfci8fshmsshvp7u",
+      "id": "1dfci8fshmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "The ratio of boys to girls is 3:2. If there are 30 boys, how many girls are there?",
+      "options": [
+        "15",
+        "18",
+        "20",
+        "25"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Use the ratio to find the number of girls.",
+      "detailed_explanation": "Step 1: 3 parts = 30, so 1 part = 10.\nStep 2: Girls = 2 × 10 = 20.",
+      "is_active": true
+    },
+    {
+      "_id": "o85331ttwmsshvp7u",
+      "id": "o85331ttwmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "If x/12 = 5/3, what is x?",
+      "options": [
+        "15",
+        "18",
+        "24",
+        "20"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Cross-multiply the proportion.",
+      "detailed_explanation": "Step 1: 3x = 12 × 5.\nStep 2: x = 60/3 = 20.",
+      "is_active": true
+    },
+    {
+      "_id": "nul4aa9y7msshvp7u",
+      "id": "nul4aa9y7msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "A map scale is 1:50,000. What actual distance is represented by 2 cm?",
+      "options": [
+        "500 m",
+        "1 km",
+        "2 km",
+        "5 km"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiply the map distance by the scale.",
+      "detailed_explanation": "Step 1: 2 cm × 50,000 = 100,000 cm.\nStep 2: 100,000 cm = 1 km.",
+      "is_active": true
+    },
+    {
+      "_id": "cye0s670pmsshvp7u",
+      "id": "cye0s670pmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "If 8 notebooks cost ₹240, what is the cost of 5 notebooks?",
+      "options": [
+        "₹150",
+        "₹135",
+        "₹120",
+        "₹160"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the cost per notebook first.",
+      "detailed_explanation": "Step 1: ₹240/8 = ₹30 per notebook.\nStep 2: 5 × ₹30 = ₹150.",
+      "is_active": true
+    },
+    {
+      "_id": "gesau1hakmsshvp7u",
+      "id": "gesau1hakmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "The ratio 4:5 is equivalent to which ratio?",
+      "options": [
+        "12",
+        "12:15",
+        "16:25",
+        "10:14"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiply both terms by the same factor.",
+      "detailed_explanation": "Step 1: 4 × 3 = 12.\nStep 2: 5 × 3 = 15.",
+      "is_active": true
+    },
+    {
+      "_id": "2oo7mnv9qmsshvp7u",
+      "id": "2oo7mnv9qmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Ratio and Proportion",
+      "question_type": "MCQ",
+      "question_text": "If 6 machines produce 900 units in a day, how many units will 10 machines produce at the same rate?",
+      "options": [
+        "1800",
+        "1200",
+        "1350",
+        "1500"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Production is directly proportional to the number of machines.",
+      "detailed_explanation": "Step 1: One machine produces 900/6 = 150 units.\nStep 2: 10 machines produce 150 × 10 = 1500 units.",
+      "is_active": true
+    },
+    {
+      "_id": "4zepunzimsshvp7u",
+      "id": "4zepunzimsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "What is the average of 12, 18, and 24?",
+      "options": [
+        "20",
+        "16",
+        "18",
+        "17"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Average is the sum divided by the number of values.",
+      "detailed_explanation": "Step 1: Sum = 12 + 18 + 24 = 54.\nStep 2: Average = 54/3 = 18.",
+      "is_active": true
+    },
+    {
+      "_id": "vjzjzxv07msshvp7u",
+      "id": "vjzjzxv07msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average of 5 numbers is 20. What is their total?",
+      "options": [
+        "90",
+        "80",
+        "100",
+        "120"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Total = average × number of values.",
+      "detailed_explanation": "Step 1: Total = 20 × 5 = 100.",
+      "is_active": true
+    },
+    {
+      "_id": "tsr7xysz5msshvp7u",
+      "id": "tsr7xysz5msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average of 8 numbers is 15. If one number is 22, what is the sum of the other 7?",
+      "options": [
+        "102",
+        "88",
+        "92",
+        "98"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Subtract the known value from the total.",
+      "detailed_explanation": "Step 1: Total = 8 × 15 = 120.\nStep 2: Other seven sum = 120 − 22 = 98.",
+      "is_active": true
+    },
+    {
+      "_id": "a89vifiiimsshvp7u",
+      "id": "a89vifiiimsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "Find the average of 25, 35, 45, and 55.",
+      "options": [
+        "42",
+        "40",
+        "38",
+        "35"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add all values and divide by 4.",
+      "detailed_explanation": "Step 1: Sum = 25 + 35 + 45 + 55 = 160.\nStep 2: 160/4 = 40.",
+      "is_active": true
+    },
+    {
+      "_id": "j5m792e37msshvp7u",
+      "id": "j5m792e37msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average age of 6 students is 14 years. If a teacher aged 26 joins them, what is the new average?",
+      "options": [
+        "15 years",
+        "15 5/7 years",
+        "16 1/7 years",
+        "16 years"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add the teacher's age to the original total and divide by 7.",
+      "detailed_explanation": "Step 1: Original total = 6 × 14 = 84.\nStep 2: New total = 84 + 26 = 110.\nStep 3: New average = 110/7 = 15 5/7 years.",
+      "is_active": true
+    },
+    {
+      "_id": "wjnft7mm9msshvp7u",
+      "id": "wjnft7mm9msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average of 10 numbers is 24. If 36 is replaced by 46, what is the new average?",
+      "options": [
+        "25.5",
+        "25",
+        "26",
+        "24.5"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Replacing 36 by 46 increases the total by 10.",
+      "detailed_explanation": "Step 1: Original total = 10 × 24 = 240.\nStep 2: New total = 240 − 36 + 46 = 250.\nStep 3: New average = 250/10 = 25.",
+      "is_active": true
+    },
+    {
+      "_id": "pcvcpbptpmsshvp7u",
+      "id": "pcvcpbptpmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "What is the average of the first five positive even numbers?",
+      "options": [
+        "8",
+        "5",
+        "7",
+        "6"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The first five positive even numbers are 2, 4, 6, 8, 10.",
+      "detailed_explanation": "Step 1: Sum = 2 + 4 + 6 + 8 + 10 = 30.\nStep 2: Average = 30/5 = 6.",
+      "is_active": true
+    },
+    {
+      "_id": "y50o3u8i0msshvp7u",
+      "id": "y50o3u8i0msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average of 4 numbers is 18. Three numbers are 12, 16, and 20. What is the fourth number?",
+      "options": [
+        "20",
+        "22",
+        "24",
+        "26"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the total and subtract the three known numbers.",
+      "detailed_explanation": "Step 1: Total = 4 × 18 = 72.\nStep 2: Fourth number = 72 − 12 − 16 − 20 = 24.",
+      "is_active": true
+    },
+    {
+      "_id": "5tiv8qxnpmsshvp7u",
+      "id": "5tiv8qxnpmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "A batsman scores 45, 55, 40, and 60 in four matches. What is his average score?",
+      "options": [
+        "52",
+        "50",
+        "45",
+        "48"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Average score is total runs divided by four.",
+      "detailed_explanation": "Step 1: Total = 45 + 55 + 40 + 60 = 200.\nStep 2: Average = 200/4 = 50.",
+      "is_active": true
+    },
+    {
+      "_id": "a1ml9co1zmsshvp7u",
+      "id": "a1ml9co1zmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Average",
+      "question_type": "MCQ",
+      "question_text": "The average of 7 consecutive integers is 18. What is the smallest integer?",
+      "options": [
+        "14",
+        "16",
+        "17",
+        "15"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "For an odd number of consecutive integers, the average is the middle integer.",
+      "detailed_explanation": "Step 1: Seven integers centered at 18 are 15, 16, 17, 18, 19, 20, 21.\nStep 2: Smallest = 15.",
+      "is_active": true
+    },
+    {
+      "_id": "amys9idscmsshvp7u",
+      "id": "amys9idscmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An article costs ₹500 and is sold for ₹600. What is the profit percentage?",
+      "options": [
+        "25%",
+        "10%",
+        "15%",
+        "20%"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Profit percentage = profit/cost price × 100.",
+      "detailed_explanation": "Step 1: Profit = ₹600 − ₹500 = ₹100.\nStep 2: Profit% = ₹100/₹500 × 100 = 20%.",
+      "is_active": true
+    },
+    {
+      "_id": "it6llhmlumsshvp7u",
+      "id": "it6llhmlumsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An item bought for ₹800 is sold for ₹720. What is the loss percentage?",
+      "options": [
+        "5%",
+        "12%",
+        "8%",
+        "10%"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Loss percentage is calculated on cost price.",
+      "detailed_explanation": "Step 1: Loss = ₹800 − ₹720 = ₹80.\nStep 2: Loss% = ₹80/₹800 × 100 = 10%.",
+      "is_active": true
+    },
+    {
+      "_id": "j4skais2hmsshvp7u",
+      "id": "j4skais2hmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An article is sold for ₹1,200 at a profit of 20%. What is its cost price?",
+      "options": [
+        "₹1,000",
+        "₹1,100",
+        "₹950",
+        "₹900"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Selling price is 120% of cost price.",
+      "detailed_explanation": "Step 1: 120% of CP = ₹1,200.\nStep 2: CP = ₹1,200/1.20 = ₹1,000.",
+      "is_active": true
+    },
+    {
+      "_id": "0r71x5v25msshvp7u",
+      "id": "0r71x5v25msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An item costing ₹750 is sold at a loss of 12%. What is the selling price?",
+      "options": [
+        "₹660",
+        "₹675",
+        "₹690",
+        "₹640"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A 12% loss means the selling price is 88% of cost price.",
+      "detailed_explanation": "Step 1: Loss = 12% of ₹750 = ₹90.\nStep 2: SP = ₹750 − ₹90 = ₹660.",
+      "is_active": true
+    },
+    {
+      "_id": "wmhy5d36jmsshvp7u",
+      "id": "wmhy5d36jmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "A shopkeeper marks an item at ₹1,000 and gives a 15% discount. What is the selling price?",
+      "options": [
+        "₹875",
+        "₹850",
+        "₹825",
+        "₹800"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Subtract 15% of the marked price.",
+      "detailed_explanation": "Step 1: Discount = 15% of ₹1,000 = ₹150.\nStep 2: SP = ₹1,000 − ₹150 = ₹850.",
+      "is_active": true
+    },
+    {
+      "_id": "0youa1tmdmsshvp7u",
+      "id": "0youa1tmdmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An article is sold for ₹920 at a profit of 15%. What is its cost price?",
+      "options": [
+        "₹800",
+        "₹850",
+        "₹780",
+        "₹820"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Selling price is 115% of cost price.",
+      "detailed_explanation": "Step 1: 115% of CP = ₹920.\nStep 2: CP = ₹920/1.15 = ₹800.",
+      "is_active": true
+    },
+    {
+      "_id": "83fswb5wamsshvp7u",
+      "id": "83fswb5wamsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "A product costing ₹1,500 is sold for ₹1,800. Find the profit percentage.",
+      "options": [
+        "20%",
+        "15%",
+        "18%",
+        "25%"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Profit percentage is based on cost price.",
+      "detailed_explanation": "Step 1: Profit = ₹1,800 − ₹1,500 = ₹300.\nStep 2: Profit% = ₹300/₹1,500 × 100 = 20%.",
+      "is_active": true
+    },
+    {
+      "_id": "govvikmgdmsshvp7u",
+      "id": "govvikmgdmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "A marked price of ₹2,400 is reduced by 25%. What is the discount amount?",
+      "options": [
+        "₹500",
+        "₹550",
+        "₹650",
+        "₹600"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Calculate 25% of the marked price.",
+      "detailed_explanation": "Step 1: Discount = 25/100 × ₹2,400 = ₹600.",
+      "is_active": true
+    },
+    {
+      "_id": "f4l885wo2msshvp7u",
+      "id": "f4l885wo2msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "An item is sold at ₹1,080 after a 10% discount. What was its marked price?",
+      "options": [
+        "₹1,150",
+        "₹1,250",
+        "₹1,100",
+        "₹1,200"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The selling price is 90% of the marked price.",
+      "detailed_explanation": "Step 1: 90% of MP = ₹1,080.\nStep 2: MP = ₹1,080/0.90 = ₹1,200.",
+      "is_active": true
+    },
+    {
+      "_id": "ho8jf0vynmsshvp7u",
+      "id": "ho8jf0vynmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Profit and Loss",
+      "question_type": "MCQ",
+      "question_text": "A trader gains 25% by selling an article for ₹1,000. What is the cost price?",
+      "options": [
+        "₹900",
+        "₹800",
+        "₹850",
+        "₹750"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Selling price is 125% of cost price.",
+      "detailed_explanation": "Step 1: 125% of CP = ₹1,000.\nStep 2: CP = ₹1,000/1.25 = ₹800.",
+      "is_active": true
+    },
+    {
+      "_id": "ofcc5yw20msshvp7u",
+      "id": "ofcc5yw20msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "Find the simple interest on ₹5,000 at 8% per annum for 2 years.",
+      "options": [
+        "₹600",
+        "₹700",
+        "₹900",
+        "₹800"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Use SI = P × R × T / 100.",
+      "detailed_explanation": "Step 1: SI = 5000 × 8 × 2 / 100.\nStep 2: SI = ₹800.",
+      "is_active": true
+    },
+    {
+      "_id": "so86dgsj2msshvp7u",
+      "id": "so86dgsj2msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "What is the amount on ₹4,000 at 5% simple interest for 3 years?",
+      "options": [
+        "₹4,650",
+        "₹4,550",
+        "₹4,600",
+        "₹4,500"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Amount equals principal plus simple interest.",
+      "detailed_explanation": "Step 1: SI = 4000 × 5 × 3 / 100 = ₹600.\nStep 2: Amount = ₹4,000 + ₹600 = ₹4,600.",
+      "is_active": true
+    },
+    {
+      "_id": "zqsiwu5izmsshvp7u",
+      "id": "zqsiwu5izmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "At what annual rate will ₹2,000 earn ₹300 simple interest in 3 years?",
+      "options": [
+        "4%",
+        "5%",
+        "5%",
+        "6%"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rearrange SI = PRT/100 to find R.",
+      "detailed_explanation": "Step 1: R = SI × 100/(P × T).\nStep 2: R = 300 × 100/(2000 × 3) = 5%.",
+      "is_active": true
+    },
+    {
+      "_id": "huwn3bokpmsshvp7u",
+      "id": "huwn3bokpmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "How much simple interest is earned on ₹8,000 at 6% for 18 months?",
+      "options": [
+        "₹720",
+        "₹640",
+        "₹760",
+        "₹680"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Convert 18 months to 1.5 years.",
+      "detailed_explanation": "Step 1: T = 18/12 = 1.5 years.\nStep 2: SI = 8000 × 6 × 1.5/100 = ₹720.",
+      "is_active": true
+    },
+    {
+      "_id": "afmz7mvm9msshvp7u",
+      "id": "afmz7mvm9msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "A sum earns ₹900 simple interest at 10% per year in 3 years. Find the principal.",
+      "options": [
+        "₹3,500",
+        "₹3,000",
+        "₹2,750",
+        "₹2,500"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rearrange the simple interest formula.",
+      "detailed_explanation": "Step 1: P = SI × 100/(R × T).\nStep 2: P = 900 × 100/(10 × 3) = ₹3,000.",
+      "is_active": true
+    },
+    {
+      "_id": "5l9ici9jamsshvp7u",
+      "id": "5l9ici9jamsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "Find the amount on ₹7,500 at 4% per annum for 2 years.",
+      "options": [
+        "₹8,000",
+        "₹7,950",
+        "₹8,100",
+        "₹8,250"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "First calculate simple interest and add it to principal.",
+      "detailed_explanation": "Step 1: SI = 7500 × 4 × 2/100 = ₹600.\nStep 2: Amount = ₹7,500 + ₹600 = ₹8,100.",
+      "is_active": true
+    },
+    {
+      "_id": "ohw7hvefkmsshvp7u",
+      "id": "ohw7hvefkmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "If ₹6,000 earns ₹1,440 simple interest in 4 years, what is the rate?",
+      "options": [
+        "5%",
+        "7%",
+        "6%",
+        "8%"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Use R = SI × 100/(P × T).",
+      "detailed_explanation": "Step 1: R = 1440 × 100/(6000 × 4).\nStep 2: R = 6%.",
+      "is_active": true
+    },
+    {
+      "_id": "3bn60qgplmsshvp7u",
+      "id": "3bn60qgplmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "Find the simple interest on ₹10,000 at 7.5% for 2 years.",
+      "options": [
+        "₹1,750",
+        "₹1,250",
+        "₹1,400",
+        "₹1,500"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Apply the simple interest formula.",
+      "detailed_explanation": "Step 1: SI = 10000 × 7.5 × 2/100.\nStep 2: SI = ₹1,500.",
+      "is_active": true
+    },
+    {
+      "_id": "hpa9fx0evmsshvp7u",
+      "id": "hpa9fx0evmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "For how many years will ₹5,000 earn ₹1,000 at 10% simple interest?",
+      "options": [
+        "2 years",
+        "5 years",
+        "1 year",
+        "5 years"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Rearrange the formula to solve for time.",
+      "detailed_explanation": "Step 1: T = SI × 100/(P × R).\nStep 2: T = 1000 × 100/(5000 × 10) = 2 years.",
+      "is_active": true
+    },
+    {
+      "_id": "3ba8ltrfgmsshvp7u",
+      "id": "3ba8ltrfgmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Simple Interest",
+      "question_type": "MCQ",
+      "question_text": "What is the simple interest on ₹3,200 at 12.5% per annum for 2 years?",
+      "options": [
+        "₹600",
+        "₹800",
+        "₹720",
+        "₹900"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Calculate 12.5% of ₹3,200 for two years.",
+      "detailed_explanation": "Step 1: SI = 3200 × 12.5 × 2/100.\nStep 2: SI = ₹800.",
+      "is_active": true
+    },
+    {
+      "_id": "yfz0kvctwmsshvp7u",
+      "id": "yfz0kvctwmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A can complete a job in 10 days. What fraction of the job does A complete in one day?",
+      "options": [
+        "1/8",
+        "1/5",
+        "1/12",
+        "1/10"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "One day's work is the reciprocal of the total days.",
+      "detailed_explanation": "Step 1: Total work = 1 job.\nStep 2: Daily work = 1/10 job.",
+      "is_active": true
+    },
+    {
+      "_id": "h8momcz52msshvp7u",
+      "id": "h8momcz52msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A can complete a job in 12 days and B in 6 days. How long will they take together?",
+      "options": [
+        "3 days",
+        "6 days",
+        "4 days",
+        "5 days"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add their daily work rates.",
+      "detailed_explanation": "Step 1: A's rate = 1/12.\nStep 2: B's rate = 1/6.\nStep 3: Combined rate = 1/12 + 2/12 = 1/4.\nStep 4: Time = 4 days.",
+      "is_active": true
+    },
+    {
+      "_id": "zdmdajyetmsshvp7u",
+      "id": "zdmdajyetmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A pipe fills a tank in 8 hours. What fraction of the tank does it fill in 2 hours?",
+      "options": [
+        "1/3",
+        "3/8",
+        "1/4",
+        "1/8"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Multiply the hourly filling rate by 2.",
+      "detailed_explanation": "Step 1: Rate = 1/8 tank per hour.\nStep 2: In 2 hours = 2/8 = 1/4.",
+      "is_active": true
+    },
+    {
+      "_id": "rwjg4kg3dmsshvp7u",
+      "id": "rwjg4kg3dmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A can do a piece of work in 15 days and B in 10 days. How much work do they complete in one day together?",
+      "options": [
+        "1/4",
+        "1/6",
+        "1/3",
+        "1/5"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Add their individual daily work rates.",
+      "detailed_explanation": "Step 1: A = 1/15.\nStep 2: B = 1/10.\nStep 3: 1/15 + 1/10 = 2/30 + 3/30 = 1/6.",
+      "is_active": true
+    },
+    {
+      "_id": "8l2gvutq6msshvp7u",
+      "id": "8l2gvutq6msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "If 8 workers finish a job in 15 days, how many worker-days are required?",
+      "options": [
+        "130",
+        "120",
+        "100",
+        "110"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Worker-days equal workers multiplied by days.",
+      "detailed_explanation": "Step 1: 8 × 15 = 120 worker-days.",
+      "is_active": true
+    },
+    {
+      "_id": "0tbhttlu1msshvp7u",
+      "id": "0tbhttlu1msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A man walks 12 km in 3 hours. What is his speed?",
+      "options": [
+        "5 km/h",
+        "6 km/h",
+        "3 km/h",
+        "4 km/h"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Speed = distance/time.",
+      "detailed_explanation": "Step 1: Speed = 12/3 = 4 km/h.",
+      "is_active": true
+    },
+    {
+      "_id": "ite4f2g7cmsshvp7u",
+      "id": "ite4f2g7cmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "How long will it take to travel 150 km at 50 km/h?",
+      "options": [
+        "2 hours",
+        "4 hours",
+        "5 hours",
+        "3 hours"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Time = distance/speed.",
+      "detailed_explanation": "Step 1: Time = 150/50 = 3 hours.",
+      "is_active": true
+    },
+    {
+      "_id": "2kygchoqdmsshvp7u",
+      "id": "2kygchoqdmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A car travels at 60 km/h for 2.5 hours. What distance does it cover?",
+      "options": [
+        "120 km",
+        "135 km",
+        "180 km",
+        "150 km"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Distance = speed × time.",
+      "detailed_explanation": "Step 1: Distance = 60 × 2.5 = 150 km.",
+      "is_active": true
+    },
+    {
+      "_id": "4k1y87bipmsshvp7u",
+      "id": "4k1y87bipmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A cyclist covers 72 km in 4 hours. What is the average speed?",
+      "options": [
+        "18 km/h",
+        "20 km/h",
+        "16 km/h",
+        "24 km/h"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide distance by time.",
+      "detailed_explanation": "Step 1: Speed = 72/4 = 18 km/h.",
+      "is_active": true
+    },
+    {
+      "_id": "sjjwofk6omsshvp7u",
+      "id": "sjjwofk6omsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Time and Work",
+      "question_type": "MCQ",
+      "question_text": "A train travels 240 km at 80 km/h. How much time does it take?",
+      "options": [
+        "5 hours",
+        "3 hours",
+        "4 hours",
+        "2 hours"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Use time = distance/speed.",
+      "detailed_explanation": "Step 1: Time = 240/80 = 3 hours.",
+      "is_active": true
+    },
+    {
+      "_id": "507ftnny9msshvp7u",
+      "id": "507ftnny9msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the HCF of 24 and 36?",
+      "options": [
+        "8",
+        "12",
+        "18",
+        "6"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "HCF is the greatest number that divides both numbers exactly.",
+      "detailed_explanation": "Step 1: Factors common to 24 and 36 include 1, 2, 3, 4, 6, 12.\nStep 2: Greatest common factor = 12.",
+      "is_active": true
+    },
+    {
+      "_id": "cl6ov7n56msshvp7u",
+      "id": "cl6ov7n56msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the LCM of 8 and 12?",
+      "options": [
+        "24",
+        "20",
+        "16",
+        "32"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "LCM is the smallest positive number divisible by both.",
+      "detailed_explanation": "Step 1: Multiples of 8: 8, 16, 24.\nStep 2: 24 is also divisible by 12.\nStep 3: LCM = 24.",
+      "is_active": true
+    },
+    {
+      "_id": "tadoalydrmsshvp7u",
+      "id": "tadoalydrmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the HCF of 45 and 60?",
+      "options": [
+        "15",
+        "20",
+        "5",
+        "10"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the greatest common factor.",
+      "detailed_explanation": "Step 1: 45 = 3 × 15.\nStep 2: 60 = 4 × 15.\nStep 3: HCF = 15.",
+      "is_active": true
+    },
+    {
+      "_id": "2bkek70hymsshvp7u",
+      "id": "2bkek70hymsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the LCM of 15 and 20?",
+      "options": [
+        "45",
+        "75",
+        "60",
+        "30"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the smallest common multiple.",
+      "detailed_explanation": "Step 1: Multiples of 15 include 15, 30, 45, 60.\nStep 2: 60 is divisible by 20.\nStep 3: LCM = 60.",
+      "is_active": true
+    },
+    {
+      "_id": "u2q2e34wemsshvp7u",
+      "id": "u2q2e34wemsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the greatest 3-digit number divisible by 9?",
+      "options": [
+        "998",
+        "996",
+        "999",
+        "990"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The largest 3-digit number is 999, and its digit sum is 27, which is divisible by 9.",
+      "detailed_explanation": "Step 1: 999 is three digits.\nStep 2: 9 + 9 + 9 = 27, divisible by 9.\nStep 3: Therefore, 999 is the greatest 3-digit multiple of 9.",
+      "is_active": true
+    },
+    {
+      "_id": "92vw04pxrmsshvp7u",
+      "id": "92vw04pxrmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the smallest number divisible by both 6 and 8?",
+      "options": [
+        "12",
+        "36",
+        "24",
+        "18"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The required number is the LCM of 6 and 8.",
+      "detailed_explanation": "Step 1: Multiples of 6: 6, 12, 18, 24.\nStep 2: 24 is divisible by 8.\nStep 3: LCM = 24.",
+      "is_active": true
+    },
+    {
+      "_id": "pnvmnytecmsshvp7u",
+      "id": "pnvmnytecmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the HCF of 72 and 90?",
+      "options": [
+        "9",
+        "18",
+        "12",
+        "24"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the greatest common divisor.",
+      "detailed_explanation": "Step 1: 72 = 18 × 4.\nStep 2: 90 = 18 × 5.\nStep 3: HCF = 18.",
+      "is_active": true
+    },
+    {
+      "_id": "vcv0diufumsshvp7u",
+      "id": "vcv0diufumsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "What is the LCM of 9, 12, and 15?",
+      "options": [
+        "90",
+        "150",
+        "120",
+        "180"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The LCM is the smallest number divisible by all three numbers.",
+      "detailed_explanation": "Step 1: 9 = 3², 12 = 2² × 3, 15 = 3 × 5.\nStep 2: LCM = 2² × 3² × 5 = 180.",
+      "is_active": true
+    },
+    {
+      "_id": "rl7p2hxgimsshvp7u",
+      "id": "rl7p2hxgimsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "Which of the following numbers is divisible by 11?",
+      "options": [
+        "127",
+        "125",
+        "121",
+        "123"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "A number is divisible by 11 when the alternating digit sum is a multiple of 11.",
+      "detailed_explanation": "Step 1: For 121, (1 + 1) − 2 = 0.\nStep 2: 0 is divisible by 11, so 121 is divisible by 11.",
+      "is_active": true
+    },
+    {
+      "_id": "xo1heft33msshvp7u",
+      "id": "xo1heft33msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - HCF and LCM",
+      "question_type": "MCQ",
+      "question_text": "If the HCF of two numbers is 6 and their product is 720, what is their LCM?",
+      "options": [
+        "90",
+        "120",
+        "144",
+        "60"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "For two positive integers, product = HCF × LCM.",
+      "detailed_explanation": "Step 1: 720 = 6 × LCM.\nStep 2: LCM = 720/6 = 120.",
+      "is_active": true
+    },
+    {
+      "_id": "ciw6rcr6amsshvp7u",
+      "id": "ciw6rcr6amsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A number is 40% more than 50. What is the number?",
+      "options": [
+        "75",
+        "70",
+        "65",
+        "60"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Increase 50 by 40%.",
+      "detailed_explanation": "Step 1: 40% of 50 = 20.\nStep 2: 50 + 20 = 70.",
+      "is_active": true
+    },
+    {
+      "_id": "uoobyku41msshvp7u",
+      "id": "uoobyku41msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A number is 25% less than 160. What is the number?",
+      "options": [
+        "125",
+        "115",
+        "110",
+        "120"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Reduce 160 by 25%.",
+      "detailed_explanation": "Step 1: 25% of 160 = 40.\nStep 2: 160 − 40 = 120.",
+      "is_active": true
+    },
+    {
+      "_id": "3ykg0j9fnmsshvp7u",
+      "id": "3ykg0j9fnmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A person spends ₹3,600 from a monthly income of ₹12,000. What percentage of income is spent?",
+      "options": [
+        "35%",
+        "20%",
+        "30%",
+        "25%"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Percentage spent = expenditure/income × 100.",
+      "detailed_explanation": "Step 1: 3600/12000 × 100 = 30%.",
+      "is_active": true
+    },
+    {
+      "_id": "kurxmvsckmsshvp7u",
+      "id": "kurxmvsckmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "If 3/5 of a number is 48, what is the number?",
+      "options": [
+        "80",
+        "75",
+        "90",
+        "72"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide 48 by 3/5.",
+      "detailed_explanation": "Step 1: Number = 48 × 5/3.\nStep 2: = 80.",
+      "is_active": true
+    },
+    {
+      "_id": "3wl6vzyohmsshvp7u",
+      "id": "3wl6vzyohmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A shop sells 4 items for ₹240. At the same rate, what will 9 items cost?",
+      "options": [
+        "₹540",
+        "₹560",
+        "₹500",
+        "₹480"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Find the cost per item and multiply by 9.",
+      "detailed_explanation": "Step 1: Cost per item = ₹240/4 = ₹60.\nStep 2: Cost of 9 = ₹60 × 9 = ₹540.",
+      "is_active": true
+    },
+    {
+      "_id": "8t9plxkelmsshvp7u",
+      "id": "8t9plxkelmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A number divided by 7 gives a quotient of 18 and remainder 5. What is the number?",
+      "options": [
+        "126",
+        "131",
+        "121",
+        "133"
+      ],
+      "correct_option": 1,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Use dividend = divisor × quotient + remainder.",
+      "detailed_explanation": "Step 1: Number = 7 × 18 + 5.\nStep 2: = 126 + 5 = 131.",
+      "is_active": true
+    },
+    {
+      "_id": "bnq9vgpl6msshvp7u",
+      "id": "bnq9vgpl6msshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "If 2/3 of a class are present and 10 students are absent, how many students are in the class?",
+      "options": [
+        "24",
+        "36",
+        "20",
+        "30"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "The absent fraction is 1/3 of the class.",
+      "detailed_explanation": "Step 1: Absent = 1 − 2/3 = 1/3.\nStep 2: 1/3 of class = 10.\nStep 3: Total = 30.",
+      "is_active": true
+    },
+    {
+      "_id": "smm7bl86fmsshvp7u",
+      "id": "smm7bl86fmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A number is multiplied by 1.5 and becomes 90. What was the original number?",
+      "options": [
+        "45",
+        "75",
+        "50",
+        "60"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Divide the final value by the multiplier.",
+      "detailed_explanation": "Step 1: Original × 1.5 = 90.\nStep 2: Original = 90/1.5 = 60.",
+      "is_active": true
+    },
+    {
+      "_id": "89ayjhwekmsshvp7u",
+      "id": "89ayjhwekmsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A ₹2,000 item receives successive discounts of 10% and 20%. What is the final price?",
+      "options": [
+        "₹1,600",
+        "₹1,400",
+        "₹1,440",
+        "₹1,500"
+      ],
+      "correct_option": 2,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Apply each discount to the reduced price successively.",
+      "detailed_explanation": "Step 1: After 10% discount: ₹2,000 × 0.90 = ₹1,800.\nStep 2: After 20% discount: ₹1,800 × 0.80 = ₹1,440.",
+      "is_active": true
+    },
+    {
+      "_id": "v2vvzys4imsshvp7u",
+      "id": "v2vvzys4imsshvp7u",
+      "course_id": "0lyb29vramsr8o0z6",
+      "subject": "Arithmatics",
+      "topic_tag": "Arithmatics - Mixed Arithmetic",
+      "question_type": "MCQ",
+      "question_text": "A family saves ₹4,500 from an income of ₹15,000. What is the ratio of savings to income in simplest form?",
+      "options": [
+        "5",
+        "3",
+        "8",
+        "10"
+      ],
+      "correct_option": 3,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Express savings and income as a ratio and simplify.",
+      "detailed_explanation": "Step 1: Ratio = 4500:15000.\nStep 2: Divide both terms by 1500.\nStep 3: Ratio = 3:10.",
+      "is_active": true
     }
   ],
   "mockTests": [

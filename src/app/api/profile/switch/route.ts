@@ -3,6 +3,7 @@ import { User } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
+import { queryD1 } from '@/lib/d1';
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +24,46 @@ export async function POST(req: Request) {
 
     const { user: currentUser, isMemoryMode } = authResult;
 
+    // 1. Try D1 first
+    try {
+      const d1Users = await queryD1('SELECT * FROM users WHERE id = ? LIMIT 1', [profileId]);
+      if (d1Users && d1Users.length > 0) {
+        const targetProfile = d1Users[0];
+        if (targetProfile.status === 'Deleted') {
+          return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        }
+
+        const token = signUserToken({
+          userId: targetProfile.id,
+          email: targetProfile.email,
+          name: targetProfile.name,
+          lockedCourseId: targetProfile.locked_course_id || null,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          profile: {
+            id: targetProfile.id,
+            name: targetProfile.name,
+            email: targetProfile.email,
+            lockedCourseId: targetProfile.locked_course_id || null,
+          },
+        });
+
+        response.cookies.set('student_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
+      }
+    } catch (d1Err) {
+      console.warn('[api/profile/switch] D1 fallback:', d1Err);
+    }
+
+    // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
       const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
@@ -66,7 +107,7 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Mongoose Mode
+    // 3. Mongoose Mode
     const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
     let targetProfile = null;
@@ -114,4 +155,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Profile switch failed' }, { status: 500 });
   }
 }
-

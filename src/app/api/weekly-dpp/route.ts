@@ -1,29 +1,93 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { WeeklyDPP, User, Course } from '@/lib/models';
+import { WeeklyDPP, User, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 import { getEquivalentCourseIds } from '@/lib/courseMatcher';
+import { queryD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
   try {
-    const { isMemoryMode } = await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user, isMemoryMode } = authResult;
+    if (!user.locked_course_id) {
+      return NextResponse.json({ weeklyDpps: [] });
+    }
+
+    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
+
+    // 1. Try D1 first
+    try {
+      const d1Dpps = await queryD1('SELECT * FROM weekly_dpps WHERE course_id = ? AND is_active = 1 ORDER BY created_at DESC', [userCourseId]);
+      if (d1Dpps) {
+        const formatted = await Promise.all(
+          d1Dpps.map(async (d: any) => {
+            let qIds: string[] = [];
+            try {
+              qIds = typeof d.question_ids_json === 'string' ? JSON.parse(d.question_ids_json) : (d.question_ids_json || []);
+            } catch (e) {
+              qIds = [];
+            }
+
+            let questions: any[] = [];
+            if (qIds.length > 0) {
+              const quoted = qIds.map((id) => `'${id}'`).join(',');
+              const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quoted})`);
+              questions = (d1Qs || []).map((q: any) => {
+                let opts: string[] = [];
+                try {
+                  opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
+                } catch (e) {
+                  opts = [];
+                }
+                return {
+                  _id: q.id,
+                  id: q.id,
+                  question_text: q.question_text,
+                  options: opts,
+                  correct_option: Number(q.correct_option || 0),
+                  explanation: q.explanation || '',
+                  detailed_explanation: q.detailed_explanation || '',
+                  topic_tag: q.topic_tag || 'General',
+                };
+              });
+            }
+
+            return {
+              _id: d.id,
+              id: d.id,
+              course_id: d.course_id,
+              title: d.title,
+              duration_minutes: d.duration_minutes,
+              question_ids: qIds,
+              questions,
+              created_at: d.created_at,
+            };
+          })
+        );
+
+        return NextResponse.json({ weeklyDpps: formatted });
+      }
+    } catch (d1Err) {
+      console.warn('[api/weekly-dpp] D1 query fallback:', d1Err);
+    }
+
+    // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => String(u._id) === String(auth.userId));
-      if (!user || !user.locked_course_id) {
-        return NextResponse.json({ weeklyDpps: [] });
-      }
-
-      const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
       const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
       const dpps = (db.weeklyDpps || []).filter((d) => {
         const dppCourseId = String(typeof d.course_id === 'object' ? d.course_id?._id : d.course_id);
@@ -41,14 +105,9 @@ export async function GET() {
       return NextResponse.json({ weeklyDpps: populated });
     }
 
-    // Mongoose Mode
-    const user = await User.findById(auth.userId);
-    if (!user || !user.locked_course_id) {
-      return NextResponse.json({ weeklyDpps: [] });
-    }
-
+    // 3. Mongoose Mode Fallback
+    await dbConnect();
     const allCourses = await Course.find({});
-    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? user.locked_course_id._id.toString() : user.locked_course_id.toString();
     const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
 
     const dpps = await WeeklyDPP.find({

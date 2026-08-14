@@ -3,25 +3,95 @@ import { dbConnect } from '@/lib/db';
 import { User, MockTest, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getUserFromAuth } from '@/lib/userHelper';
 import { getEquivalentCourseIds } from '@/lib/courseMatcher';
+import { queryD1 } from '@/lib/d1';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    const { isMemoryMode } = await dbConnect();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const authResult = await getUserFromAuth(auth);
+    if (!authResult || !authResult.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { user, isMemoryMode } = authResult;
+    if (!user.locked_course_id) {
+      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+    }
+
+    const rawCourseId = user.locked_course_id;
+    const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
+
+    // 1. Try D1 first
+    try {
+      const d1Tests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND is_active = 1 ORDER BY created_at DESC', [courseId]);
+      if (d1Tests) {
+        const tests = await Promise.all(
+          d1Tests.map(async (m: any) => {
+            let qIds: string[] = [];
+            try {
+              qIds = typeof m.question_ids_json === 'string' ? JSON.parse(m.question_ids_json) : (m.question_ids_json || []);
+            } catch (e) {
+              qIds = [];
+            }
+
+            let qs: any[] = [];
+            if (qIds.length > 0) {
+              const quotedIds = qIds.map((id) => `'${id}'`).join(',');
+              const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
+              qs = (d1Qs || []).map((q: any) => {
+                let opts: string[] = [];
+                try {
+                  opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
+                } catch (e) {
+                  opts = [];
+                }
+                return {
+                  _id: q.id,
+                  id: q.id,
+                  question_text: q.question_text,
+                  options: opts,
+                  correct_option: Number(q.correct_option || 0),
+                  explanation: q.explanation || '',
+                  detailed_explanation: q.detailed_explanation || '',
+                  topic_tag: q.topic_tag || 'General',
+                };
+              });
+            }
+
+            return {
+              _id: m.id,
+              id: m.id,
+              course_id: m.course_id,
+              title: m.title,
+              type: m.type,
+              duration_minutes: m.duration_minutes,
+              cutoff_marks: m.cutoff_marks,
+              question_ids: qs,
+              questions_count: qIds.length,
+              is_active: m.is_active !== 0,
+            };
+          })
+        );
+
+        return NextResponse.json({ tests });
+      }
+    } catch (d1Err) {
+      console.warn('[api/mock-tests] D1 query fallback:', d1Err);
+    }
+
+    // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
-      const user = (db.users || []).find((u) => u._id === auth.userId);
-      if (!user || !user.locked_course_id) {
-        return NextResponse.json({ error: 'No course locked' }, { status: 400 });
-      }
-
-      const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
-      const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
+      const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
 
       const tests = (db.mockTests || [])
         .filter((m) => {
@@ -36,15 +106,10 @@ export async function GET() {
       return NextResponse.json({ tests });
     }
 
-    // Mongoose mode
-    const user = await User.findById(auth.userId);
-    if (!user || !user.locked_course_id) {
-      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
-    }
-
+    // 3. Mongoose Fallback
+    await dbConnect();
     const allCourses = await Course.find({});
-    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? user.locked_course_id._id.toString() : user.locked_course_id.toString();
-    const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
+    const validCourseIds = getEquivalentCourseIds(courseId, allCourses);
 
     const rawTests = await MockTest.find({
       course_id: { $in: validCourseIds },
@@ -67,4 +132,3 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

@@ -3,6 +3,10 @@ import { User, Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
+import { queryD1 } from '@/lib/d1';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   const auth = getAuthenticatedUser();
@@ -18,11 +22,42 @@ export async function GET() {
 
     const { user: currentUser, isMemoryMode } = authResult;
 
+    // 1. Try D1 first
+    try {
+      const mainEmail = (currentUser.account_email || currentUser.email || auth.email).toLowerCase().trim();
+      const d1Users = await queryD1(
+        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted'",
+        [mainEmail, `${mainEmail.split('@')[0]}+%`, String(currentUser._id || currentUser.id || auth.userId)]
+      );
+
+      if (d1Users && d1Users.length > 0) {
+        const d1Courses = await queryD1('SELECT id, name FROM courses');
+        const courseMap = new Map((d1Courses || []).map((c: any) => [c.id, c.name]));
+
+        const currentIdStr = String(currentUser._id || currentUser.id || auth.userId);
+        const profiles = d1Users.map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          accountEmail: mainEmail,
+          lockedCourseId: u.locked_course_id || null,
+          lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id) || null) : null,
+          isActive: u.id === currentIdStr,
+          isPrimary: u.email.toLowerCase() === mainEmail,
+          xp_total: u.xp_total || 0,
+        }));
+
+        return NextResponse.json({ success: true, profiles });
+      }
+    } catch (d1Err) {
+      console.warn('[api/profile/list] D1 fallback:', d1Err);
+    }
+
+    // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
       const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
-      // Find all profiles matching this main account email
       const family = (db.users || []).filter(
         (u: any) =>
           (u.email && u.email.toLowerCase() === mainEmail) ||
@@ -48,7 +83,7 @@ export async function GET() {
       return NextResponse.json({ success: true, profiles });
     }
 
-    // Mongoose mode
+    // 3. Mongoose mode
     const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
     const family = await User.find({
@@ -79,4 +114,3 @@ export async function GET() {
     return NextResponse.json({ error: error.message || 'Failed to list profiles' }, { status: 500 });
   }
 }
-

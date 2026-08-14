@@ -592,47 +592,40 @@ export default function PracticeSetsPage() {
     const qSubLower = qSub.toLowerCase();
     const tagLower = (q.topic_tag || '').toString().toLowerCase().trim();
 
-    // 0. Explicit subject check if q.subject is specified:
+    // 0. Direct match on q.subject
     if (qSubLower && !/^\d+$/.test(qSubLower)) {
-      if (sLower.includes('science')) {
-        if (['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology'].some((k) => qSubLower.includes(k) || tagLower.includes(k))) {
-          return true;
-        }
-      }
-      if (qSubLower === sLower || qSubLower.startsWith(sLower) || sLower.startsWith(qSubLower)) {
-        return true;
-      }
-      // If q.subject explicitly names another subject (e.g. 'chemistry' when target is 'physics'), reject!
-      const knownSubjects = ['physics', 'chemistry', 'mathematics', 'math', 'biology', 'science', 'social studies'];
-      const explicitQSub = knownSubjects.find((k) => qSubLower.includes(k));
-      if (explicitQSub && !sLower.includes(explicitQSub)) {
-        if (!(sLower.includes('science') && ['physics', 'chemistry', 'biology'].includes(explicitQSub))) {
-          return false;
-        }
-      }
+      if (qSubLower === sLower) return true;
     }
 
-    // 1. Prefix check on topic_tag (e.g. "Chemistry - Thermodynamics", "Physics - Mechanics")
-    if (tagLower) {
-      if (tagLower.startsWith('chem') && !sLower.includes('chem') && !sLower.includes('science')) return false;
-      if (tagLower.startsWith('phys') && !sLower.includes('phys') && !sLower.includes('science')) return false;
-      if (tagLower.startsWith('math') && !sLower.includes('math')) return false;
-      if (tagLower.startsWith('bio') && !sLower.includes('bio') && !sLower.includes('science')) return false;
-
-      if (tagLower === sLower) return true;
-      if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
-
-      const firstPart = tagLower.split('-')[0].trim();
-      if (firstPart === sLower) return true;
+    // 1. Advance Arithmetic vs Arithmetic/Mathematics
+    const isAdvanceTarget = /^(?:advance\s*arithm[ae]tic|advanced\s*math)/i.test(sLower);
+    if (isAdvanceTarget) {
+      if (tagLower.includes('advance') || qSubLower.includes('advance')) return true;
+      return false;
     }
 
-    // 2. Science catch-all
-    if (sLower.includes('science')) {
-      const scienceKeywords = ['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology', 'chemical', 'mechanics', 'optics', 'waves', 'thermodynamics', 'acid', 'base', 'reaction', 'cell', 'plant', 'animal'];
-      if (scienceKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    const isArithOrMathTarget = /^(?:arithm[ae]tics?|math(?:ematics)?|quant(?:itative\s*aptitude)?)$/i.test(sLower);
+    if (isArithOrMathTarget) {
+      if (tagLower.includes('advance') || qSubLower.includes('advance')) return false; // belongs to Advance Arithmetic
+      const mathKeywords = ['arithm', 'math', 'quant', 'average', 'fraction', 'hcf', 'lcm', 'percentage', 'profit and loss', 'ratio', 'simple interest', 'simplification', 'time and work', 'algebra', 'calculus', 'geometry', 'trigonometry', 'number system'];
+      if (mathKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+      if (tagLower.startsWith(sLower)) return true;
     }
 
-    // 3. GK / GS check
+    // 2. Reasoning / Intelligence
+    const isReasoningTarget = /^(?:reasoning|logical\s*reasoning|general\s*intelligence)/i.test(sLower);
+    if (isReasoningTarget) {
+      const reasoningKeywords = ['reasoning', 'logic', 'intelligence', 'analogy', 'series', 'coding', 'decoding', 'blood relation', 'direction', 'venn', 'syllogism', 'puzzle', 'seating'];
+      if (reasoningKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+
+    // 3. Current Affairs
+    const isCurrentAffairsTarget = /^(?:current\s*aff[ai]+rs?)/i.test(sLower);
+    if (isCurrentAffairsTarget) {
+      if (tagLower.includes('current') || qSubLower.includes('current') || tagLower.includes('affair')) return true;
+    }
+
+    // 4. GK / GS check
     const isGkGsTarget = (
       sLower === 'gk/gs' ||
       sLower === 'gk / gs' ||
@@ -674,10 +667,23 @@ export default function PracticeSetsPage() {
       if (gkKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
     }
 
-    // 4. Specific Subject Keyword Classification
+    // 5. Science catch-all
+    if (sLower.includes('science')) {
+      const scienceKeywords = ['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology', 'chemical', 'mechanics', 'optics', 'waves', 'thermodynamics', 'acid', 'base', 'reaction', 'cell', 'plant', 'animal'];
+      if (scienceKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    }
+
+    // 6. Explicit prefix & substring check
+    if (tagLower) {
+      if (tagLower === sLower) return true;
+      if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
+      const firstPart = tagLower.split('-')[0].trim();
+      if (firstPart === sLower) return true;
+    }
+
+    // 7. General Sciences / Physics / Chemistry / Biology
     const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'electricity', 'electrostatics', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'semiconductor'];
     const chemistryKeywords = ['chemistry', 'chemical', 'acid', 'base', 'reaction', 'organic', 'inorganic', 'physical chemistry', 'alkane', 'alkene', 'thermodynamics', 'thermochemistry', 'electrochemistry', 'environmental chemistry', 'periodic', 'bonding', 'solution', 'equilibrium', 'mole', 'gas', 'solid state'];
-    const mathKeywords = ['math', 'mathematics', 'calculus', 'algebra', 'vector', 'matrix', 'matrices', 'determinant', 'integral', 'integration', 'derivative', 'differentiation', 'trigonometry', 'geometry', 'probability', 'statistics', 'permutation', 'combination', 'complex number', 'relation', 'function'];
     const biologyKeywords = ['biology', 'botany', 'zoology', 'cell', 'genetics', 'evolution', 'anatomy', 'physiology', 'plant', 'animal', 'ecology', 'reproduction', 'biotechnology', 'organism'];
 
     if (sLower.includes('physics')) {
@@ -685,9 +691,6 @@ export default function PracticeSetsPage() {
     }
     if (sLower.includes('chem')) {
       if (chemistryKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-    if (sLower.includes('math')) {
-      if (mathKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
     }
     if (sLower.includes('bio')) {
       if (biologyKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
@@ -737,7 +740,7 @@ export default function PracticeSetsPage() {
     }
 
     // 1. Remove subject prefix if present (e.g. "Physics - Kinematics" -> "Kinematics", "Chemistry - Thermodynamics" -> "Thermodynamics")
-    const knownSubjectPrefixes = ['chemistry', 'physics', 'mathematics', 'math', 'biology', 'science', 'social studies'];
+    const knownSubjectPrefixes = ['chemistry', 'physics', 'mathematics', 'math', 'arithmatics', 'arithmetic', 'advance arithmatic', 'reasoning', 'current affairs', 'current affirs', 'biology', 'science', 'social studies'];
     for (const subPrefix of knownSubjectPrefixes) {
       if (tag.toLowerCase().startsWith(subPrefix)) {
         const remaining = tag.slice(subPrefix.length).trim();
