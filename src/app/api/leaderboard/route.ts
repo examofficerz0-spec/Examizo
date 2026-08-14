@@ -13,7 +13,9 @@ export async function GET() {
 
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      const res = NextResponse.json({ error: 'User deleted or not found' }, { status: 401 });
+      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+      return res;
     }
 
     const { user, isMemoryMode } = authResult;

@@ -8,13 +8,17 @@ import { queryD1 } from '@/lib/d1';
 export async function GET() {
   const auth = getAuthenticatedUser();
   if (!auth) {
-    return NextResponse.json({ authenticated: false }, { status: 401 });
+    const res = NextResponse.json({ authenticated: false, error: 'Unauthorized' }, { status: 401 });
+    res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+    return res;
   }
 
   try {
     const authResult = await getUserFromAuth(auth);
-    if (!authResult || !authResult.user) {
-      return NextResponse.json({ authenticated: false }, { status: 401 });
+    if (!authResult || !authResult.user || authResult.user.status === 'Deleted' || authResult.user.name === 'Deleted User') {
+      const res = NextResponse.json({ authenticated: false, error: 'User deleted or not found' }, { status: 401 });
+      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+      return res;
     }
 
     const { user, isMemoryMode } = authResult;
@@ -77,7 +81,7 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to authenticate' }, { status: 500 });
+    const res = NextResponse.json({ error: error.message || 'Failed to authenticate' }, { status: 500 });
+    return res;
   }
 }
-

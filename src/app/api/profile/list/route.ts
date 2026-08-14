@@ -11,13 +11,17 @@ export const revalidate = 0;
 export async function GET() {
   const auth = getAuthenticatedUser();
   if (!auth) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+    return res;
   }
 
   try {
     const authResult = await getUserFromAuth(auth);
-    if (!authResult || !authResult.user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!authResult || !authResult.user || authResult.user.status === 'Deleted' || authResult.user.name === 'Deleted User') {
+      const res = NextResponse.json({ error: 'User deleted or not found' }, { status: 401 });
+      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+      return res;
     }
 
     const { user: currentUser, isMemoryMode } = authResult;
@@ -26,7 +30,7 @@ export async function GET() {
     try {
       const mainEmail = (currentUser.account_email || currentUser.email || auth.email).toLowerCase().trim();
       const d1Users = await queryD1(
-        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted'",
+        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User'",
         [mainEmail, `${mainEmail.split('@')[0]}+%`, String(currentUser._id || currentUser.id || auth.userId)]
       );
 
@@ -60,9 +64,11 @@ export async function GET() {
 
       const family = (db.users || []).filter(
         (u: any) =>
-          (u.email && u.email.toLowerCase() === mainEmail) ||
-          (u.account_email && u.account_email.toLowerCase() === mainEmail) ||
-          (currentUser.email && currentUser.email.toLowerCase() === (u.account_email || '').toLowerCase())
+          u.status !== 'Deleted' &&
+          u.name !== 'Deleted User' &&
+          ((u.email && u.email.toLowerCase() === mainEmail) ||
+           (u.account_email && u.account_email.toLowerCase() === mainEmail) ||
+           (currentUser.email && currentUser.email.toLowerCase() === (u.account_email || '').toLowerCase()))
       );
 
       const profiles = family.map((u: any) => {
@@ -92,6 +98,7 @@ export async function GET() {
         { account_email: mainEmail },
       ],
       status: { $ne: 'Deleted' },
+      name: { $ne: 'Deleted User' },
     }).lean();
 
     const courses = await Course.find({ is_active: true }).lean();

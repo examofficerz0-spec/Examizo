@@ -118,11 +118,32 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const fetchProfiles = async () => {
     try {
       const res = await fetch('/api/profile/list');
+      if (res.status === 401) {
+        try {
+          sessionStorage.clear();
+          localStorage.removeItem('examizo_is_sub_profile');
+        } catch (e) {}
+        window.location.replace('/login');
+        return;
+      }
       const data = await res.json();
       if (data.profiles && Array.isArray(data.profiles)) {
-        setProfiles(data.profiles);
-        const active = data.profiles.find((p: ProfileItem) => p.isActive);
+        const validProfiles = data.profiles.filter((p: any) => p.name !== 'Deleted User');
+        if (validProfiles.length === 0) {
+          try {
+            sessionStorage.clear();
+            localStorage.removeItem('examizo_is_sub_profile');
+          } catch (e) {}
+          window.location.replace('/login');
+          return;
+        }
+        setProfiles(validProfiles);
+        const active = validProfiles.find((p: ProfileItem) => p.isActive);
         if (active) {
+          if (active.name === 'Deleted User') {
+            window.location.replace('/login');
+            return;
+          }
           setUserName(active.name);
           setCurrentUserEmail(active.accountEmail || active.email);
           setCurrentCourseName(active.lockedCourseName || null);
@@ -165,14 +186,30 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     }
 
     fetch('/api/auth/me')
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res.status === 401) {
+          try {
+            sessionStorage.clear();
+            localStorage.removeItem('examizo_is_sub_profile');
+          } catch (e) {}
+          window.location.replace('/login');
+          return null;
+        }
+        return res.ok ? res.json() : null;
+      })
       .then((data) => {
-        if (data?.user) {
-          setUserName(data.user.name);
-          setCurrentUserEmail(data.user.email);
-          if (data.user.lockedCourse?.name) {
-            setCurrentCourseName(data.user.lockedCourse.name);
-          }
+        if (!data || !data.authenticated || !data.user || data.user.status === 'Deleted' || data.user.name === 'Deleted User') {
+          try {
+            sessionStorage.clear();
+            localStorage.removeItem('examizo_is_sub_profile');
+          } catch (e) {}
+          window.location.replace('/login');
+          return;
+        }
+        setUserName(data.user.name);
+        setCurrentUserEmail(data.user.email);
+        if (data.user.lockedCourse?.name) {
+          setCurrentCourseName(data.user.lockedCourse.name);
         }
       })
       .catch(console.error);
