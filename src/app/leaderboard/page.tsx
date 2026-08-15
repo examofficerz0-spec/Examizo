@@ -327,8 +327,8 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Pinned Own Rank Card */}
-        {userRank && (
+        {/* Pinned Own Rank Card (Only visible when unlocked) */}
+        {!isLocked && userRank && (
           <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-blue-900/40 p-6 text-slate-900 dark:text-white shadow-xs">
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">

@@ -47,11 +47,11 @@ export async function POST(req: Request) {
         const userId = generateId();
         const created = await executeD1(
           'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [userId, name, email, 'google_oauth_authenticated', 'Active', 100, null]
+          [userId, name, email, 'google_oauth_authenticated', 'Active', 0, null]
         );
 
         if (created) {
-          user = { id: userId, name, email, locked_course_id: null };
+          user = { id: userId, name, email, locked_course_id: null, xp_total: 0 };
         }
       }
 
@@ -103,9 +103,9 @@ export async function POST(req: Request) {
           name,
           email,
           password_hash: 'google_oauth_authenticated',
-          locked_course_id: db.courses && db.courses.length > 0 ? db.courses[0]._id : null,
+          locked_course_id: null,
           role: 'student',
-          xp_total: 100,
+          xp_total: 0,
           rank: 1,
           created_at: new Date().toISOString(),
         };
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
         email,
         password_hash: 'google_oauth_authenticated',
         role: 'student',
-        xp_total: 100,
+        xp_total: 0,
       });
     }
 
