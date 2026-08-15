@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
+import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 import {
   FolderDown,
   FileText,
@@ -33,9 +34,10 @@ interface ResourceItem {
 }
 
 export default function StudentResourcesPage() {
-  const [resources, setResources] = useState<ResourceItem[]>([]);
-  const [courseName, setCourseName] = useState<string>('Selected Course');
-  const [loading, setLoading] = useState(true);
+  const initialCache = getClientUserCache('__RESOURCES_CACHE__');
+  const [resources, setResources] = useState<ResourceItem[]>(initialCache?.resources || []);
+  const [courseName, setCourseName] = useState<string>(initialCache?.courseName || 'Selected Course');
+  const [loading, setLoading] = useState(!initialCache);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,7 +52,6 @@ export default function StudentResourcesPage() {
   }, []);
 
   const fetchResources = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/resources');
       const data = await res.json();
@@ -60,6 +61,10 @@ export default function StudentResourcesPage() {
       if (data.course?.name) {
         setCourseName(data.course.name);
       }
+      setClientUserCache('__RESOURCES_CACHE__', {
+        resources: data.resources || [],
+        courseName: data.course?.name || 'Selected Course',
+      });
     } catch (err) {
       console.error('Failed to load resources:', err);
     } finally {
