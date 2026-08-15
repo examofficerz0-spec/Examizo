@@ -28,7 +28,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
         }
         if (isSuspended) {
-          return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
+          return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
         }
 
         let isMatch = false;
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
       if (isSuspended) {
-        return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
+        return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
       }
 
       let isMatch = false;
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
 
       const response = NextResponse.json({
         success: true,
-        user: { id: user._id, name: user.name, email: user.email, lockedCourseId: user.locked_course_id },
+        user: { id: user._id, name: user.name, email: user.email, lockedCourseId: user.locked_course_id || null },
       });
 
       response.cookies.set('student_token', token, {
@@ -129,20 +129,18 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // 3. Mongoose / Atlas mode
+    // 3. Mongoose Mode Fallback
     const user = await User.findOne({ email: lowerEmail });
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const isSuspended = String(user.status || '').toLowerCase() === 'suspended';
-    const isDeleted = String(user.status || '').toLowerCase() === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
-
-    if (isDeleted) {
+    if (user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'))) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
-    if (isSuspended) {
-      return NextResponse.json({ error: 'Your account has been suspended by administration. Access is blocked until your account is reinstated.' }, { status: 403 });
+
+    if (String(user.status || '').toLowerCase() === 'suspended') {
+      return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
     }
 
     let isMatch = false;

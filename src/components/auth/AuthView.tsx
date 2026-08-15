@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 interface AuthViewProps {
@@ -44,6 +44,19 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
     window.addEventListener('popstate', handlePopState);
     
+    // Check URL error parameter (e.g. from eviction/suspension redirect)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorParam = urlParams.get('error');
+      if (errorParam) {
+        if (errorParam === 'suspended' || errorParam.toLowerCase().includes('suspended')) {
+          setError('Your account is suspended. Please contact support to restore access.');
+        } else {
+          setError(decodeURIComponent(errorParam));
+        }
+      }
+    }
+
     // Route prefetching for zero-latency post-login transitions
     try {
       router.prefetch('/dashboard');
@@ -443,8 +456,32 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             </div>
 
             {error && (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs rounded-xl font-bold shadow-xs">
-                {error}
+              <div
+                className={`p-3.5 rounded-xl text-xs font-bold shadow-xs flex items-start gap-2.5 transition-all animate-fadeIn ${
+                  error.toLowerCase().includes('suspended')
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400'
+                }`}
+              >
+                {error.toLowerCase().includes('suspended') ? (
+                  <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 space-y-1">
+                  <p className="leading-relaxed">{error}</p>
+                  {error.toLowerCase().includes('suspended') && (
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                      Need help?{' '}
+                      <a
+                        href="mailto:support@examizo.com?subject=Account%20Suspension%20Inquiry"
+                        className="underline hover:text-amber-900 dark:hover:text-white font-bold"
+                      >
+                        Contact Support (support@examizo.com)
+                      </a>
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 

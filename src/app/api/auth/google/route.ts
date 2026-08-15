@@ -56,6 +56,16 @@ export async function POST(req: Request) {
       }
 
       if (user) {
+        const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
+        const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+
+        if (isDeleted) {
+          return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
+        }
+        if (isSuspended) {
+          return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
+        }
+
         const token = signUserToken({
           userId: user.id,
           email: user.email,
@@ -97,7 +107,16 @@ export async function POST(req: Request) {
 
       let user = db.users.find((u) => u.email?.toLowerCase() === email);
 
-      if (!user) {
+      if (user) {
+        const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
+        const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+        if (isDeleted) {
+          return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
+        }
+        if (isSuspended) {
+          return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
+        }
+      } else {
         user = {
           _id: generateId(),
           name,
@@ -105,6 +124,7 @@ export async function POST(req: Request) {
           password_hash: 'google_oauth_authenticated',
           locked_course_id: null,
           role: 'student',
+          status: 'Active',
           xp_total: 0,
           rank: 1,
           created_at: new Date().toISOString(),
@@ -145,12 +165,23 @@ export async function POST(req: Request) {
     // 3. Mongoose Mode Fallback
     let user = await User.findOne({ email });
 
-    if (!user) {
+    if (user) {
+      const userStatus = String(user.status || '').toLowerCase();
+      const isSuspended = userStatus === 'suspended';
+      const isDeleted = userStatus === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+      if (isDeleted) {
+        return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
+      }
+      if (isSuspended) {
+        return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
+      }
+    } else {
       user = await User.create({
         name,
         email,
         password_hash: 'google_oauth_authenticated',
         role: 'student',
+        status: 'Active',
         xp_total: 0,
       });
     }
