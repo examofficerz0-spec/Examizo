@@ -117,33 +117,32 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     }
   };
 
+  const redirectToLogin = (reason?: string) => {
+    clearAllClientUserCaches();
+    if (pathname !== '/login') {
+      router.replace(reason ? `/login?error=${encodeURIComponent(reason)}` : '/login');
+    }
+  };
+
   const fetchProfiles = async () => {
     try {
-      const res = await fetch('/api/profile/list');
-      if (res.status === 401) {
-        try {
-          sessionStorage.clear();
-          localStorage.removeItem('examizo_is_sub_profile');
-        } catch (e) {}
-        window.location.replace('/login');
+      const res = await fetch('/api/profile/list', { cache: 'no-store' });
+      if (res.status === 401 || res.status === 403) {
+        redirectToLogin();
         return;
       }
       const data = await res.json();
       if (data.profiles && Array.isArray(data.profiles)) {
         const validProfiles = data.profiles.filter((p: any) => p.name !== 'Deleted User');
         if (validProfiles.length === 0) {
-          try {
-            sessionStorage.clear();
-            localStorage.removeItem('examizo_is_sub_profile');
-          } catch (e) {}
-          window.location.replace('/login');
+          redirectToLogin();
           return;
         }
         setProfiles(validProfiles);
         const active = validProfiles.find((p: ProfileItem) => p.isActive);
         if (active) {
           if (active.name === 'Deleted User') {
-            window.location.replace('/login');
+            redirectToLogin();
             return;
           }
           setUserName(active.name);
@@ -156,6 +155,35 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       }
     } catch (e) {
       console.error('Failed to fetch profiles:', e);
+    }
+  };
+
+  const checkAuthStatus = async () => {
+    try {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (res.status === 401 || res.status === 403) {
+        redirectToLogin();
+        return null;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        const status = String(data?.user?.status || '').toLowerCase();
+        if (!data?.authenticated || !data?.user || status === 'suspended' || status === 'deleted' || data?.user?.name === 'Deleted User') {
+          redirectToLogin(status === 'suspended' ? 'Your account has been suspended by administration' : undefined);
+          return null;
+        }
+        setUserName(data.user.name);
+        setCurrentUserEmail(data.user.email);
+        if (data.user.lockedCourse?.name) {
+          setCurrentCourseName(data.user.lockedCourse.name);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('examizo_cached_course_name', data.user.lockedCourse.name);
+          }
+        }
+        return data;
+      }
+    } catch (e) {
+      console.warn('[StudentHeader] Auth check warning:', e);
     }
   };
 
@@ -174,6 +202,29 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     } catch (e) {}
   }, []);
 
+  useEffect(() => {
+    if (propsUserName) {
+      setUserName(propsUserName);
+    }
+
+    checkAuthStatus();
+    const interval = setInterval(checkAuthStatus, 10000);
+
+    const onFocus = () => checkAuthStatus();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') checkAuthStatus();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [propsUserName]);
+
   const changeTextSize = (delta: number) => {
     setTextSize((prev) => {
       const next = Math.min(130, Math.max(80, prev + delta));
@@ -185,49 +236,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     });
   };
 
-  useEffect(() => {
-    if (propsUserName) {
-      setUserName(propsUserName);
-    }
-
-    fetch('/api/auth/me')
-      .then((res) => {
-        if (res.status === 401) {
-          try {
-            sessionStorage.clear();
-            localStorage.removeItem('examizo_is_sub_profile');
-          } catch (e) {}
-          window.location.replace('/login');
-          return null;
-        }
-        return res.ok ? res.json() : null;
-      })
-      .then((data) => {
-        if (!data || !data.authenticated || !data.user || data.user.status === 'Deleted' || data.user.name === 'Deleted User') {
-          try {
-            sessionStorage.clear();
-            localStorage.removeItem('examizo_is_sub_profile');
-          } catch (e) {}
-          window.location.replace('/login');
-          return;
-        }
-        setUserName(data.user.name);
-        setCurrentUserEmail(data.user.email);
-        if (data.user.lockedCourse?.name) {
-          setCurrentCourseName(data.user.lockedCourse.name);
-        }
-      })
-      .catch(console.error);
-  }, [propsUserName]);
-
   const displayName = userName || 'Student';
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch (e) {}
+  const handleLogout = () => {
     clearAllClientUserCaches();
-    window.location.replace('/login');
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    router.replace('/login');
   };
 
   const handleSwitchProfile = async (profile: ProfileItem) => {

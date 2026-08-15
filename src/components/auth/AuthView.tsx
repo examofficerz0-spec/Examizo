@@ -43,8 +43,16 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     };
 
     window.addEventListener('popstate', handlePopState);
+    
+    // Route prefetching for zero-latency post-login transitions
+    try {
+      router.prefetch('/dashboard');
+      router.prefetch('/course-selection');
+      router.prefetch('/leaderboard');
+    } catch (e) {}
+
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [router]);
 
   const handleTabSwitch = (mode: 'signin' | 'register') => {
     if (mode === activeTab) return;
@@ -62,7 +70,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     clearAllClientUserCaches();
 
     try {
-      await fetch('/api/seed');
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +128,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     clearAllClientUserCaches();
 
     try {
-      await fetch('/api/seed');
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -179,7 +185,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     setGoogleAuthLoading(true);
     clearAllClientUserCaches();
     try {
-      await fetch('/api/seed');
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

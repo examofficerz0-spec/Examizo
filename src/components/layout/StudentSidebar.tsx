@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
 import { LayoutDashboard, FileText, HelpCircle, Trophy, LogOut, Award, X } from 'lucide-react';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 interface StudentSidebarProps {
   courseName?: string;
@@ -69,15 +70,10 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch (e) {}
-    try {
-      sessionStorage.clear();
-      localStorage.removeItem('examizo_is_sub_profile');
-    } catch (e) {}
-    window.location.replace('/login');
+  const handleLogout = () => {
+    clearAllClientUserCaches();
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    router.replace('/login');
   };
 
   const SidebarContent = () => (
