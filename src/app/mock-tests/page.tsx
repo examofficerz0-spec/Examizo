@@ -5,17 +5,11 @@ import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import { FileText, PlayCircle, Sparkles, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
-
-const getInitialMockTestsCache = () => {
-  if (typeof window !== 'undefined' && (window as any).__MOCK_TESTS_CACHE__) {
-    return (window as any).__MOCK_TESTS_CACHE__;
-  }
-  return null;
-};
+import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 
 export default function MockTestsListPage() {
   const router = useRouter();
-  const initialCache = getInitialMockTestsCache();
+  const initialCache = getClientUserCache('__MOCK_TESTS_CACHE__');
   const [tests, setTests] = useState<any[]>(initialCache || []);
   const [loading, setLoading] = useState(!initialCache);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
@@ -30,9 +24,7 @@ export default function MockTestsListPage() {
       .then((res) => res.json())
       .then((data) => {
         const list = data.tests || [];
-        if (typeof window !== 'undefined') {
-          (window as any).__MOCK_TESTS_CACHE__ = list;
-        }
+        setClientUserCache('__MOCK_TESTS_CACHE__', list);
         setTests(list);
       })
       .catch(console.error)

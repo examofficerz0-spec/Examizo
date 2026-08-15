@@ -4,20 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
+import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles, BarChart2, Eye
 } from 'lucide-react';
 
-const getInitialLeaderboardCache = () => {
-  if (typeof window !== 'undefined' && (window as any).__LEADERBOARD_CACHE__) {
-    return (window as any).__LEADERBOARD_CACHE__;
-  }
-  return null;
-};
-
 export default function LeaderboardPage() {
   const router = useRouter();
-  const initialCache = getInitialLeaderboardCache();
+  const initialCache = getClientUserCache('__LEADERBOARD_CACHE__');
   const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
   const [selectedStudentStatsId, setSelectedStudentStatsId] = useState<string | null>(null);
   
@@ -63,9 +57,7 @@ export default function LeaderboardPage() {
             leaderboard: data.leaderboard || [],
             userRank: data.userRank || null,
           };
-          if (typeof window !== 'undefined') {
-            (window as any).__LEADERBOARD_CACHE__ = cacheObj;
-          }
+          setClientUserCache('__LEADERBOARD_CACHE__', cacheObj);
           setLeaderboard(data.leaderboard || []);
           setUserRank(data.userRank || null);
         }

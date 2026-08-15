@@ -28,16 +28,11 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-const getInitialDashboardCache = () => {
-  if (typeof window !== 'undefined' && (window as any).__DASHBOARD_CACHE__) {
-    return (window as any).__DASHBOARD_CACHE__;
-  }
-  return null;
-};
+import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const initialCache = getInitialDashboardCache();
+  const initialCache = getClientUserCache('__DASHBOARD_CACHE__');
   const [userData, setUserData] = useState<any>(initialCache?.user || null);
   const [mockTests, setMockTests] = useState<any[]>(initialCache?.mockTests || []);
   const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
@@ -133,9 +128,7 @@ export default function StudentDashboardPage() {
           leaderboard: data.topLeaderboard || [],
           incorrectLog: data.incorrectLog || [],
         };
-        if (typeof window !== 'undefined') {
-          (window as any).__DASHBOARD_CACHE__ = newCache;
-        }
+        setClientUserCache('__DASHBOARD_CACHE__', newCache, data.user?.email);
 
         if (data.user) setUserData(data.user);
         if (data.mockTests) setMockTests(data.mockTests);

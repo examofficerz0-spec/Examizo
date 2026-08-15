@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 import {
   Home,
   FileText,
@@ -225,10 +226,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {}
-    try {
-      sessionStorage.clear();
-      localStorage.removeItem('examizo_is_sub_profile');
-    } catch (e) {}
+    clearAllClientUserCaches();
     window.location.replace('/login');
   };
 
@@ -236,6 +234,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     if (profile.isActive) return;
 
     try {
+      clearAllClientUserCaches();
       const res = await fetch('/api/profile/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -244,6 +243,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
       const data = await res.json();
       if (data.success) {
+        clearAllClientUserCaches();
         setShowProfileMenu(false);
         // If the target profile has NO locked course, redirect to course selection!
         if (!data.profile?.lockedCourseId) {

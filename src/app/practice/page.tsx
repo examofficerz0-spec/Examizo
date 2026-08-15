@@ -28,15 +28,10 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-const getInitialPracticeCache = () => {
-  if (typeof window !== 'undefined' && (window as any).__PRACTICE_CACHE__) {
-    return (window as any).__PRACTICE_CACHE__;
-  }
-  return null;
-};
+import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 
 export default function PracticeSetsPage() {
-  const initialCache = getInitialPracticeCache();
+  const initialCache = getClientUserCache('__PRACTICE_CACHE__');
   const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>(initialCache?.topicCounts || {});
   const [courseName, setCourseName] = useState<string>(initialCache?.courseName || '');
@@ -115,9 +110,7 @@ export default function PracticeSetsPage() {
         publishedWeeklyDpp: newWeeklyDpp,
       };
 
-      if (typeof window !== 'undefined') {
-        (window as any).__PRACTICE_CACHE__ = cacheObj;
-      }
+      setClientUserCache('__PRACTICE_CACHE__', cacheObj);
 
       setQuestions(data.questions || []);
       setTopicCounts(data.topicCounts || {});

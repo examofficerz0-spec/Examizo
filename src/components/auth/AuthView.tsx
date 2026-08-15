@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff } from 'lucide-react';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 interface AuthViewProps {
   initialMode?: 'signin' | 'register';
@@ -58,6 +59,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     e.preventDefault();
     setError('');
     setLoading(true);
+    clearAllClientUserCaches();
 
     try {
       await fetch('/api/seed');
@@ -71,6 +73,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       if (!res.ok) {
         setError(data.error || 'Invalid email or password');
       } else {
+        clearAllClientUserCaches();
         if (typeof window !== 'undefined' && data.user) {
           try {
             const savedStr = localStorage.getItem('exammaster_saved_accounts');
@@ -115,6 +118,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     e.preventDefault();
     setError('');
     setLoading(true);
+    clearAllClientUserCaches();
 
     try {
       await fetch('/api/seed');
@@ -128,16 +132,25 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       if (!res.ok) {
         setError(data.error || 'Registration failed');
       } else {
+        clearAllClientUserCaches();
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
 
-        if (joinCode) {
-          router.push(`/course-selection?joinCode=${encodeURIComponent(joinCode)}`);
+        if (!data.user.lockedCourseId) {
+          if (joinCode) {
+            router.push(`/course-selection?joinCode=${encodeURIComponent(joinCode)}`);
+          } else if (joinHostId) {
+            router.push(`/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`);
+          } else {
+            router.push('/course-selection');
+          }
+        } else if (joinCode) {
+          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
         } else if (joinHostId) {
-          router.push(`/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`);
+          router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
         } else {
-          router.push('/course-selection');
+          router.push('/dashboard');
         }
       }
     } catch (err) {
@@ -164,6 +177,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   const processGoogleAuth = async (payload: { email?: string; name?: string; credential?: string }) => {
     setError('');
     setGoogleAuthLoading(true);
+    clearAllClientUserCaches();
     try {
       await fetch('/api/seed');
       const res = await fetch('/api/auth/google', {
@@ -174,6 +188,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
       const data = await res.json();
       if (res.ok) {
+        clearAllClientUserCaches();
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
