@@ -347,8 +347,8 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
           {children}
         </div>
 
-        {/* Centered Glass Lock Screen Overlay (Positioned top-20 below fixed navbar so header remains 100% crisp & clickable) */}
-        <div className="fixed top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center p-4 bg-slate-950/30 backdrop-blur-sm animate-fade-in">
+        {/* Centered Glass Lock Screen Overlay (Positioned top-20 below fixed navbar with z-30 so header & profile dropdown remain 100% crisp & clickable) */}
+        <div className="fixed top-20 inset-x-0 bottom-0 z-30 flex items-center justify-center p-4 bg-slate-950/30 backdrop-blur-sm animate-fade-in">
           <div className="max-w-xl w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-center space-y-5 relative overflow-hidden">
             
             <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-md">
