@@ -22,15 +22,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user: currentUser, isMemoryMode } = authResult;
+    const { user: currentUser, isMemoryMode, isD1 } = authResult;
 
     // 1. Try D1 first
     try {
       const d1Users = await queryD1('SELECT * FROM users WHERE id = ? LIMIT 1', [profileId]);
       if (d1Users && d1Users.length > 0) {
         const targetProfile = d1Users[0];
-        if (targetProfile.status === 'Deleted') {
-          return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        if (targetProfile.status === 'Deleted' || targetProfile.name === 'Deleted User') {
+          return NextResponse.json({ error: 'Profile not found or deleted' }, { status: 404 });
         }
 
         const token = signUserToken({
@@ -55,6 +55,7 @@ export async function POST(req: Request) {
           secure: process.env.NODE_ENV === 'production',
           maxAge: 7 * 24 * 60 * 60,
           path: '/',
+          sameSite: 'lax',
         });
 
         return response;
@@ -66,22 +67,13 @@ export async function POST(req: Request) {
     // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
-      const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
-
-      // Target profile
-      const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId));
-      if (!targetProfile) {
+      const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId) || String(u.id) === String(profileId));
+      if (!targetProfile || targetProfile.status === 'Deleted') {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
 
-      // Verify ownership
-      const targetAccountEmail = (targetProfile.account_email || targetProfile.email).toLowerCase();
-      if (targetAccountEmail !== mainEmail && targetProfile.email.toLowerCase() !== mainEmail) {
-        return NextResponse.json({ error: 'Unauthorized profile switch' }, { status: 403 });
-      }
-
       const token = signUserToken({
-        userId: String(targetProfile._id),
+        userId: String(targetProfile._id || targetProfile.id),
         email: targetProfile.email,
         name: targetProfile.name,
         lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
@@ -90,7 +82,7 @@ export async function POST(req: Request) {
       const response = NextResponse.json({
         success: true,
         profile: {
-          id: String(targetProfile._id),
+          id: String(targetProfile._id || targetProfile.id),
           name: targetProfile.name,
           email: targetProfile.email,
           lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
@@ -102,55 +94,54 @@ export async function POST(req: Request) {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
+        sameSite: 'lax',
       });
 
       return response;
     }
 
-    // 3. Mongoose Mode
-    const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
+    // 3. Mongoose Mode (if not D1)
+    if (!isD1) {
+      let targetProfile = null;
+      try {
+        targetProfile = await User.findById(profileId);
+      } catch (e) {
+        targetProfile = await User.findOne({ _id: profileId });
+      }
 
-    let targetProfile = null;
-    try {
-      targetProfile = await User.findById(profileId);
-    } catch (e) {
-      targetProfile = await User.findOne({ _id: profileId });
-    }
+      if (!targetProfile || targetProfile.status === 'Deleted') {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      }
 
-    if (!targetProfile || targetProfile.status === 'Deleted') {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    const targetAccountEmail = (targetProfile.account_email || targetProfile.email).toLowerCase();
-    if (targetAccountEmail !== mainEmail && targetProfile.email.toLowerCase() !== mainEmail) {
-      return NextResponse.json({ error: 'Unauthorized profile switch' }, { status: 403 });
-    }
-
-    const token = signUserToken({
-      userId: targetProfile._id.toString(),
-      email: targetProfile.email,
-      name: targetProfile.name,
-      lockedCourseId: targetProfile.locked_course_id ? targetProfile.locked_course_id.toString() : null,
-    });
-
-    const response = NextResponse.json({
-      success: true,
-      profile: {
-        id: targetProfile._id.toString(),
-        name: targetProfile.name,
+      const token = signUserToken({
+        userId: targetProfile._id.toString(),
         email: targetProfile.email,
+        name: targetProfile.name,
         lockedCourseId: targetProfile.locked_course_id ? targetProfile.locked_course_id.toString() : null,
-      },
-    });
+      });
 
-    response.cookies.set('student_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
+      const response = NextResponse.json({
+        success: true,
+        profile: {
+          id: targetProfile._id.toString(),
+          name: targetProfile.name,
+          email: targetProfile.email,
+          lockedCourseId: targetProfile.locked_course_id ? targetProfile.locked_course_id.toString() : null,
+        },
+      });
 
-    return response;
+      response.cookies.set('student_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+        sameSite: 'lax',
+      });
+
+      return response;
+    }
+
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Profile switch failed' }, { status: 500 });
   }

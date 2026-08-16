@@ -33,13 +33,16 @@ export async function GET() {
     }
 
     const { user: currentUser, isMemoryMode } = authResult;
+    const currentEmail = (currentUser.email || auth.email || '').toLowerCase().trim();
+    const accountEmail = (currentUser.account_email || '').toLowerCase().trim();
+    // Extract base account handle (stripping out any +profile_... suffix)
+    const baseHandle = (accountEmail || currentEmail).split('@')[0].split('+')[0].trim();
 
     // 1. Try D1 first
     try {
-      const mainEmail = (currentUser.account_email || currentUser.email || auth.email).toLowerCase().trim();
       const d1Users = await queryD1(
-        "SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended'",
-        [mainEmail, `${mainEmail.split('@')[0]}+%`, String(currentUser._id || currentUser.id || auth.userId)]
+        "SELECT * FROM users WHERE (LOWER(email) LIKE ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended' AND status != 'suspended'",
+        [`${baseHandle}@%`, `${baseHandle}+%`, String(currentUser._id || currentUser.id || auth.userId)]
       );
 
       if (d1Users && d1Users.length > 0) {
@@ -47,17 +50,30 @@ export async function GET() {
         const courseMap = new Map((d1Courses || []).map((c: any) => [c.id, c.name]));
 
         const currentIdStr = String(currentUser._id || currentUser.id || auth.userId);
-        const profiles = d1Users.map((u: any) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          accountEmail: mainEmail,
-          lockedCourseId: u.locked_course_id || null,
-          lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id) || null) : null,
-          isActive: u.id === currentIdStr,
-          isPrimary: u.email.toLowerCase() === mainEmail,
-          xp_total: u.xp_total || 0,
-        }));
+        
+        // Ensure primary account profile appears first
+        const sortedD1Users = [...d1Users].sort((a: any, b: any) => {
+          const aIsPrimary = !a.email.includes('+');
+          const bIsPrimary = !b.email.includes('+');
+          if (aIsPrimary && !bIsPrimary) return -1;
+          if (!aIsPrimary && bIsPrimary) return 1;
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        });
+
+        const profiles = sortedD1Users.map((u: any) => {
+          const isPrimary = !u.email.includes('+');
+          return {
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
+            lockedCourseId: u.locked_course_id || null,
+            lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id) || null) : null,
+            isActive: u.id === currentIdStr,
+            isPrimary,
+            xp_total: u.xp_total || 0,
+          };
+        });
 
         return NextResponse.json({ success: true, profiles });
       }
@@ -68,28 +84,27 @@ export async function GET() {
     // 2. Memory Mode Fallback
     if (isMemoryMode) {
       const db = readSharedDb();
-      const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
 
-      const family = (db.users || []).filter(
-        (u: any) =>
-          u.status !== 'Deleted' &&
-          u.name !== 'Deleted User' &&
-          ((u.email && u.email.toLowerCase() === mainEmail) ||
-           (u.account_email && u.account_email.toLowerCase() === mainEmail) ||
-           (currentUser.email && currentUser.email.toLowerCase() === (u.account_email || '').toLowerCase()))
-      );
+      const family = (db.users || []).filter((u: any) => {
+        if (u.status === 'Deleted' || u.name === 'Deleted User') return false;
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uAcct = (u.account_email || '').toLowerCase().trim();
+        const uHandle = (uAcct || uEmail).split('@')[0].split('+')[0].trim();
+        return uHandle === baseHandle || String(u._id) === String(currentUser._id);
+      });
 
       const profiles = family.map((u: any) => {
         const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id)) || null;
+        const isPrimary = !(u.email || '').includes('+');
         return {
           id: String(u._id),
           name: u.name,
           email: u.email,
-          accountEmail: u.account_email || u.email,
+          accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
           lockedCourseId: u.locked_course_id || null,
           lockedCourseName: lockedCourse?.name || null,
           isActive: String(u._id) === String(currentUser._id),
-          isPrimary: u.email.toLowerCase() === mainEmail,
+          isPrimary,
           xp_total: u.xp_total || 0,
         };
       });
@@ -98,12 +113,10 @@ export async function GET() {
     }
 
     // 3. Mongoose mode
-    const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
-
     const family = await User.find({
       $or: [
-        { email: mainEmail },
-        { account_email: mainEmail },
+        { email: { $regex: `^${baseHandle}(@|\\+)`, $options: 'i' } },
+        { account_email: { $regex: `^${baseHandle}(@|\\+)`, $options: 'i' } },
       ],
       status: { $ne: 'Deleted' },
       name: { $ne: 'Deleted User' },
@@ -116,11 +129,11 @@ export async function GET() {
       id: u._id.toString(),
       name: u.name,
       email: u.email,
-      accountEmail: u.account_email || u.email,
+      accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
       lockedCourseId: u.locked_course_id ? u.locked_course_id.toString() : null,
       lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id.toString()) || null) : null,
       isActive: u._id.toString() === currentUser._id.toString(),
-      isPrimary: u.email.toLowerCase() === mainEmail,
+      isPrimary: !u.email.includes('+'),
       xp_total: u.xp_total || 0,
     }));
 
