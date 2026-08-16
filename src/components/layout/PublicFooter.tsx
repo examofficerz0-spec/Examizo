@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
-import { Mail, ShieldCheck, ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, ShieldCheck, ExternalLink, ArrowRight } from 'lucide-react';
 
 export const PublicFooter: React.FC = () => {
   return (

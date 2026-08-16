@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, Sparkles, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2 } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2 } from 'lucide-react';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { DigiLockerModal, isAbove10thClass, getDigiLockerStatus } from '@/components/ui/DigiLockerModal';
 
@@ -193,7 +193,7 @@ export default function ProfilePage() {
                         disabled={promoteInfo.loading}
                         className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-xs rounded-2xl shadow-lg shadow-emerald-950/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        <Sparkles className="w-4 h-4 text-emerald-600 fill-emerald-600 animate-pulse" />
+                        <GraduationCap className="w-4 h-4 text-emerald-600" />
                         {promoteInfo.loading ? 'Promoting Class...' : `Promote to ${promoteInfo.nextCourse.name}`}
                       </button>
                     )}

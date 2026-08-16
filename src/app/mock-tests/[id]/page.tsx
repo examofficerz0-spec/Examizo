@@ -6,7 +6,7 @@ import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton, translateToHindi } from '@/components/common/HindiTranslateButton';
 import {
   Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
-  AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart, Sparkles
+  AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart
 } from 'lucide-react';
 
 function shuffleArray<T>(arr: T[]): T[] {

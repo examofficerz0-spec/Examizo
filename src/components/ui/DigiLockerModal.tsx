@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Lock, CheckCircle2, AlertCircle, X, ExternalLink, ArrowRight, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle2, AlertCircle, X, ExternalLink, ArrowRight, Loader2, Building2 } from 'lucide-react';
 
 interface DigiLockerModalProps {
   isOpen: boolean;

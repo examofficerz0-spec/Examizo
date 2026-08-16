@@ -11,7 +11,6 @@ import {
   Download,
   ExternalLink,
   Layers,
-  Sparkles,
   CheckCircle2,
   X,
   Eye,

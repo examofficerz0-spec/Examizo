@@ -6,7 +6,7 @@ import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 import {
-  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, Sparkles, BarChart2, Eye
+  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
 } from 'lucide-react';
 
 export default function LeaderboardPage() {
@@ -281,7 +281,7 @@ export default function LeaderboardPage() {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-bounce">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Trophy className="w-4 h-4 text-amber-400" />
           {toastMessage}
         </div>
       )}
@@ -517,7 +517,7 @@ export default function LeaderboardPage() {
               <div className="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-5 space-y-3 shadow-xs animate-fade-in">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <h4 className="text-xs font-black text-amber-900 dark:text-amber-200 flex items-center gap-2 uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <Users className="w-4 h-4 text-amber-500" />
                     Pending Arena Join Requests ({pendingRequests.length})
                   </h4>
                   <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
@@ -747,7 +747,7 @@ export default function LeaderboardPage() {
               </div>
             ) : joinModalInfo.status === 'pending' ? (
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-900 flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500 animate-spin shrink-0" />
+                <Clock className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
                 <span>Your join request is pending approval by <strong>{joinModalInfo.hostName}</strong>.</span>
               </div>
             ) : (

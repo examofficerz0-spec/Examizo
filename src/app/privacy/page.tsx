@@ -12,7 +12,6 @@ import {
   CheckCircle2, 
   ArrowLeft, 
   Mail, 
-  Sparkles,
   Server,
   UserCheck
 } from 'lucide-react';
@@ -70,7 +69,7 @@ export default function PrivacyPolicyPage() {
         {/* Overview Banner */}
         <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-50 via-indigo-50/60 to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 border border-blue-200/80 dark:border-slate-800 space-y-2">
           <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-extrabold text-sm">
-            <Sparkles className="w-4 h-4" />
+            <ShieldCheck className="w-4 h-4" />
             <span>Commitment to Student Data Protection</span>
           </div>
           <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal">

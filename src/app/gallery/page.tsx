@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { 
-  Sparkles, 
   ArrowRight, 
   Search, 
   X, 

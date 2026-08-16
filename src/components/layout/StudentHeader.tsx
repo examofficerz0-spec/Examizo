@@ -24,7 +24,6 @@ import {
   Check,
   X,
   Lock,
-  Sparkles,
   Bell,
   AlertTriangle,
   CheckCircle2,
@@ -499,7 +498,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                             ) : notif.type === 'success' ? (
                               <CheckCircle2 className="w-4 h-4" />
                             ) : (
-                              <Sparkles className="w-4 h-4" />
+                              <Bell className="w-4 h-4" />
                             )}
                           </div>
 

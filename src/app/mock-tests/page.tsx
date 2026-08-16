@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
-import { FileText, PlayCircle, Sparkles, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
+import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 

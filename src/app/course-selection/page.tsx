@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, Sparkles } from 'lucide-react';
+import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap } from 'lucide-react';
 
 export default function CourseSelectionPage() {
   const router = useRouter();
@@ -169,7 +169,7 @@ export default function CourseSelectionPage() {
                 : 'text-slate-600 hover:text-slate-900 font-bold'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" /> All Track ({courses.length})
+            All Track ({courses.length})
           </button>
 
           <button

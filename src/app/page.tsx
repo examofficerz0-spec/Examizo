@@ -11,7 +11,6 @@ import {
   Zap, 
   BarChart3, 
   ShieldCheck, 
-  Sparkles, 
   CheckCircle2, 
   ArrowRight, 
   Clock, 
@@ -505,7 +504,7 @@ export default function LandingPage() {
             ) : (
               <div className="max-w-xl mx-auto p-8 rounded-3xl bg-gradient-to-b from-blue-50/70 via-indigo-50/40 to-white border border-blue-200/80 text-center space-y-4 shadow-xs">
                 <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-600/10 text-blue-600 border border-blue-200 flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 animate-pulse text-blue-600" />
+                  <GraduationCap className="w-7 h-7 text-blue-600" />
                 </div>
                 <div className="space-y-1.5">
                   <span className="inline-block px-3.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-black uppercase tracking-wider">

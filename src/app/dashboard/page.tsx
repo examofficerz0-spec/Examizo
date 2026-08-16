@@ -13,7 +13,6 @@ import {
   ArrowRight,
   TrendingUp,
   Play,
-  Sparkles,
   BookOpen,
   AlertCircle,
   X,
