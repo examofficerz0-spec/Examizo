@@ -4,17 +4,22 @@ import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
     const auth = getAuthenticatedUser();
     if (!auth) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized. Please login first.' }, { status: 401 });
     }
 
-    const { profileId } = await req.json();
+    const { profileId, password } = await req.json();
     if (!profileId) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 });
+    }
+
+    if (!password || !password.trim()) {
+      return NextResponse.json({ error: 'Account password is required to switch profiles.' }, { status: 400 });
     }
 
     const authResult = await getUserFromAuth(auth);
@@ -24,6 +29,18 @@ export async function POST(req: Request) {
 
     const { user: currentUser, isMemoryMode, isD1 } = authResult;
 
+    // Verify Password on the active or root account
+    let isPasswordValid = false;
+    const currentHash = currentUser.password_hash;
+    if (currentHash) {
+      try {
+        isPasswordValid = await bcrypt.compare(password, currentHash);
+      } catch (e) {}
+      if (!isPasswordValid && currentHash === password) {
+        isPasswordValid = true;
+      }
+    }
+
     // 1. Try D1 first
     try {
       const d1Users = await queryD1('SELECT * FROM users WHERE id = ? LIMIT 1', [profileId]);
@@ -31,6 +48,20 @@ export async function POST(req: Request) {
         const targetProfile = d1Users[0];
         if (targetProfile.status === 'Deleted' || targetProfile.name === 'Deleted User') {
           return NextResponse.json({ error: 'Profile not found or deleted' }, { status: 404 });
+        }
+
+        // Also check target profile hash if current hash was not validated
+        if (!isPasswordValid && targetProfile.password_hash) {
+          try {
+            isPasswordValid = await bcrypt.compare(password, targetProfile.password_hash);
+          } catch (e) {}
+          if (!isPasswordValid && targetProfile.password_hash === password) {
+            isPasswordValid = true;
+          }
+        }
+
+        if (!isPasswordValid) {
+          return NextResponse.json({ error: 'Incorrect account password. Profile switch denied.' }, { status: 401 });
         }
 
         const token = signUserToken({
@@ -72,6 +103,19 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
 
+      if (!isPasswordValid && targetProfile.password_hash) {
+        try {
+          isPasswordValid = await bcrypt.compare(password, targetProfile.password_hash);
+        } catch (e) {}
+        if (!isPasswordValid && targetProfile.password_hash === password) {
+          isPasswordValid = true;
+        }
+      }
+
+      if (!isPasswordValid) {
+        return NextResponse.json({ error: 'Incorrect account password. Profile switch denied.' }, { status: 401 });
+      }
+
       const token = signUserToken({
         userId: String(targetProfile._id || targetProfile.id),
         email: targetProfile.email,
@@ -111,6 +155,19 @@ export async function POST(req: Request) {
 
       if (!targetProfile || targetProfile.status === 'Deleted') {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      }
+
+      if (!isPasswordValid && targetProfile.password_hash) {
+        try {
+          isPasswordValid = await bcrypt.compare(password, targetProfile.password_hash);
+        } catch (e) {}
+        if (!isPasswordValid && targetProfile.password_hash === password) {
+          isPasswordValid = true;
+        }
+      }
+
+      if (!isPasswordValid) {
+        return NextResponse.json({ error: 'Incorrect account password. Profile switch denied.' }, { status: 401 });
       }
 
       const token = signUserToken({

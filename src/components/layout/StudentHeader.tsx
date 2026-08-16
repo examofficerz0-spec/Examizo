@@ -29,6 +29,9 @@ import {
   CheckCircle2,
   Megaphone,
   Image as ImageIcon,
+  Eye,
+  EyeOff,
+  Key,
 } from 'lucide-react';
 
 interface StudentHeaderProps {
@@ -65,6 +68,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [newProfileName, setNewProfileName] = useState('');
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+
+  // Secure Profile Switch Password Verification Modal State
+  const [switchTargetProfile, setSwitchTargetProfile] = useState<ProfileItem | null>(null);
+  const [switchPassword, setSwitchPassword] = useState('');
+  const [showSwitchPassword, setShowSwitchPassword] = useState(false);
+  const [switchError, setSwitchError] = useState('');
+  const [switchLoading, setSwitchLoading] = useState(false);
 
   // Notification State
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -243,21 +253,35 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     router.replace('/login');
   };
 
-  const handleSwitchProfile = async (profile: ProfileItem) => {
+  const handleSwitchProfile = (profile: ProfileItem) => {
     if (profile.isActive) return;
+    setSwitchTargetProfile(profile);
+    setSwitchPassword('');
+    setSwitchError('');
+    setShowProfileMenu(false);
+  };
+
+  const handleConfirmSwitchProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!switchTargetProfile || !switchPassword) return;
+
+    setSwitchError('');
+    setSwitchLoading(true);
 
     try {
-      clearAllClientUserCaches();
       const res = await fetch('/api/profile/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileId: profile.id }),
+        body: JSON.stringify({ profileId: switchTargetProfile.id, password: switchPassword }),
       });
 
       const data = await res.json();
-      if (data.success) {
+      if (!res.ok || !data.success) {
+        setSwitchError(data.error || 'Authentication failed. Incorrect password.');
+      } else {
         clearAllClientUserCaches();
-        setShowProfileMenu(false);
+        setSwitchTargetProfile(null);
+        setSwitchPassword('');
         // If the target profile has NO locked course, redirect to course selection!
         if (!data.profile?.lockedCourseId) {
           window.location.href = '/course-selection';
@@ -266,7 +290,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         }
       }
     } catch (err) {
-      console.error('Failed to switch profile:', err);
+      setSwitchError('Network error during authentication. Please try again.');
+    } finally {
+      setSwitchLoading(false);
     }
   };
 
@@ -791,6 +817,103 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Creating Profile...' : 'Create Profile & Select Course'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Security Verification Modal: Switch Profile with Password Confirmation */}
+      {switchTargetProfile && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 z-[75] animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Security Verification</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    Authenticate to switch profile
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSwitchTargetProfile(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Target Profile Summary Badge */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#044B3B] text-white font-black flex items-center justify-center text-sm shadow-xs shrink-0">
+                {switchTargetProfile.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                  Switching to: <span className="text-blue-600 dark:text-blue-400 font-extrabold">{switchTargetProfile.name}</span>
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium truncate">
+                  {switchTargetProfile.lockedCourseName ? `Course: ${switchTargetProfile.lockedCourseName}` : 'No course locked yet'}
+                </p>
+              </div>
+            </div>
+
+            {switchError && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{switchError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmSwitchProfile} className="space-y-4 text-xs font-medium">
+              <div className="space-y-1.5">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center justify-between">
+                  <span>Enter Account Password *</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Required for account security</span>
+                </label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <input
+                    type={showSwitchPassword ? 'text' : 'password'}
+                    required
+                    autoFocus
+                    value={switchPassword}
+                    onChange={(e) => setSwitchPassword(e.target.value)}
+                    placeholder="Enter your account password"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold shadow-2xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSwitchPassword(!showSwitchPassword)}
+                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    title={showSwitchPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSwitchPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setSwitchTargetProfile(null)}
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={switchLoading || !switchPassword.trim()}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-md shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  {switchLoading ? 'Verifying Password...' : 'Authenticate & Switch'}
                 </button>
               </div>
             </form>
