@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { useHeader } from '@/context/HeaderContext';
 import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
@@ -1388,14 +1389,20 @@ export default function PracticeSetsPage() {
                       ))}
                     </div>
                   ) : courseSubjects.length === 0 ? (
-                    <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 stroke-[1.5]" />
+                    <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center flex flex-col items-center justify-center space-y-4">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <BookOpen className="w-7 h-7 stroke-[1.5]" />
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No practice questions available for this course yet</h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5">Please check back later or log into Admin Portal to add questions!</p>
+                      <div className="max-w-md mx-auto space-y-1">
+                        <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">No practice questions available for this course yet</h4>
+                        <p className="text-xs text-slate-400 font-medium">Please select another course or choose your class curriculum track.</p>
                       </div>
+                      <Link
+                        href="/course-selection"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                      >
+                        <BookOpen className="w-4 h-4" /> Continue Course Selection <ArrowRight className="w-4 h-4" />
+                      </Link>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

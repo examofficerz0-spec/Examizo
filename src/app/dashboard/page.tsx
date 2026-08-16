@@ -181,6 +181,8 @@ export default function StudentDashboardPage() {
     );
   });
 
+  const hasNoCourse = !userData?.lockedCourse?.id && !userData?.lockedCourse?.name && !userData?.locked_course_id;
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-black text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {/* Main Page Container */}
@@ -193,7 +195,11 @@ export default function StudentDashboardPage() {
               Welcome back, <span className="text-blue-600 dark:text-blue-400">{displayName}!</span> 👋
             </h1>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              You&apos;re making steady progress in <strong className="text-blue-600 dark:text-blue-400 font-extrabold">{courseName}</strong>.
+              {hasNoCourse ? (
+                <span>You haven&apos;t chosen an active course track yet.</span>
+              ) : (
+                <span>You&apos;re making steady progress in <strong className="text-blue-600 dark:text-blue-400 font-extrabold">{courseName}</strong>.</span>
+              )}
             </p>
           </div>
 
@@ -208,6 +214,36 @@ export default function StudentDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Continue Course Selection Banner if no course locked */}
+        {hasNoCourse && (
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border-2 border-amber-400/80 dark:border-amber-600/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center shadow-md shrink-0">
+                <BookOpen className="w-6 h-6 stroke-[2]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/30 text-amber-900 dark:text-amber-200 border border-amber-400/40">
+                    Action Required
+                  </span>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    No Academic Course Track Selected
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium">
+                  Choose your target class or competitive examination track to access customized mock papers, weekly practice DPPs, and arena rankings.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/course-selection"
+              className="w-full md:w-auto px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4" /> Continue Course Selection <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         {/* Row 1: Available Mock Examinations & Course Leaderboard */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

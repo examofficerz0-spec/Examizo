@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 import {
@@ -16,7 +17,8 @@ import {
   Eye,
   FileSpreadsheet,
   Lock,
-  Clock
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 
 interface ResourceItem {
@@ -292,6 +294,15 @@ export default function StudentResourcesPage() {
               <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300 font-bold text-xs">
                 <Clock className="w-4 h-4 text-blue-500 animate-spin" style={{ animationDuration: '6s' }} />
                 Check back soon for new PDF downloads
+              </div>
+
+              <div className="pt-1">
+                <Link
+                  href="/course-selection"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                >
+                  <BookOpen className="w-4 h-4" /> Continue Course Selection <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </div>

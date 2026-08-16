@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
-import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X } from 'lucide-react';
+import Link from 'next/link';
+import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight } from 'lucide-react';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 
@@ -133,8 +134,24 @@ export default function MockTestsListPage() {
               </div>
             ))
           ) : filteredTests.length === 0 ? (
-            <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-400 font-medium shadow-xs">
-              No mock tests found matching filter criteria.
+            <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-12 text-center space-y-4 shadow-xs">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div className="max-w-md mx-auto space-y-1">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">No Mock Tests Available For This Track</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Looking for full-length papers in a different subject or haven&apos;t chosen your class curriculum yet?
+                </p>
+              </div>
+              <div className="pt-2">
+                <Link
+                  href="/course-selection"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all"
+                >
+                  <BookOpen className="w-4 h-4" /> Continue Course Selection <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           ) : (
             filteredTests.map((testItem) => (
