@@ -247,10 +247,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   const displayName = userName || 'Student';
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearAllClientUserCaches();
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    router.replace('/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    window.location.href = '/login';
   };
 
   const handleSwitchProfile = (profile: ProfileItem) => {

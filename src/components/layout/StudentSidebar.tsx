@@ -70,10 +70,12 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearAllClientUserCaches();
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    router.replace('/login');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    window.location.href = '/login';
   };
 
   const SidebarContent = () => (
