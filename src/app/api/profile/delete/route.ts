@@ -3,6 +3,7 @@ import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 export async function POST(req: Request) {
   try {
@@ -21,17 +22,44 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user: currentUser, isMemoryMode } = authResult;
+    const { user: currentUser, isMemoryMode, isD1 } = authResult;
 
-    if (String(profileId) === String(currentUser._id) || String(profileId) === String(auth.userId)) {
+    if (String(profileId) === String(currentUser._id || currentUser.id) || String(profileId) === String(auth.userId)) {
       return NextResponse.json({ error: 'Cannot delete active profile. Switch to another profile first.' }, { status: 400 });
     }
 
+    const mainEmail = (currentUser.account_email || currentUser.email || auth.email).toLowerCase().trim();
+
+    // 1. Try D1 first
+    try {
+      const d1Users = await queryD1('SELECT * FROM users WHERE id = ? LIMIT 1', [profileId]);
+      if (d1Users && d1Users.length > 0) {
+        const targetProfile = d1Users[0];
+        if (targetProfile.email.toLowerCase() === mainEmail) {
+          return NextResponse.json({ error: 'Cannot delete primary account profile' }, { status: 400 });
+        }
+
+        await executeD1("UPDATE users SET status = 'Deleted' WHERE id = ?", [profileId]);
+
+        // Also update sharedDb if exists
+        try {
+          const db = readSharedDb();
+          if (db && db.users) {
+            db.users = (db.users || []).filter((u: any) => String(u._id) !== String(profileId) && String(u.id) !== String(profileId));
+            writeSharedDb(db);
+          }
+        } catch (_) {}
+
+        return NextResponse.json({ success: true });
+      }
+    } catch (d1Err) {
+      console.warn('[api/profile/delete] D1 fallback:', d1Err);
+    }
+
+    // 2. Memory Mode
     if (isMemoryMode) {
       const db = readSharedDb();
-      const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
-
-      const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId));
+      const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId) || String(u.id) === String(profileId));
       if (!targetProfile) {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
@@ -41,45 +69,46 @@ export async function POST(req: Request) {
       }
 
       const targetAccountEmail = (targetProfile.account_email || '').toLowerCase();
-      if (targetAccountEmail !== mainEmail) {
+      if (targetAccountEmail && targetAccountEmail !== mainEmail) {
         return NextResponse.json({ error: 'Unauthorized profile deletion' }, { status: 403 });
       }
 
-      db.users = (db.users || []).filter((u: any) => String(u._id) !== String(profileId));
+      db.users = (db.users || []).filter((u: any) => String(u._id) !== String(profileId) && String(u.id) !== String(profileId));
       writeSharedDb(db);
 
       return NextResponse.json({ success: true });
     }
 
-    // Mongoose Mode
-    const mainEmail = (currentUser.account_email || currentUser.email).toLowerCase();
+    // 3. Mongoose Mode (only if !isD1)
+    if (!isD1) {
+      let targetProfile = null;
+      try {
+        targetProfile = await User.findById(profileId);
+      } catch (e) {
+        targetProfile = await User.findOne({ _id: profileId });
+      }
 
-    let targetProfile = null;
-    try {
-      targetProfile = await User.findById(profileId);
-    } catch (e) {
-      targetProfile = await User.findOne({ _id: profileId });
+      if (!targetProfile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      }
+
+      if (targetProfile.email.toLowerCase() === mainEmail) {
+        return NextResponse.json({ error: 'Cannot delete primary account profile' }, { status: 400 });
+      }
+
+      const targetAccountEmail = (targetProfile.account_email || '').toLowerCase();
+      if (targetAccountEmail && targetAccountEmail !== mainEmail) {
+        return NextResponse.json({ error: 'Unauthorized profile deletion' }, { status: 403 });
+      }
+
+      targetProfile.status = 'Deleted';
+      await targetProfile.save();
+
+      return NextResponse.json({ success: true });
     }
 
-    if (!targetProfile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    if (targetProfile.email.toLowerCase() === mainEmail) {
-      return NextResponse.json({ error: 'Cannot delete primary account profile' }, { status: 400 });
-    }
-
-    const targetAccountEmail = (targetProfile.account_email || '').toLowerCase();
-    if (targetAccountEmail !== mainEmail) {
-      return NextResponse.json({ error: 'Unauthorized profile deletion' }, { status: 403 });
-    }
-
-    targetProfile.status = 'Deleted';
-    await targetProfile.save();
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete profile' }, { status: 500 });
   }
 }
-

@@ -33,6 +33,8 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           id: u.id,
           name: u.name,
           email: u.email,
+          password_hash: u.password_hash,
+          account_email: u.account_email || (u.email.includes('+profile_') ? `${u.email.split('+profile_')[0]}@${u.email.split('@')[1] || 'exammaster.internal'}` : u.email),
           locked_course_id: u.locked_course_id || null,
           status: u.status || 'Active',
           xp_total: u.xp_total || 0,

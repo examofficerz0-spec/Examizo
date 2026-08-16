@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
-import { User, Notification } from '@/lib/models';
+import { Notification } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const isRelevantForUser = (n: any, userId: string, courseId?: string | null) => {
-  const targetType = n.targetType || 'all';
+  const targetType = n.targetType || n.target_type || 'all';
   if (targetType === 'user') {
-    return String(n.targetUserId || '') === String(userId);
+    return String(n.targetUserId || n.target_user_id || '') === String(userId);
   }
   if (targetType === 'course' && courseId) {
-    return String(n.targetCourseId || '') === String(courseId);
+    return String(n.targetCourseId || n.target_course_id || '') === String(courseId);
   }
   if (targetType === 'all') {
     return true;
@@ -34,83 +35,79 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user: currentUser, isMemoryMode } = authResult;
+    const { user: currentUser, isMemoryMode, isD1 } = authResult;
+    const currentUserId = String(currentUser._id || currentUser.id || auth.userId);
+    const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const currentUserId = String(currentUser._id);
-      const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
-      const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
+    // 1. Try Cloudflare D1
+    try {
+      const d1Notifs = await queryD1('SELECT * FROM notifications ORDER BY created_at DESC');
+      if (d1Notifs && Array.isArray(d1Notifs)) {
+        const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
 
-      // Filter notifications relevant to currentUser and not cleared by currentUser
-      const allNotifs = (db.notifications || []).filter((n: any) => {
-        const clearedBy = (n.clearedBy || []).map((id: any) => String(id));
-        if (clearedBy.includes(currentUserId)) return false;
+        const filtered = d1Notifs.filter((n: any) => {
+          let clearedBy: string[] = [];
+          try {
+            clearedBy = typeof n.cleared_by_json === 'string' ? JSON.parse(n.cleared_by_json) : (n.clearedBy || []);
+          } catch (_) {}
+          if (clearedBy.map(String).includes(currentUserId)) return false;
 
-        // New account or sub-profile does NOT receive notifications sent BEFORE their creation!
-        const notifTime = n.created_at ? new Date(n.created_at).getTime() : 0;
-        if (userCreatedAtTime > 0 && notifTime < userCreatedAtTime - 5000) {
-          return false;
-        }
+          const notifTime = n.created_at ? new Date(n.created_at).getTime() : 0;
+          if (userCreatedAtTime > 0 && notifTime < userCreatedAtTime - 5000) {
+            return false;
+          }
 
-        return isRelevantForUser(n, currentUserId, userCourseId);
-      });
+          return isRelevantForUser(n, currentUserId, userCourseId);
+        });
 
-      // Sort newest first
-      allNotifs.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        const formatted = filtered.map((n: any) => {
+          let readBy: string[] = [];
+          try {
+            readBy = typeof n.read_by_json === 'string' ? JSON.parse(n.read_by_json) : (n.readBy || []);
+          } catch (_) {}
+          return {
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: n.type || 'announcement',
+            isRead: readBy.map(String).includes(currentUserId),
+            created_at: n.created_at,
+          };
+        });
 
-      const formatted = allNotifs.map((n: any) => {
-        const readBy = (n.readBy || []).map((id: any) => String(id));
-        return {
-          id: String(n._id),
-          title: n.title,
-          message: n.message,
-          type: n.type || 'announcement',
-          isRead: readBy.includes(currentUserId),
-          created_at: n.created_at,
-        };
-      });
-
-      const unreadCount = formatted.filter((n: any) => !n.isRead).length;
-
-      return NextResponse.json({
-        notifications: formatted,
-        unreadCount,
-      });
+        const unreadCount = formatted.filter((n: any) => !n.isRead).length;
+        return NextResponse.json({ notifications: formatted, unreadCount });
+      }
+    } catch (d1Err) {
+      console.warn('[notifications GET] D1 fallback:', d1Err);
     }
 
-    // Mongoose Mode
-    const userIdStr = currentUser._id.toString();
-    const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
-    const userCreatedAt = currentUser.created_at ? new Date(currentUser.created_at) : null;
+    // 2. Memory Mode Fallback
+    const db = readSharedDb();
+    const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
 
-    const query: any = {
-      clearedBy: { $ne: userIdStr },
-      $or: [
-        { targetType: 'all' },
-        { targetType: 'user', targetUserId: userIdStr },
-      ],
-    };
+    const allNotifs = (db.notifications || []).filter((n: any) => {
+      const clearedBy = (n.clearedBy || []).map((id: any) => String(id));
+      if (clearedBy.includes(currentUserId)) return false;
 
-    if (userCourseId) {
-      query.$or.push({ targetType: 'course', targetCourseId: userCourseId });
-    }
+      const notifTime = n.created_at ? new Date(n.created_at).getTime() : 0;
+      if (userCreatedAtTime > 0 && notifTime < userCreatedAtTime - 5000) {
+        return false;
+      }
 
-    // New account or sub-profile does NOT receive notifications sent BEFORE their creation!
-    if (userCreatedAt) {
-      query.created_at = { $gte: new Date(userCreatedAt.getTime() - 5000) };
-    }
+      return isRelevantForUser(n, currentUserId, userCourseId);
+    });
 
-    const notifs = await Notification.find(query).sort({ created_at: -1 }).limit(30).lean();
+    allNotifs.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-    const formatted = notifs.map((n: any) => {
-      const readBy = (n.readBy || []).map((id: any) => id.toString());
+    const formatted = allNotifs.map((n: any) => {
+      const readBy = (n.readBy || []).map((id: any) => String(id));
       return {
-        id: n._id.toString(),
+        id: String(n._id || n.id),
         title: n.title,
         message: n.message,
         type: n.type || 'announcement',
-        isRead: readBy.includes(userIdStr),
+        isRead: readBy.includes(currentUserId),
         created_at: n.created_at,
       };
     });
@@ -139,103 +136,100 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user: currentUser, isMemoryMode } = authResult;
+    const { user: currentUser } = authResult;
     const body = await request.json();
     const { notificationId, markAll, clearRead, clearId } = body;
 
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      if (!db.notifications) db.notifications = [];
+    const currentUserId = String(currentUser._id || currentUser.id || auth.userId);
+    const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
-      const currentUserId = String(currentUser._id);
-      const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
+    // 1. Try D1
+    try {
+      const d1Notifs = await queryD1('SELECT * FROM notifications');
+      if (d1Notifs && Array.isArray(d1Notifs)) {
+        for (const n of d1Notifs) {
+          if (!isRelevantForUser(n, currentUserId, userCourseId)) continue;
+          let readBy: string[] = [];
+          let clearedBy: string[] = [];
+          try {
+            readBy = typeof n.read_by_json === 'string' ? JSON.parse(n.read_by_json) : (n.readBy || []);
+          } catch (_) {}
+          try {
+            clearedBy = typeof n.cleared_by_json === 'string' ? JSON.parse(n.cleared_by_json) : (n.clearedBy || []);
+          } catch (_) {}
 
-      if (clearRead) {
-        db.notifications.forEach((n: any) => {
-          if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
-          if (!n.clearedBy) n.clearedBy = [];
-          const readBy = (n.readBy || []).map((id: any) => String(id));
-          const clearedBy = n.clearedBy.map((id: any) => String(id));
-          if (readBy.includes(currentUserId) && !clearedBy.includes(currentUserId)) {
-            n.clearedBy.push(currentUserId);
+          let changed = false;
+          if (clearRead && readBy.includes(currentUserId) && !clearedBy.includes(currentUserId)) {
+            clearedBy.push(currentUserId);
+            changed = true;
+          } else if (clearId && String(n.id) === String(clearId) && !clearedBy.includes(currentUserId)) {
+            clearedBy.push(currentUserId);
+            changed = true;
+          } else if (markAll && !readBy.includes(currentUserId)) {
+            readBy.push(currentUserId);
+            changed = true;
+          } else if (notificationId && String(n.id) === String(notificationId) && !readBy.includes(currentUserId)) {
+            readBy.push(currentUserId);
+            changed = true;
           }
-        });
-      } else if (clearId) {
-        const target = db.notifications.find((n: any) => String(n._id) === String(clearId));
-        if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
-          if (!target.clearedBy) target.clearedBy = [];
-          const clearedBy = target.clearedBy.map((id: any) => String(id));
-          if (!clearedBy.includes(currentUserId)) {
-            target.clearedBy.push(currentUserId);
-          }
-        }
-      } else if (markAll) {
-        db.notifications.forEach((n: any) => {
-          if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
-          if (!n.readBy) n.readBy = [];
-          const readBy = n.readBy.map((id: any) => String(id));
-          if (!readBy.includes(currentUserId)) {
-            n.readBy.push(currentUserId);
-          }
-        });
-      } else if (notificationId) {
-        const target = db.notifications.find((n: any) => String(n._id) === String(notificationId));
-        if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
-          if (!target.readBy) target.readBy = [];
-          const readBy = target.readBy.map((id: any) => String(id));
-          if (!readBy.includes(currentUserId)) {
-            target.readBy.push(currentUserId);
+
+          if (changed) {
+            await executeD1('UPDATE notifications SET read_by_json = ?, cleared_by_json = ? WHERE id = ?', [
+              JSON.stringify(readBy),
+              JSON.stringify(clearedBy),
+              n.id,
+            ]);
           }
         }
       }
-
-      writeSharedDb(db);
-      return NextResponse.json({ success: true, message: 'Notification action completed' });
+    } catch (d1Err) {
+      console.warn('[notifications POST] D1 fallback:', d1Err);
     }
 
-    // Mongoose Mode
-    const userIdStr = currentUser._id.toString();
-    const userCourseId = currentUser.locked_course_id ? currentUser.locked_course_id.toString() : null;
-
-    const userTargetFilter: any = {
-      $or: [
-        { targetType: 'all' },
-        { targetType: 'user', targetUserId: userIdStr },
-      ],
-    };
-    if (userCourseId) {
-      userTargetFilter.$or.push({ targetType: 'course', targetCourseId: userCourseId });
-    }
+    // 2. Memory Mode Sync
+    const db = readSharedDb();
+    if (!db.notifications) db.notifications = [];
 
     if (clearRead) {
-      await Notification.updateMany(
-        {
-          ...userTargetFilter,
-          readBy: userIdStr,
-          clearedBy: { $ne: userIdStr },
-        },
-        { $addToSet: { clearedBy: userIdStr } }
-      );
+      db.notifications.forEach((n: any) => {
+        if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
+        if (!n.clearedBy) n.clearedBy = [];
+        const readBy = (n.readBy || []).map((id: any) => String(id));
+        const clearedBy = n.clearedBy.map((id: any) => String(id));
+        if (readBy.includes(currentUserId) && !clearedBy.includes(currentUserId)) {
+          n.clearedBy.push(currentUserId);
+        }
+      });
     } else if (clearId) {
-      await Notification.updateOne(
-        { _id: clearId, ...userTargetFilter },
-        { $addToSet: { clearedBy: userIdStr } }
-      );
+      const target = db.notifications.find((n: any) => String(n._id || n.id) === String(clearId));
+      if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
+        if (!target.clearedBy) target.clearedBy = [];
+        const clearedBy = target.clearedBy.map((id: any) => String(id));
+        if (!clearedBy.includes(currentUserId)) {
+          target.clearedBy.push(currentUserId);
+        }
+      }
     } else if (markAll) {
-      await Notification.updateMany(
-        {
-          ...userTargetFilter,
-          readBy: { $ne: userIdStr },
-        },
-        { $addToSet: { readBy: userIdStr } }
-      );
+      db.notifications.forEach((n: any) => {
+        if (!isRelevantForUser(n, currentUserId, userCourseId)) return;
+        if (!n.readBy) n.readBy = [];
+        const readBy = n.readBy.map((id: any) => String(id));
+        if (!readBy.includes(currentUserId)) {
+          n.readBy.push(currentUserId);
+        }
+      });
     } else if (notificationId) {
-      await Notification.updateOne(
-        { _id: notificationId, ...userTargetFilter },
-        { $addToSet: { readBy: userIdStr } }
-      );
+      const target = db.notifications.find((n: any) => String(n._id || n.id) === String(notificationId));
+      if (target && isRelevantForUser(target, currentUserId, userCourseId)) {
+        if (!target.readBy) target.readBy = [];
+        const readBy = target.readBy.map((id: any) => String(id));
+        if (!readBy.includes(currentUserId)) {
+          target.readBy.push(currentUserId);
+        }
+      }
     }
 
+    writeSharedDb(db);
     return NextResponse.json({ success: true, message: 'Notification action completed' });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to process notification action' }, { status: 500 });
