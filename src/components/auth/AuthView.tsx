@@ -179,56 +179,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     }
   };
 
-  // Load Google Identity Services SDK script and check for URL OAuth callback
-  useEffect(() => {
+  // Redirect to Google OAuth directly (ultimate fallback)
+  const redirectToGoogleOAuth = (clientId: string) => {
     if (typeof window === 'undefined') return;
+    const redirectUri = window.location.origin + window.location.pathname;
+    const url =
+      `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=token` +
+      `&scope=${encodeURIComponent('openid email profile')}` +
+      `&prompt=select_account` +
+      `&state=${encodeURIComponent(window.location.search || '')}`;
+    window.location.href = url;
+  };
 
-    // 1. Check for Google OAuth redirect callback tokens in URL hash (e.g. #access_token=... or #id_token=...)
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get('access_token');
-      const idToken = params.get('id_token');
-      if (idToken) {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        processGoogleAuth({ credential: idToken });
-      } else if (accessToken) {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        setGoogleAuthLoading(true);
-        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-          .then((r) => r.json())
-          .then((userInfo) => {
-            if (userInfo.email) {
-              processGoogleAuth({
-                email: userInfo.email,
-                name: userInfo.name || userInfo.email.split('@')[0],
-              });
-            } else {
-              setError('Could not retrieve your Google account details.');
-              setGoogleAuthLoading(false);
-            }
-          })
-          .catch(() => {
-            setError('Failed to complete Google authentication.');
-            setGoogleAuthLoading(false);
-          });
-      }
-    }
-
-    // 2. Load Google Identity Services SDK
-    const scriptId = 'google-gsi-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-  }, []);
-
+  // Process the Google auth payload (email/name or credential) via our backend
   const processGoogleAuth = async (payload: { email?: string; name?: string; credential?: string }) => {
     setError('');
     setGoogleAuthLoading(true);
@@ -248,11 +214,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             const savedStr = localStorage.getItem('exammaster_saved_accounts');
             let saved = savedStr ? JSON.parse(savedStr) : [];
             if (!Array.isArray(saved)) saved = [];
-            const userEmail = data.user.email || payload.email;
+            const userEmail = data.user.email || payload.email || '';
             const userName = data.user.name || payload.name || userEmail.split('@')[0];
             const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
-            saved = saved.filter((a: any) => a.email.toLowerCase() !== userEmail.toLowerCase());
+            saved = saved.filter((a: any) => a.email?.toLowerCase() !== userEmail.toLowerCase());
             saved.unshift({
               id: data.user.id || userEmail,
               email: userEmail,
@@ -285,16 +251,74 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           router.push('/dashboard');
         }
       } else {
-        setError(data.error || 'Google authentication failed');
+        setError(data.error || 'Google authentication failed. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred during Google sign-in');
+      setError('An error occurred during Google sign-in. Please try again.');
     } finally {
       setGoogleAuthLoading(false);
     }
   };
 
-  const handleGoogleAuth = async () => {
+  // Fetch user info from Google using access_token, then call processGoogleAuth
+  const fetchGoogleUserAndAuth = async (accessToken: string) => {
+    setGoogleAuthLoading(true);
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const userInfo = await res.json();
+      if (userInfo.email) {
+        await processGoogleAuth({
+          email: userInfo.email,
+          name: userInfo.name || userInfo.email.split('@')[0],
+        });
+      } else {
+        setError('Could not retrieve your Google account email.');
+        setGoogleAuthLoading(false);
+      }
+    } catch {
+      setError('Failed to get account info from Google.');
+      setGoogleAuthLoading(false);
+    }
+  };
+
+  // Load Google Identity Services SDK and handle redirect callbacks
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 1. Handle Google OAuth redirect callback (hash tokens from implicit flow)
+    const hash = window.location.hash.substring(1);
+    if (hash && (hash.includes('access_token') || hash.includes('id_token'))) {
+      const params = new URLSearchParams(hash);
+      const idToken = params.get('id_token');
+      const accessToken = params.get('access_token');
+
+      // Clean URL hash immediately
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      if (idToken) {
+        processGoogleAuth({ credential: idToken });
+        return;
+      } else if (accessToken) {
+        fetchGoogleUserAndAuth(accessToken);
+        return;
+      }
+    }
+
+    // 2. Load Google Identity Services SDK
+    const scriptId = 'google-gsi-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const handleGoogleAuth = () => {
     const clientId =
       process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
       '342748712178-h3b3ab5teiqcc0trkrhkql8o7ols4gk1.apps.googleusercontent.com';
@@ -304,7 +328,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
     const google = typeof window !== 'undefined' ? (window as any).google : null;
 
-    // 1. Direct OAuth2 Token Popup Flow (Instant popup on click - no browser popup blockage)
+    // ── Strategy 1: GIS OAuth2 Token Popup (called synchronously on click = no popup block) ──
     if (google?.accounts?.oauth2) {
       try {
         const tokenClient = google.accounts.oauth2.initTokenClient({
@@ -312,49 +336,75 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           scope: 'email profile openid',
           callback: async (tokenResponse: any) => {
             if (tokenResponse.error) {
-              if (tokenResponse.error !== 'popup_closed_by_user') {
-                setError(`Google sign-in error: ${tokenResponse.error}`);
+              if (tokenResponse.error === 'popup_closed_by_user') {
+                setGoogleAuthLoading(false);
+                return;
               }
-              setGoogleAuthLoading(false);
+              // Access denied or config error — try redirect
+              console.warn('Google OAuth callback error:', tokenResponse.error);
+              redirectToGoogleOAuth(clientId);
               return;
             }
             if (tokenResponse.access_token) {
-              try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const userInfo = await res.json();
-                if (userInfo.email) {
-                  await processGoogleAuth({
-                    email: userInfo.email,
-                    name: userInfo.name || userInfo.email.split('@')[0],
-                  });
-                } else {
-                  setError('Could not retrieve your Google account email.');
-                  setGoogleAuthLoading(false);
-                }
-              } catch (e) {
-                setError('Failed to fetch account info from Google.');
-                setGoogleAuthLoading(false);
-              }
+              await fetchGoogleUserAndAuth(tokenResponse.access_token);
+            } else {
+              setGoogleAuthLoading(false);
             }
+          },
+          error_callback: (err: any) => {
+            // Popup was BLOCKED by browser — fall back to redirect
+            console.warn('Google popup blocked, redirecting:', err);
+            redirectToGoogleOAuth(clientId);
           },
         });
         tokenClient.requestAccessToken({ prompt: 'select_account' });
+
+        // Safety timeout: if nothing happens in 120s, reset loading state
+        setTimeout(() => {
+          setGoogleAuthLoading((prev: boolean) => {
+            if (prev) {
+              setError('Google sign-in timed out. Please try again.');
+              return false;
+            }
+            return prev;
+          });
+        }, 120000);
         return;
       } catch (err) {
-        console.warn('Direct OAuth2 popup failed, using redirect fallback:', err);
+        console.warn('initTokenClient failed:', err);
       }
     }
 
-    // 2. Direct Google OAuth2 Redirect Fallback (works across ALL browsers, ad-blockers, Brave shields)
-    if (typeof window !== 'undefined') {
-      const redirectUri = window.location.origin + window.location.pathname;
-      const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-        clientId
-      )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${Date.now()}&prompt=select_account`;
-      window.location.href = redirectUrl;
+    // ── Strategy 2: Google One Tap / Sign In With Google (FedCM-based) ──
+    if (google?.accounts?.id) {
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response: any) => {
+            if (response.credential) {
+              await processGoogleAuth({ credential: response.credential });
+            } else {
+              setGoogleAuthLoading(false);
+            }
+          },
+          cancel_on_tap_outside: false,
+        });
+
+        google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // One Tap failed — fall back to redirect
+            redirectToGoogleOAuth(clientId);
+          }
+          // If displayed, user will interact with it and callback fires
+        });
+        return;
+      } catch (err) {
+        console.warn('Google One Tap failed:', err);
+      }
     }
+
+    // ── Strategy 3: Direct Google OAuth2 Redirect (works everywhere) ──
+    redirectToGoogleOAuth(clientId);
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
