@@ -179,9 +179,45 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     }
   };
 
-  // Load Google Identity Services SDK script on mount
+  // Load Google Identity Services SDK script and check for URL OAuth callback
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // 1. Check for Google OAuth redirect callback tokens in URL hash (e.g. #access_token=... or #id_token=...)
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get('access_token');
+      const idToken = params.get('id_token');
+      if (idToken) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        processGoogleAuth({ credential: idToken });
+      } else if (accessToken) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        setGoogleAuthLoading(true);
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then((r) => r.json())
+          .then((userInfo) => {
+            if (userInfo.email) {
+              processGoogleAuth({
+                email: userInfo.email,
+                name: userInfo.name || userInfo.email.split('@')[0],
+              });
+            } else {
+              setError('Could not retrieve your Google account details.');
+              setGoogleAuthLoading(false);
+            }
+          })
+          .catch(() => {
+            setError('Failed to complete Google authentication.');
+            setGoogleAuthLoading(false);
+          });
+      }
+    }
+
+    // 2. Load Google Identity Services SDK
     const scriptId = 'google-gsi-script';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -205,8 +241,30 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       });
 
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.user) {
         clearAllClientUserCaches();
+        if (typeof window !== 'undefined') {
+          try {
+            const savedStr = localStorage.getItem('exammaster_saved_accounts');
+            let saved = savedStr ? JSON.parse(savedStr) : [];
+            if (!Array.isArray(saved)) saved = [];
+            const userEmail = data.user.email || payload.email;
+            const userName = data.user.name || payload.name || userEmail.split('@')[0];
+            const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+
+            saved = saved.filter((a: any) => a.email.toLowerCase() !== userEmail.toLowerCase());
+            saved.unshift({
+              id: data.user.id || userEmail,
+              email: userEmail,
+              name: userName,
+              avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
+              lastLogin: new Date().toISOString(),
+            });
+            if (saved.length > 4) saved = saved.slice(0, 4);
+            localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
+          } catch (e) {}
+        }
+
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
@@ -241,58 +299,27 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
       '342748712178-h3b3ab5teiqcc0trkrhkql8o7ols4gk1.apps.googleusercontent.com';
 
-    // Wait for Google Identity Services SDK to load
-    const waitForGoogle = (): Promise<boolean> => {
-      return new Promise((resolve) => {
-        if (typeof window !== 'undefined' && (window as any).google?.accounts) {
-          resolve(true);
-          return;
-        }
-        // Poll for up to 3 seconds
-        let attempts = 0;
-        const interval = setInterval(() => {
-          attempts++;
-          if (typeof window !== 'undefined' && (window as any).google?.accounts) {
-            clearInterval(interval);
-            resolve(true);
-          } else if (attempts >= 30) {
-            clearInterval(interval);
-            resolve(false);
-          }
-        }, 100);
-      });
-    };
+    setError('');
+    setGoogleAuthLoading(true);
 
-    const googleReady = await waitForGoogle();
+    const google = typeof window !== 'undefined' ? (window as any).google : null;
 
-    if (!googleReady) {
-      setError('Google sign-in is not available. Please refresh and try again.');
-      return;
-    }
-
-    const google = (window as any).google;
-
-    // Try One Tap first
-    google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (response: any) => {
-        if (response.credential) {
-          await processGoogleAuth({ credential: response.credential });
-        }
-      },
-    });
-
-    google.accounts.id.prompt((notification: any) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Fallback: Use Google OAuth2 popup (the real Google sign-in window)
+    // 1. Direct OAuth2 Token Popup Flow (Instant popup on click - no browser popup blockage)
+    if (google?.accounts?.oauth2) {
+      try {
         const tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: 'email profile',
+          scope: 'email profile openid',
           callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              if (tokenResponse.error !== 'popup_closed_by_user') {
+                setError(`Google sign-in error: ${tokenResponse.error}`);
+              }
+              setGoogleAuthLoading(false);
+              return;
+            }
             if (tokenResponse.access_token) {
               try {
-                setGoogleAuthLoading(true);
-                // Fetch user info from Google using the access token
                 const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                   headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
                 });
@@ -303,19 +330,31 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                     name: userInfo.name || userInfo.email.split('@')[0],
                   });
                 } else {
-                  setError('Could not retrieve your Google account info.');
+                  setError('Could not retrieve your Google account email.');
                   setGoogleAuthLoading(false);
                 }
-              } catch {
-                setError('Failed to authenticate with Google.');
+              } catch (e) {
+                setError('Failed to fetch account info from Google.');
                 setGoogleAuthLoading(false);
               }
             }
           },
         });
         tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (err) {
+        console.warn('Direct OAuth2 popup failed, using redirect fallback:', err);
       }
-    });
+    }
+
+    // 2. Direct Google OAuth2 Redirect Fallback (works across ALL browsers, ad-blockers, Brave shields)
+    if (typeof window !== 'undefined') {
+      const redirectUri = window.location.origin + window.location.pathname;
+      const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+        clientId
+      )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${Date.now()}&prompt=select_account`;
+      window.location.href = redirectUrl;
+    }
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
