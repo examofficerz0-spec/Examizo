@@ -159,23 +159,30 @@ export async function GET(req: Request) {
 
         if (subject) {
           const isGk = isGkGsName(subject);
+          const subLower = subject.trim().toLowerCase();
           formattedQuestions = formattedQuestions.filter((q) => {
+            const qSub = (q.subject || '').trim().toLowerCase();
+            const tag = (q.topic_tag || '').trim();
+            const tagLower = tag.toLowerCase();
+            const tagPrefix = tagLower.split(/[\-\—\:\.]/)[0].trim();
+
+            if (qSub === subLower || tagPrefix === subLower || tagLower === subLower) return true;
+
             if (isGk) {
-              const tagL = (q.topic_tag || '').toLowerCase();
-              const subL = (q.subject || '').toLowerCase();
-              return isGkGsName(subL) || isGkGsName(tagL) || gkSubKeywords.some((k) => tagL.includes(k) || subL.includes(k));
+              return isGkGsName(qSub) || isGkGsName(tagPrefix) || gkSubKeywords.some((k) => tagLower.startsWith(k) || qSub === k);
             }
-            return (
-              (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
-              (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
-            );
+
+            return false;
           });
         }
 
         if (topic) {
-          formattedQuestions = formattedQuestions.filter(
-            (q) => q.topic_tag === topic || (q.topic_tag || '').toLowerCase().includes(topic.toLowerCase())
-          );
+          const topLower = topic.trim().toLowerCase();
+          formattedQuestions = formattedQuestions.filter((q) => {
+            const tag = (q.topic_tag || '').trim().toLowerCase();
+            const tagSuffix = tag.includes('-') ? tag.split('-').slice(1).join('-').trim() : (tag.includes('—') ? tag.split('—').slice(1).join('—').trim() : tag);
+            return tag === topLower || tagSuffix === topLower;
+          });
         }
 
         const userAttempts = (d1Attempts || []).map((a: any) => {
@@ -282,21 +289,30 @@ export async function GET(req: Request) {
 
       if (subject) {
         const isGk = isGkGsName(subject);
+        const subLower = subject.trim().toLowerCase();
         questions = questions.filter((q) => {
+          const qSub = (q.subject || '').trim().toLowerCase();
+          const tag = (q.topic_tag || '').trim();
+          const tagLower = tag.toLowerCase();
+          const tagPrefix = tagLower.split(/[\-\—\:\.]/)[0].trim();
+
+          if (qSub === subLower || tagPrefix === subLower || tagLower === subLower) return true;
+
           if (isGk) {
-            const tagL = (q.topic_tag || '').toLowerCase();
-            const subL = (q.subject || '').toLowerCase();
-            return isGkGsName(subL) || isGkGsName(tagL) || gkSubKeywords.some((k) => tagL.includes(k) || subL.includes(k));
+            return isGkGsName(qSub) || isGkGsName(tagPrefix) || gkSubKeywords.some((k) => tagLower.startsWith(k) || qSub === k);
           }
-          return (
-            (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
-            (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
-          );
+
+          return false;
         });
       }
 
       if (topic) {
-        questions = questions.filter((q) => q.topic_tag === topic || (q.topic_tag || '').toLowerCase().includes(topic.toLowerCase()));
+        const topLower = topic.trim().toLowerCase();
+        questions = questions.filter((q) => {
+          const tag = (q.topic_tag || '').trim().toLowerCase();
+          const tagSuffix = tag.includes('-') ? tag.split('-').slice(1).join('-').trim() : (tag.includes('—') ? tag.split('—').slice(1).join('—').trim() : tag);
+          return tag === topLower || tagSuffix === topLower;
+        });
       }
 
       const userAttempts = (db.attempts || []).filter((a) => String(a.student_id) === String(user._id || auth.userId));
@@ -387,23 +403,30 @@ export async function GET(req: Request) {
 
     if (subject) {
       const isGk = isGkGsName(subject);
+      const subLower = subject.trim().toLowerCase();
       questions = questions.filter((q: any) => {
+        const qSub = (q.subject || '').trim().toLowerCase();
+        const tag = (q.topic_tag || '').trim();
+        const tagLower = tag.toLowerCase();
+        const tagPrefix = tagLower.split(/[\-\—\:\.]/)[0].trim();
+
+        if (qSub === subLower || tagPrefix === subLower || tagLower === subLower) return true;
+
         if (isGk) {
-          const tagL = (q.topic_tag || '').toLowerCase();
-          const subL = (q.subject || '').toLowerCase();
-          return isGkGsName(subL) || isGkGsName(tagL) || gkSubKeywords.some((k) => tagL.includes(k) || subL.includes(k));
+          return isGkGsName(qSub) || isGkGsName(tagPrefix) || gkSubKeywords.some((k) => tagLower.startsWith(k) || qSub === k);
         }
-        return (
-          (q.subject || '').toLowerCase().includes(subject.toLowerCase()) ||
-          (q.topic_tag || '').toLowerCase().includes(subject.toLowerCase())
-        );
+
+        return false;
       });
     }
 
     if (topic) {
-      questions = questions.filter(
-        (q: any) => q.topic_tag === topic || (q.topic_tag || '').toLowerCase().includes(topic.toLowerCase())
-      );
+      const topLower = topic.trim().toLowerCase();
+      questions = questions.filter((q: any) => {
+        const tag = (q.topic_tag || '').trim().toLowerCase();
+        const tagSuffix = tag.includes('-') ? tag.split('-').slice(1).join('-').trim() : (tag.includes('—') ? tag.split('—').slice(1).join('—').trim() : tag);
+        return tag === topLower || tagSuffix === topLower;
+      });
     }
 
     const userAttempts = await Attempt.find({ student_id: user._id || auth.userId });

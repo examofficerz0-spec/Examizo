@@ -582,116 +582,62 @@ export default function PracticeSetsPage() {
     }
   };
 
+  const isGkGsName = (str: string): boolean => {
+    if (!str || typeof str !== 'string') return false;
+    const s = str.toLowerCase().trim();
+    return (
+      s === 'gk/gs' ||
+      s === 'gk / gs' ||
+      s === 'gk-gs' ||
+      s === 'gk gs' ||
+      s === 'gk' ||
+      s === 'gs' ||
+      s.includes('general knowledge') ||
+      s.includes('general studies') ||
+      s.includes('general awareness')
+    );
+  };
+
   const doesQuestionMatchSubject = (q: any, targetSubject: string, allSubjects: string[]): boolean => {
     if (!q || !targetSubject) return false;
 
     const sLower = targetSubject.toLowerCase().trim();
     const qSub = (q.subject || '').toString().trim();
     const qSubLower = qSub.toLowerCase();
-    const tagLower = (q.topic_tag || '').toString().toLowerCase().trim();
+    const tag = (q.topic_tag || '').toString().trim();
+    const tagLower = tag.toLowerCase();
 
-    // 0. Direct match on q.subject
+    // 0. Direct match on q.subject field
     if (qSubLower && !/^\d+$/.test(qSubLower)) {
       if (qSubLower === sLower) return true;
     }
 
-    // 1. Advance Arithmetic vs Arithmetic/Mathematics
-    const isAdvanceTarget = /^(?:advance\s*arithm[ae]tic|advanced\s*math)/i.test(sLower);
-    if (isAdvanceTarget) {
-      if (tagLower.includes('advance') || qSubLower.includes('advance')) return true;
-      return false;
-    }
-
-    const isArithOrMathTarget = /^(?:arithm[ae]tics?|math(?:ematics)?|quant(?:itative\s*aptitude)?)$/i.test(sLower);
-    if (isArithOrMathTarget) {
-      if (tagLower.includes('advance') || qSubLower.includes('advance')) return false; // belongs to Advance Arithmetic
-      const mathKeywords = ['arithm', 'math', 'quant', 'average', 'fraction', 'hcf', 'lcm', 'percentage', 'profit and loss', 'ratio', 'simple interest', 'simplification', 'time and work', 'algebra', 'calculus', 'geometry', 'trigonometry', 'number system'];
-      if (mathKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-      if (tagLower.startsWith(sLower)) return true;
-    }
-
-    // 2. Reasoning / Intelligence
-    const isReasoningTarget = /^(?:reasoning|logical\s*reasoning|general\s*intelligence)/i.test(sLower);
-    if (isReasoningTarget) {
-      const reasoningKeywords = ['reasoning', 'logic', 'intelligence', 'analogy', 'series', 'coding', 'decoding', 'blood relation', 'direction', 'venn', 'syllogism', 'puzzle', 'seating'];
-      if (reasoningKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-
-    // 3. Current Affairs
-    const isCurrentAffairsTarget = /^(?:current\s*aff[ai]+rs?)/i.test(sLower);
-    if (isCurrentAffairsTarget) {
-      if (tagLower.includes('current') || qSubLower.includes('current') || tagLower.includes('affair')) return true;
-    }
-
-    // 4. GK / GS check
-    const isGkGsTarget = (
-      sLower === 'gk/gs' ||
-      sLower === 'gk / gs' ||
-      sLower === 'gk-gs' ||
-      sLower === 'gk gs' ||
-      sLower === 'gk' ||
-      sLower === 'gs' ||
-      sLower.includes('gk') ||
-      sLower.includes('general studies') ||
-      sLower.includes('general awareness')
-    );
-
-    if (isGkGsTarget) {
-      const gkKeywords = [
-        'general knowledge',
-        'environment',
-        'general science',
-        'indian economy',
-        'world geography',
-        'indian geography',
-        'indian history',
-        'indian polity',
-        'history',
-        'geography',
-        'polity',
-        'economy',
-        'economics',
-        'ecology',
-        'static gk',
-        'constitution',
-        'civics',
-        'ancient india',
-        'medieval india',
-        'modern india',
-        'freedom movement',
-        'gk',
-        'gs',
-      ];
-      if (gkKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-
-    // 5. Science catch-all
-    if (sLower.includes('science')) {
-      const scienceKeywords = ['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology', 'chemical', 'mechanics', 'optics', 'waves', 'thermodynamics', 'acid', 'base', 'reaction', 'cell', 'plant', 'animal'];
-      if (scienceKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-
-    // 6. Explicit prefix & substring check
+    // 1. Exact Subject prefix in topic_tag (format: "Subject - Topic", "Subject — Topic", "Subject: Topic")
     if (tagLower) {
       if (tagLower === sLower) return true;
-      if (tagLower.startsWith(sLower + ' ') || tagLower.startsWith(sLower + '-') || tagLower.startsWith(sLower + ':')) return true;
-      const firstPart = tagLower.split('-')[0].trim();
+      if (tagLower.startsWith(sLower + ' -') || tagLower.startsWith(sLower + ' —') || tagLower.startsWith(sLower + ':') || tagLower.startsWith(sLower + '.')) return true;
+      const firstPart = tagLower.split(/[\-\—\:\.]/)[0].trim();
       if (firstPart === sLower) return true;
     }
 
-    // 7. General Sciences / Physics / Chemistry / Biology
-    const physicsKeywords = ['physics', 'mechanics', 'kinematics', 'dynamics', 'magnetism', 'gravitation', 'optics', 'waves', 'electricity', 'electrostatics', 'rotational', 'momentum', 'fluid', 'oscillation', 'sound', 'light', 'semiconductor'];
-    const chemistryKeywords = ['chemistry', 'chemical', 'acid', 'base', 'reaction', 'organic', 'inorganic', 'physical chemistry', 'alkane', 'alkene', 'thermodynamics', 'thermochemistry', 'electrochemistry', 'environmental chemistry', 'periodic', 'bonding', 'solution', 'equilibrium', 'mole', 'gas', 'solid state'];
-    const biologyKeywords = ['biology', 'botany', 'zoology', 'cell', 'genetics', 'evolution', 'anatomy', 'physiology', 'plant', 'animal', 'ecology', 'reproduction', 'biotechnology', 'organism'];
+    // 2. GK / GS check (only for courses with GK/GS subjects)
+    const isGkGsTarget = isGkGsName(sLower);
+    if (isGkGsTarget) {
+      const gkKeywords = [
+        'general knowledge', 'environment', 'general science', 'indian economy',
+        'world geography', 'indian geography', 'indian history', 'indian polity',
+        'history', 'geography', 'polity', 'economy', 'economics', 'ecology',
+        'static gk', 'constitution', 'civics', 'ancient india', 'medieval india',
+        'modern india', 'freedom movement', 'gk', 'gs'
+      ];
+      if (gkKeywords.some((k) => tagLower.startsWith(k) || qSubLower === k)) return true;
+    }
 
-    if (sLower.includes('physics')) {
-      if (physicsKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-    if (sLower.includes('chem')) {
-      if (chemistryKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
-    }
-    if (sLower.includes('bio')) {
-      if (biologyKeywords.some((k) => tagLower.includes(k) || qSubLower.includes(k))) return true;
+    // 3. Generic "Science" fallback ONLY when course does not have separate Physics/Chemistry/Biology subjects
+    const isSingleScienceSubject = sLower === 'science' && !allSubjects.some((s) => ['physics', 'chemistry', 'biology'].includes(s.toLowerCase()));
+    if (isSingleScienceSubject) {
+      const scienceKeywords = ['science', 'physics', 'chemistry', 'biology', 'botany', 'zoology'];
+      if (scienceKeywords.some((k) => tagLower.startsWith(k) || qSubLower === k)) return true;
     }
 
     return false;
