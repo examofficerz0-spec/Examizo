@@ -1586,8 +1586,27 @@ export default function PracticeSetsPage() {
                         </div>
                       ))
                     ) : Object.keys(topicModulesMap).length === 0 ? (
-                      <div className="col-span-full p-8 text-center text-xs text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900">
-                        No active practice questions uploaded for {selectedSubject} yet. Check back soon!
+                      <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-4 bg-white dark:bg-slate-900">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                          <BookOpen className="w-7 h-7 stroke-[1.5]" />
+                        </div>
+                        <div className="max-w-md mx-auto space-y-1.5">
+                          <h4 className="text-base font-extrabold text-slate-800 dark:text-slate-200">
+                            No topic practice questions added for {selectedSubject} yet
+                          </h4>
+                          <p className="text-xs text-slate-400 font-medium">
+                            Questions for {selectedSubject} under this course have not been uploaded yet. Please check back soon or explore other subjects!
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setCurrentLevel('subjects');
+                            setSelectedSubject('');
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition-all cursor-pointer"
+                        >
+                          <ArrowLeft className="w-4 h-4" /> Back to Subjects
+                        </button>
                       </div>
                     ) : (
                       Object.keys(topicModulesMap).map((tName) => {
