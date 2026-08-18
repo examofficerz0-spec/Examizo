@@ -263,8 +263,18 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           subjectBuckets[subject].push(q);
         });
 
+        // Sort subject buckets strictly by courseSubjectsList order
+        const sortedSubjectNames = Object.keys(subjectBuckets).sort((a, b) => {
+          const idxA = courseSubjectsList.indexOf(a);
+          const idxB = courseSubjectsList.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          if (idxA !== -1) return -1;
+          if (idxB !== -1) return 1;
+          return a.localeCompare(b);
+        });
+
         let finalReshuffledQuestions: any[] = [];
-        Object.keys(subjectBuckets).forEach((subj) => {
+        sortedSubjectNames.forEach((subj) => {
           const shuffledBucket = shuffleArray(subjectBuckets[subj]);
           finalReshuffledQuestions = finalReshuffledQuestions.concat(shuffledBucket);
         });
@@ -279,8 +289,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         // Initialize state for each question
         const initial: Record<string, any> = {};
         finalReshuffledQuestions.forEach((q: any, i: number) => {
-          if (q && q._id) {
-            initial[q._id] = { selectedOption: null, isMFR: false, isVisited: i === 0 };
+          const qId = q._id || q.id;
+          if (qId) {
+            initial[qId] = { selectedOption: null, isMFR: false, isVisited: i === 0 };
+            if (q._id && q.id && q._id !== q.id) {
+              initial[q.id] = initial[qId];
+            }
           }
         });
         setUserState(initial);

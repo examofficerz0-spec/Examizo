@@ -309,9 +309,11 @@ export default function PracticeSetsPage() {
       }
     });
 
-    const wrongQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === false);
-    const unattemptedQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === undefined);
-    const correctQs = candidateQs.filter((q) => questionAttemptMap[String(q._id)] === true);
+    const getQId = (q: any) => String(q?._id || q?.id || '');
+
+    const wrongQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === false);
+    const unattemptedQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === undefined);
+    const correctQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === true);
 
     const seededShuffle = (arr: any[], customSeed: number) => {
       const copy = [...arr];
@@ -336,7 +338,7 @@ export default function PracticeSetsPage() {
     const result: any[] = [];
     const seenIds = new Set<string>();
     for (const q of orderedPool) {
-      const qId = String(q._id);
+      const qId = getQId(q);
       if (!seenIds.has(qId)) {
         seenIds.add(qId);
         result.push(q);
@@ -366,16 +368,18 @@ export default function PracticeSetsPage() {
       }
     });
 
+    const getQId = (q: any) => String(q?._id || q?.id || '');
+
     const wrongQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[String(q._id)] === false
+      (q) => questionAttemptMap[getQId(q)] === false
     );
 
     const unattemptedQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[String(q._id)] === undefined
+      (q) => questionAttemptMap[getQId(q)] === undefined
     );
 
     const correctQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[String(q._id)] === true
+      (q) => questionAttemptMap[getQId(q)] === true
     );
 
     const randomShuffle = (arr: any[]) => {
@@ -396,7 +400,7 @@ export default function PracticeSetsPage() {
     const result: any[] = [];
     const seenIds = new Set<string>();
     for (const q of orderedPool) {
-      const qId = String(q._id);
+      const qId = getQId(q);
       if (!seenIds.has(qId)) {
         seenIds.add(qId);
         result.push(q);

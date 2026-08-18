@@ -62,7 +62,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         for (const qId of qIds) {
           const q = (d1Questions || []).find((item: any) => String(item.id) === String(qId));
-          const uAns = userAnswers ? userAnswers[qId] : null;
+          const uAns = userAnswers
+            ? (userAnswers[qId] || userAnswers[String(qId)] || (q ? userAnswers[q.id] || userAnswers[q._id] || userAnswers[String(q.id)] || userAnswers[String(q._id)] : null))
+            : null;
 
           if (uAns && uAns.selectedOption !== null && uAns.selectedOption !== undefined && uAns.selectedOption >= 0) {
             const isCorrect = q ? Number(uAns.selectedOption) === Number(q.correct_option) : false;
@@ -174,7 +176,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       const qList = (test.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
 
       for (const q of qList) {
-        const uAns = userAnswers[q._id || q.id];
+        const uAns = userAnswers
+          ? (userAnswers[q._id] || userAnswers[q.id] || (q._id ? userAnswers[String(q._id)] : null) || (q.id ? userAnswers[String(q.id)] : null))
+          : null;
         if (uAns && uAns.selectedOption !== null && uAns.selectedOption !== undefined && uAns.selectedOption >= 0) {
           const isCorrect = Number(uAns.selectedOption) === Number(q.correct_option);
           if (isCorrect) {
