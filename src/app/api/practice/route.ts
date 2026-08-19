@@ -100,6 +100,7 @@ export async function GET(req: Request) {
               topic_tag: q.topic_tag || 'General',
               question_type: q.question_type || 'MCQ',
               question_text: q.question_text || '',
+              image_url: q.image_url || '',
               options: opts,
               correct_option: Number(q.correct_option || 0),
               sample_answer: q.sample_answer || '',

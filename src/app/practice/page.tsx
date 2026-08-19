@@ -1016,7 +1016,7 @@ export default function PracticeSetsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-start justify-between gap-3 mb-6">
+                      <div className="flex items-start justify-between gap-3 mb-4">
                         <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-relaxed flex-1">
                           {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
                         </h2>
@@ -1027,6 +1027,16 @@ export default function PracticeSetsPage() {
                           onReset={() => handleResetTranslation(currentQ._id)}
                         />
                       </div>
+
+                      {currentQ.image_url && (
+                        <div className="mb-5 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl inline-block max-w-full">
+                          <img
+                            src={currentQ.image_url}
+                            alt="Question Diagram"
+                            className="max-h-72 max-w-full object-contain rounded-lg shadow-xs"
+                          />
+                        </div>
+                      )}
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */

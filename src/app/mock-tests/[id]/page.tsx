@@ -1086,6 +1086,17 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                         : currentQ?.question_text}
                     </div>
 
+                    {/* Question Diagram / Image */}
+                    {currentQ?.image_url && (
+                      <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl inline-block max-w-full">
+                        <img
+                          src={currentQ.image_url}
+                          alt="Question Diagram"
+                          className="max-h-72 max-w-full object-contain rounded-xl shadow-xs"
+                        />
+                      </div>
+                    )}
+
                     {/* Options Grid */}
                     <div className="grid grid-cols-1 gap-3 pt-2">
                       {(activeLanguage === 'hi'
