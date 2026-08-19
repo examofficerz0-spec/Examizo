@@ -7,10 +7,18 @@ import { queryD1, executeD1 } from '@/lib/d1';
 
 function parseJwtPayload(token: string) {
   try {
-    const base64Url = token.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    
+    if (typeof Buffer !== 'undefined') {
+      const json = Buffer.from(padded, 'base64').toString('utf-8');
+      return JSON.parse(json);
+    }
     const jsonPayload = decodeURIComponent(
-      atob(base64)
+      atob(padded)
         .split('')
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
@@ -27,6 +35,26 @@ export async function POST(req: Request) {
     let email = body.email;
     let name = body.name;
 
+    // 1. If access_token was supplied, verify and fetch user info server-side
+    if (body.access_token || body.accessToken) {
+      const at = body.access_token || body.accessToken;
+      try {
+        const gRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${at}` },
+        });
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          if (gData.email) {
+            email = gData.email;
+            name = gData.name || email.split('@')[0];
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to verify access_token with Google:', err);
+      }
+    }
+
+    // 2. If credential (ID Token JWT) was supplied, parse payload
     if (body.credential) {
       const payload = parseJwtPayload(body.credential);
       if (payload && payload.email) {
@@ -35,7 +63,11 @@ export async function POST(req: Request) {
       }
     }
 
-    email = (email || 'student.google@exammaster.com').toLowerCase();
+    if (!email) {
+      return NextResponse.json({ error: 'Unable to retrieve email from Google authentication.' }, { status: 400 });
+    }
+
+    email = email.toLowerCase().trim();
     name = name || email.split('@')[0];
 
     // 1. Try Cloudflare D1 Google Auth
@@ -70,6 +102,7 @@ export async function POST(req: Request) {
           userId: user.id,
           email: user.email,
           name: user.name,
+          lockedCourseId: user.locked_course_id || null,
         });
 
         const response = NextResponse.json({
@@ -137,6 +170,7 @@ export async function POST(req: Request) {
         userId: String(user._id),
         email: user.email,
         name: user.name,
+        lockedCourseId: user.locked_course_id || null,
       });
 
       const response = NextResponse.json({
@@ -190,6 +224,7 @@ export async function POST(req: Request) {
       userId: user._id.toString(),
       email: user.email,
       name: user.name,
+      lockedCourseId: user.locked_course_id ? user.locked_course_id.toString() : null,
     });
 
     const response = NextResponse.json({

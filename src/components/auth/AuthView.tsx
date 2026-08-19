@@ -194,8 +194,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     window.location.href = url;
   };
 
-  // Process the Google auth payload (email/name or credential) via our backend
-  const processGoogleAuth = async (payload: { email?: string; name?: string; credential?: string }) => {
+  // Process the Google auth payload (access_token, credential, or email/name) via our backend
+  const processGoogleAuth = async (payload: { email?: string; name?: string; credential?: string; access_token?: string }) => {
     setError('');
     setGoogleAuthLoading(true);
     clearAllClientUserCaches();
@@ -260,34 +260,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     }
   };
 
-  // Fetch user info from Google using access_token, then call processGoogleAuth
-  const fetchGoogleUserAndAuth = async (accessToken: string) => {
-    setGoogleAuthLoading(true);
-    try {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const userInfo = await res.json();
-      if (userInfo.email) {
-        await processGoogleAuth({
-          email: userInfo.email,
-          name: userInfo.name || userInfo.email.split('@')[0],
-        });
-      } else {
-        setError('Could not retrieve your Google account email.');
-        setGoogleAuthLoading(false);
-      }
-    } catch {
-      setError('Failed to get account info from Google.');
-      setGoogleAuthLoading(false);
-    }
-  };
-
-  // Load Google Identity Services SDK and handle redirect callbacks
+  // Initialize Google Identity Services SDK and handle redirect callbacks
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // 1. Handle Google OAuth redirect callback (hash tokens from implicit flow)
+    // Handle Google OAuth redirect callback (hash tokens from implicit flow if any)
     const hash = window.location.hash.substring(1);
     if (hash && (hash.includes('access_token') || hash.includes('id_token'))) {
       const params = new URLSearchParams(hash);
@@ -301,12 +278,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         processGoogleAuth({ credential: idToken });
         return;
       } else if (accessToken) {
-        fetchGoogleUserAndAuth(accessToken);
+        processGoogleAuth({ access_token: accessToken });
         return;
       }
     }
 
-    // 2. Load Google Identity Services SDK
+    // Ensure Google Identity Services SDK is loaded
     const scriptId = 'google-gsi-script';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -328,7 +305,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
     const google = typeof window !== 'undefined' ? (window as any).google : null;
 
-    // ── Strategy 1: GIS OAuth2 Token Popup (called synchronously on click = no popup block) ──
+    // ── Strategy 1: GIS OAuth2 Token Client (Interactive Popup) ──
     if (google?.accounts?.oauth2) {
       try {
         const tokenClient = google.accounts.oauth2.initTokenClient({
@@ -340,26 +317,37 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                 setGoogleAuthLoading(false);
                 return;
               }
-              // Access denied or config error — try redirect
-              console.warn('Google OAuth callback error:', tokenResponse.error);
-              redirectToGoogleOAuth(clientId);
+              console.warn('Google OAuth token error:', tokenResponse.error);
+              setError('Google sign-in was cancelled or encountered an issue. Please try again.');
+              setGoogleAuthLoading(false);
               return;
             }
             if (tokenResponse.access_token) {
-              await fetchGoogleUserAndAuth(tokenResponse.access_token);
+              await processGoogleAuth({ access_token: tokenResponse.access_token });
             } else {
               setGoogleAuthLoading(false);
             }
           },
           error_callback: (err: any) => {
-            // Popup was BLOCKED by browser — fall back to redirect
-            console.warn('Google popup blocked, redirecting:', err);
-            redirectToGoogleOAuth(clientId);
+            console.warn('Google popup error:', err);
+            // Try fallback to One Tap / ID token prompt
+            if (google?.accounts?.id) {
+              google.accounts.id.prompt((notification: any) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                  setError('Google popup was blocked. Please allow popups or use email & password.');
+                  setGoogleAuthLoading(false);
+                }
+              });
+            } else {
+              setError('Google sign-in popup was blocked. Please allow popups for this site.');
+              setGoogleAuthLoading(false);
+            }
           },
         });
+
         tokenClient.requestAccessToken({ prompt: 'select_account' });
 
-        // Safety timeout: if nothing happens in 120s, reset loading state
+        // Safety timeout
         setTimeout(() => {
           setGoogleAuthLoading((prev: boolean) => {
             if (prev) {
@@ -368,14 +356,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             }
             return prev;
           });
-        }, 120000);
+        }, 90000);
         return;
       } catch (err) {
-        console.warn('initTokenClient failed:', err);
+        console.warn('initTokenClient error:', err);
       }
     }
 
-    // ── Strategy 2: Google One Tap / Sign In With Google (FedCM-based) ──
+    // ── Strategy 2: Google One Tap / Sign In With Google ──
     if (google?.accounts?.id) {
       try {
         google.accounts.id.initialize({
@@ -392,19 +380,19 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
         google.accounts.id.prompt((notification: any) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            // One Tap failed — fall back to redirect
-            redirectToGoogleOAuth(clientId);
+            setError('Google sign-in prompt is unavailable in your browser. Please sign in with email and password.');
+            setGoogleAuthLoading(false);
           }
-          // If displayed, user will interact with it and callback fires
         });
         return;
       } catch (err) {
-        console.warn('Google One Tap failed:', err);
+        console.warn('Google One Tap error:', err);
       }
     }
 
-    // ── Strategy 3: Direct Google OAuth2 Redirect (works everywhere) ──
-    redirectToGoogleOAuth(clientId);
+    // ── Fallback when Google SDK is completely unavailable / blocked ──
+    setError('Google Sign-In is temporarily unavailable or blocked by your browser extensions. Please sign in with your email and password.');
+    setGoogleAuthLoading(false);
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
