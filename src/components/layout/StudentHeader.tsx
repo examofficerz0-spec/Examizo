@@ -379,13 +379,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               </button>
             )}
 
-            <Link href="/dashboard" prefetch={true} className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-5 h-5 fill-current stroke-[1.5]" />
-              </div>
-              <span className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                Examizo
-              </span>
+            <Link href="/dashboard" prefetch={true} className="flex items-center">
+              <Logo size={36} />
             </Link>
           </div>
 

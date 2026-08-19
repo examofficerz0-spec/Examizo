@@ -9,208 +9,250 @@ interface ExamizoIconProps {
 }
 
 export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
-  size = 40,
+  size = 42,
   className = '',
   animate = true,
 }) => {
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative inline-flex items-center justify-center shrink-0 select-none ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 select-none overflow-visible group/icon ${className}`}
     >
       <svg
-        viewBox="0 0 200 200"
+        viewBox="0 0 220 220"
         width={size}
         height={size}
         className="w-full h-full overflow-visible"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Gradients for E */}
-          <linearGradient id="eTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="60%" stopColor="#2563eb" />
+          {/* Gradients matching the signature Examizo Ribbon Logo */}
+          <linearGradient id="ezTopBarGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="#1a56db" />
+            <stop offset="50%" stopColor="#2563eb" />
             <stop offset="100%" stopColor="#38bdf8" />
           </linearGradient>
 
-          <linearGradient id="eMidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="50%" stopColor="#1e3a8a" />
-            <stop offset="100%" stopColor="#1d4ed8" />
-          </linearGradient>
-
-          <linearGradient id="eBotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="40%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
-          </linearGradient>
-
-          <linearGradient id="eSpineFront" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="40%" stopColor="#2563eb" />
+          <linearGradient id="ezMidBarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a1931" />
+            <stop offset="50%" stopColor="#0f2b5c" />
             <stop offset="100%" stopColor="#1e40af" />
           </linearGradient>
 
-          <linearGradient id="eSpineDark" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#1e3a8a" />
+          <linearGradient id="ezBotBarGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="#1e40af" />
+            <stop offset="40%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#38bdf8" />
           </linearGradient>
 
-          {/* Hat Gradients */}
-          <linearGradient id="hatTopGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#0a1128" />
-            <stop offset="35%" stopColor="#102a5c" />
-            <stop offset="75%" stopColor="#1d4ed8" />
+          <linearGradient id="ezSpineMain" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="30%" stopColor="#2563eb" />
+            <stop offset="70%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#172554" />
+          </linearGradient>
+
+          <linearGradient id="ezSpineDarkFold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0b172a" />
+            <stop offset="100%" stopColor="#172554" />
+          </linearGradient>
+
+          {/* Mortarboard Graduation Cap Gradients */}
+          <linearGradient id="ezHatTopGrad" x1="0%" y1="70%" x2="100%" y2="30%">
+            <stop offset="0%" stopColor="#071126" />
+            <stop offset="30%" stopColor="#0c234b" />
+            <stop offset="70%" stopColor="#1e40af" />
             <stop offset="100%" stopColor="#2563eb" />
           </linearGradient>
 
-          <linearGradient id="hatCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a1128" />
-            <stop offset="100%" stopColor="#0f172a" />
+          <linearGradient id="ezHatSideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#071126" />
+            <stop offset="100%" stopColor="#030814" />
           </linearGradient>
 
-          <linearGradient id="tasselGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a8a" />
-            <stop offset="100%" stopColor="#0f172a" />
+          <linearGradient id="ezTasselGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="50%" stopColor="#0f2b5c" />
+            <stop offset="100%" stopColor="#071126" />
           </linearGradient>
 
           {/* Glow filter */}
-          <filter id="logoGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#2563eb" floodOpacity="0.25" />
+          <filter id="ezDropShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#1e40af" floodOpacity="0.3" />
           </filter>
         </defs>
 
         <style>{`
-          @keyframes hatDropIn {
+          @keyframes ezHatLanding {
             0% {
-              transform: translateY(-40px) rotate(-18deg) scale(1.15);
+              transform: translateY(-65px) translateX(15px) rotate(-26deg) scale(1.25);
               opacity: 0;
             }
-            65% {
-              transform: translateY(4px) rotate(2deg) scale(0.98);
+            60% {
+              transform: translateY(6px) translateX(-2px) rotate(4deg) scale(0.96);
               opacity: 1;
             }
-            85% {
-              transform: translateY(-2px) rotate(-1deg) scale(1.01);
+            80% {
+              transform: translateY(-3px) translateX(1px) rotate(-2deg) scale(1.02);
             }
             100% {
-              transform: translateY(0) rotate(0deg) scale(1);
+              transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
               opacity: 1;
             }
           }
 
-          @keyframes tasselSway {
+          @keyframes ezTasselPhysics {
+            0% {
+              transform: rotate(0deg);
+            }
+            62% {
+              transform: rotate(-30deg);
+            }
+            75% {
+              transform: rotate(24deg);
+            }
+            88% {
+              transform: rotate(-12deg);
+            }
+            95% {
+              transform: rotate(6deg);
+            }
+            100% {
+              transform: rotate(0deg);
+            }
+          }
+
+          @keyframes ezTasselIdleSway {
             0%, 100% {
               transform: rotate(0deg);
             }
-            25% {
-              transform: rotate(14deg);
-            }
             50% {
-              transform: rotate(-10deg);
-            }
-            75% {
-              transform: rotate(6deg);
+              transform: rotate(8deg);
             }
           }
 
-          @keyframes ePulse {
-            0%, 100% {
-              transform: scale(1);
+          @keyframes ezELandBounce {
+            0%, 55% {
+              transform: translateY(0) scaleY(1);
             }
-            50% {
-              transform: scale(1.02);
+            65% {
+              transform: translateY(3px) scaleY(0.97);
+            }
+            80% {
+              transform: translateY(-1px) scaleY(1.01);
+            }
+            100% {
+              transform: translateY(0) scaleY(1);
             }
           }
 
-          .examizo-hat-animated {
-            transform-origin: 100px 65px;
-            animation: hatDropIn 1.2s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+          .ez-hat-animated {
+            transform-origin: 110px 72px;
+            animation: ezHatLanding 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
 
-          .examizo-tassel-animated {
-            transform-origin: 66px 68px;
-            animation: tasselSway 2.4s ease-in-out 1.2s infinite;
+          .ez-tassel-animated {
+            transform-origin: 74px 74px;
+            animation: ezTasselPhysics 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards, ezTasselIdleSway 3.5s ease-in-out 1.6s infinite;
           }
 
-          .examizo-container:hover .examizo-hat-animated {
-            animation: hatDropIn 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+          .ez-e-animated {
+            transform-origin: 110px 140px;
+            animation: ezELandBounce 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          }
+
+          .group\\/icon:hover .ez-hat-animated,
+          .group:hover .ez-hat-animated,
+          .examizo-container:hover .ez-hat-animated {
+            animation: ezHatLanding 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          }
+
+          .group\\/icon:hover .ez-tassel-animated,
+          .group:hover .ez-tassel-animated,
+          .examizo-container:hover .ez-tassel-animated {
+            animation: ezTasselPhysics 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          }
+
+          .group\\/icon:hover .ez-e-animated,
+          .group:hover .ez-e-animated,
+          .examizo-container:hover .ez-e-animated {
+            animation: ezELandBounce 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
         `}</style>
 
-        {/* Group for the 'E' Letter Base */}
-        <g filter="url(#logoGlow)" className="transition-transform duration-300">
+        {/* 1. Base Stylized 'E' Ribbon Group */}
+        <g filter="url(#ezDropShadow)" className={animate ? 'ez-e-animated' : ''}>
           {/* Top Bar of 'E' */}
           <path
-            d="M 86 86 C 104 81 128 78 152 78 C 158 78 163 83 163 89 C 163 95 158 100 152 100 C 122 100 100 101 84 105 Z"
-            fill="url(#eTopGrad)"
+            d="M 96 90 C 114 86 138 84 158 84 C 165 84 170 89 170 96 C 170 102 165 107 158 107 C 128 107 106 109 90 113 Z"
+            fill="url(#ezTopBarGrad)"
           />
 
-          {/* Under Spine Shadow / Depth Layer */}
+          {/* Under Spine Dark Depth Layer */}
           <path
-            d="M 88 88 L 62 138 C 58 147 62 158 72 165 C 75 167 80 168 85 168 L 105 125 C 109 116 102 106 92 104 Z"
-            fill="url(#eSpineDark)"
+            d="M 98 94 L 70 148 C 66 156 70 167 80 174 C 84 176 89 177 94 177 L 115 132 C 118 123 112 113 102 111 Z"
+            fill="url(#ezSpineDarkFold)"
           />
 
-          {/* Mid Bar of 'E' (Dark Ribbon fold) */}
+          {/* Middle Bar of 'E' (Dark Ribbon fold) */}
           <path
-            d="M 88 106 C 98 103 118 102 136 102 C 142 102 147 106 147 111 C 147 117 141 123 134 123 C 114 123 96 127 78 135 C 74 137 70 134 72 129 C 76 119 82 110 88 106 Z"
-            fill="url(#eMidGrad)"
+            d="M 96 114 C 108 111 128 110 146 110 C 153 110 158 114 158 120 C 158 126 152 131 144 131 C 124 131 106 136 86 144 C 81 146 77 143 79 137 C 83 128 90 119 96 114 Z"
+            fill="url(#ezMidBarGrad)"
           />
 
           {/* Bottom Bar of 'E' */}
           <path
-            d="M 68 152 C 64 163 71 176 83 176 L 140 176 C 148 176 153 171 150 163 C 147 156 141 152 133 152 L 88 152 C 80 152 72 150 68 152 Z"
-            fill="url(#eBotGrad)"
+            d="M 76 160 C 72 171 80 184 92 184 L 148 184 C 157 184 162 178 158 170 C 155 163 148 159 140 159 L 96 159 C 88 159 80 158 76 160 Z"
+            fill="url(#ezBotBarGrad)"
           />
 
-          {/* Left Flowing Ribbon Spine (Bright Dynamic Curve) */}
+          {/* Dynamic Front Spine Ribbon (Sweeping 3D Blue Curve) */}
           <path
-            d="M 126 80 C 106 82 86 96 76 112 C 60 138 52 162 67 175 C 75 182 88 181 97 172 C 106 163 112 148 116 138 C 118 132 114 126 108 126 C 96 126 86 134 82 144 C 77 156 68 158 66 148 C 64 136 74 116 88 102 C 98 92 112 85 126 80 Z"
-            fill="url(#eSpineFront)"
+            d="M 136 86 C 116 88 94 103 84 120 C 66 148 58 174 74 187 C 82 194 96 193 106 183 C 115 174 122 157 126 146 C 128 140 124 134 117 134 C 105 134 94 143 90 154 C 85 167 75 169 73 158 C 71 145 82 123 97 108 C 108 97 122 90 136 86 Z"
+            fill="url(#ezSpineMain)"
           />
         </g>
 
-        {/* Group for Graduation Cap (The Hat) with Landing Animation */}
-        <g className={animate ? 'examizo-hat-animated' : ''}>
-          {/* Hat Skull Cap underneath diamond */}
+        {/* 2. Mortarboard Graduation Cap (The Hat Landing On The 'E') */}
+        <g className={animate ? 'ez-hat-animated' : ''}>
+          {/* Skull cap band sitting on E's crest */}
           <path
-            d="M 85 64 C 95 62 118 64 132 68 L 130 84 C 114 88 95 86 85 80 Z"
-            fill="url(#hatCapGrad)"
+            d="M 94 72 C 105 70 128 72 142 76 L 140 92 C 124 96 104 94 94 88 Z"
+            fill="url(#ezHatSideGrad)"
           />
 
-          {/* Diamond Top Board (Mortarboard) */}
+          {/* Mortarboard Diamond Board */}
           <polygon
-            points="102,28 168,48 102,68 36,48"
-            fill="url(#hatTopGrad)"
+            points="112,32 182,54 112,76 42,54"
+            fill="url(#ezHatTopGrad)"
           />
 
           {/* Top highlight facet */}
           <polygon
-            points="102,28 168,48 102,32 40,48"
-            fill="#3b82f6"
-            opacity="0.35"
+            points="112,32 182,54 112,38 48,54"
+            fill="#60a5fa"
+            opacity="0.4"
           />
 
-          {/* Center Button on Mortarboard */}
-          <ellipse cx="102" cy="48" rx="4.5" ry="3" fill="#0f172a" />
+          {/* Center Mortarboard Button */}
+          <ellipse cx="112" cy="54" rx="5" ry="3.5" fill="#071126" />
 
           {/* Tassel Assembly */}
-          <g className={animate ? 'examizo-tassel-animated' : ''}>
+          <g className={animate ? 'ez-tassel-animated' : ''}>
             {/* Tassel Cord hanging to left */}
             <path
-              d="M 102 48 Q 72 52 58 64 L 56 80"
+              d="M 112 54 Q 80 58 64 72 L 62 90"
               fill="none"
-              stroke="#0f172a"
-              strokeWidth="2.5"
+              stroke="#071126"
+              strokeWidth="2.8"
               strokeLinecap="round"
             />
 
-            {/* Tassel Bell / Fringe */}
-            <circle cx="56" cy="80" r="3.5" fill="#0a1128" />
+            {/* Tassel Ring & Brush */}
+            <circle cx="62" cy="90" r="4" fill="#071126" />
             <path
-              d="M 53 82 L 59 82 L 61 98 C 61 100 51 100 51 98 Z"
-              fill="url(#tasselGrad)"
+              d="M 59 92 L 65 92 L 68 112 C 68 114 56 114 56 112 Z"
+              fill="url(#ezTasselGrad)"
             />
           </g>
         </g>
