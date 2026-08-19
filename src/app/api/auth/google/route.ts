@@ -37,8 +37,49 @@ export async function POST(req: Request) {
     let email = body.email;
     let name = body.name;
 
-    // 1. If access_token was supplied, verify and fetch user info server-side
-    if (body.access_token || body.accessToken) {
+    // 1. If OAuth authorization code was supplied, exchange for tokens
+    if (body.code) {
+      try {
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            code: body.code,
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+            client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+            redirect_uri: body.redirect_uri || '',
+            grant_type: 'authorization_code',
+          }),
+        });
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          if (tokenData.id_token) {
+            const payload = parseJwtPayload(tokenData.id_token);
+            if (payload && payload.email) {
+              email = payload.email;
+              name = payload.name || payload.email.split('@')[0];
+            }
+          }
+          if (!email && tokenData.access_token) {
+            const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            if (uRes.ok) {
+              const uData = await uRes.json();
+              if (uData.email) {
+                email = uData.email;
+                name = uData.name || email.split('@')[0];
+              }
+            }
+          }
+        }
+      } catch (codeErr) {
+        console.warn('Failed to exchange Google auth code:', codeErr);
+      }
+    }
+
+    // 2. If access_token was supplied, verify and fetch user info server-side
+    if ((!email) && (body.access_token || body.accessToken)) {
       const at = body.access_token || body.accessToken;
       try {
         const gRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -50,14 +91,24 @@ export async function POST(req: Request) {
             email = gData.email;
             name = gData.name || email.split('@')[0];
           }
+        } else {
+          // Fallback to tokeninfo
+          const tInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(at)}`);
+          if (tInfoRes.ok) {
+            const tData = await tInfoRes.json();
+            if (tData.email) {
+              email = tData.email;
+              name = tData.name || email.split('@')[0];
+            }
+          }
         }
       } catch (err) {
         console.warn('Failed to verify access_token with Google:', err);
       }
     }
 
-    // 2. If credential (ID Token JWT) was supplied, parse payload
-    if (body.credential) {
+    // 3. If credential (ID Token JWT) was supplied, parse payload
+    if ((!email) && body.credential) {
       const payload = parseJwtPayload(body.credential);
       if (payload && payload.email) {
         email = payload.email;
@@ -144,9 +195,7 @@ export async function POST(req: Request) {
         },
       });
 
-      response.cookies.set({
-        name: 'student_token',
-        value: token,
+      response.cookies.set('student_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -157,7 +206,7 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Brand New User -> Immediately register into Cloudflare D1 and SharedDb!
+    // Brand New User -> Register into Cloudflare D1 and SharedDb!
     const newUserId = generateId();
     const dummyPasswordHash = await bcrypt.hash(`google_oauth_${generateId()}_${Date.now()}`, 10);
 
@@ -207,9 +256,7 @@ export async function POST(req: Request) {
       },
     });
 
-    response.cookies.set({
-      name: 'student_token',
-      value: token,
+    response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

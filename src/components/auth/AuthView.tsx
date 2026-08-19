@@ -256,18 +256,18 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
         if (!data.user.lockedCourseId) {
           if (joinCode) {
-            router.push(`/course-selection?joinCode=${encodeURIComponent(joinCode)}`);
+            window.location.href = `/course-selection?joinCode=${encodeURIComponent(joinCode)}`;
           } else if (joinHostId) {
-            router.push(`/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`);
+            window.location.href = `/course-selection?joinHostId=${encodeURIComponent(joinHostId)}`;
           } else {
-            router.push('/course-selection');
+            window.location.href = '/course-selection';
           }
         } else if (joinCode) {
-          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+          window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
         } else if (joinHostId) {
-          router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+          window.location.href = `/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`;
         } else {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
       } else {
         setError(data.error || 'Google authentication failed. Please try again.');
@@ -282,6 +282,16 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   // Initialize Google Identity Services SDK and handle redirect callbacks
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // Handle OAuth redirect authorization code if returned in search params
+    const searchParams = new URLSearchParams(window.location.search);
+    const authCode = searchParams.get('code');
+    if (authCode) {
+      const redirectUri = window.location.origin + window.location.pathname;
+      window.history.replaceState(null, '', window.location.pathname);
+      processGoogleAuth({ code: authCode, redirect_uri: redirectUri } as any);
+      return;
+    }
 
     // Handle Google OAuth redirect callback (hash tokens from implicit flow if any)
     const hash = window.location.hash.substring(1);
@@ -315,9 +325,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   }, []);
 
   const handleGoogleAuth = () => {
-    const clientId =
-      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-      '342748712178-h3b3ab5teiqcc0trkrhkql8o7ols4gk1.apps.googleusercontent.com';
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
     setError('');
     setGoogleAuthLoading(true);

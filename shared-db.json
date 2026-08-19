@@ -157,6 +157,17 @@
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
       "created_at": "2026-08-19T13:25:10.857Z"
+    },
+    {
+      "_id": "6d6rta7u1mt04vnnd",
+      "id": "6d6rta7u1mt04vnnd",
+      "name": "Google Test Student",
+      "email": "google_student_1787146491298@gmail.com",
+      "password_hash": "$2a$10$c1cdaoZEHLYB4ulpAdhNu.jDdLfY15fb/9QZhCfaaDAiktaAH1Os.",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": null,
+      "created_at": "2026-08-19T13:34:53.577Z"
     }
   ],
   "courses": [
