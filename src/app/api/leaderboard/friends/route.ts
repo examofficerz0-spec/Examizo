@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { queryD1, executeD1 } from '@/lib/d1';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // GET: Fetch user's friends leaderboard or search registered students
 export async function GET(request: Request) {
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [String(auth.userId), String(auth.email).toLowerCase()]);
       if (d1Users && d1Users.length > 0) {
@@ -92,142 +93,69 @@ export async function GET(request: Request) {
       console.warn('[friends GET] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const currentUser = (db.users || []).find((u) => u._id === auth.userId || u.id === auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
-      const friendsIds: string[] = currentUser.friends || [];
-
-      if (searchQuery) {
-        const matches = (db.users || [])
-          .filter((u) => u._id !== currentUser._id)
-          .filter((u) => 
-            (u.name || '').toLowerCase().includes(searchQuery) || 
-            (u.email || '').toLowerCase().includes(searchQuery)
-          )
-          .map((u) => ({
-            id: u._id,
-            name: u.name,
-            email: u.email,
-            xp_total: u.xp_total || 0,
-            isAlreadyFriend: friendsIds.includes(u._id),
-          }));
-
-        return NextResponse.json({ searchResults: matches.slice(0, 10) });
-      }
-
-      const groupIds = new Set<string>([currentUser._id, ...friendsIds]);
-      (db.users || []).forEach((u) => {
-        if (groupIds.has(u._id)) {
-          (u.friends || []).forEach((fid: string) => groupIds.add(fid));
-        }
-      });
-
-      const allFriendsObjs = (db.users || [])
-        .filter((u) => groupIds.has(u._id))
-        .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
-
-      const leaderboard = allFriendsObjs.map((u, idx) => ({
-        arenaRank: idx + 1,
-        id: u._id,
-        name: u.name,
-        email: u.email,
-        xp_total: u.xp_total || 0,
-        isCurrentUser: u._id === currentUser._id,
-      }));
-
-      const pendingRequests = (currentUser.friendRequests || [])
-        .filter((r: any) => r.status === 'pending')
-        .map((r: any) => ({
-          requesterId: r.requesterId,
-          name: r.requesterName,
-          email: r.requesterEmail,
-          xp_total: r.requesterXp || 0,
-          created_at: r.created_at,
-        }));
-
-      return NextResponse.json({
-        friendsLeaderboard: leaderboard,
-        pendingRequests,
-        inviteCode: (currentUser._id || currentUser.id).slice(0, 8).toUpperCase(),
-        totalFriends: groupIds.size - 1,
-      });
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const currentUser = (db.users || []).find((u) => u._id === auth.userId || u.id === auth.userId);
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 3. Mongoose mode (if connected)
-    try {
-      const currentUser = await User.findById(auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+    const friendsIds: string[] = currentUser.friends || [];
 
-      const friendsIds: string[] = currentUser.friends || [];
-
-      if (searchQuery) {
-        const matches = await User.find({
-          _id: { $ne: currentUser._id },
-          $or: [
-            { name: { $regex: searchQuery, $options: 'i' } },
-            { email: { $regex: searchQuery, $options: 'i' } },
-          ],
-        })
-          .select('name email xp_total')
-          .limit(10);
-
-        const searchResults = matches.map((u) => ({
-          id: u._id.toString(),
+    if (searchQuery) {
+      const matches = (db.users || [])
+        .filter((u) => (u._id || u.id) !== (currentUser._id || currentUser.id))
+        .filter((u) => 
+          (u.name || '').toLowerCase().includes(searchQuery) || 
+          (u.email || '').toLowerCase().includes(searchQuery)
+        )
+        .map((u) => ({
+          id: u._id || u.id,
           name: u.name,
           email: u.email,
           xp_total: u.xp_total || 0,
-          isAlreadyFriend: friendsIds.includes(u._id.toString()),
+          isAlreadyFriend: friendsIds.includes(u._id || u.id),
         }));
 
-        return NextResponse.json({ searchResults });
-      }
+      return NextResponse.json({ searchResults: matches.slice(0, 10) });
+    }
 
-      const groupIds = new Set<string>([currentUser._id.toString(), ...friendsIds]);
-      const directFriendsObjs = await User.find({ _id: { $in: Array.from(groupIds) } }).select('friends');
-      directFriendsObjs.forEach((u) => {
+    const groupIds = new Set<string>([currentUser._id || currentUser.id, ...friendsIds]);
+    (db.users || []).forEach((u) => {
+      if (groupIds.has(u._id || u.id)) {
         (u.friends || []).forEach((fid: string) => groupIds.add(fid));
-      });
+      }
+    });
 
-      const friendUsers = await User.find({ _id: { $in: Array.from(groupIds) } })
-        .sort({ xp_total: -1 })
-        .select('name email xp_total');
+    const allFriendsObjs = (db.users || [])
+      .filter((u) => groupIds.has(u._id || u.id))
+      .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
 
-      const leaderboard = friendUsers.map((u, idx) => ({
-        arenaRank: idx + 1,
-        id: u._id.toString(),
-        name: u.name,
-        email: u.email,
-        xp_total: u.xp_total || 0,
-        isCurrentUser: u._id.toString() === currentUser._id.toString(),
+    const leaderboard = allFriendsObjs.map((u, idx) => ({
+      arenaRank: idx + 1,
+      id: u._id || u.id,
+      name: u.name,
+      email: u.email,
+      xp_total: u.xp_total || 0,
+      isCurrentUser: (u._id || u.id) === (currentUser._id || currentUser.id),
+    }));
+
+    const pendingRequests = (currentUser.friendRequests || [])
+      .filter((r: any) => r.status === 'pending')
+      .map((r: any) => ({
+        requesterId: r.requesterId,
+        name: r.requesterName,
+        email: r.requesterEmail,
+        xp_total: r.requesterXp || 0,
+        created_at: r.created_at,
       }));
 
-      const pendingRequests = (currentUser.friendRequests || [])
-        .filter((r: any) => r.status === 'pending')
-        .map((r: any) => ({
-          requesterId: r.requesterId,
-          name: r.requesterName,
-          email: r.requesterEmail,
-          xp_total: r.requesterXp || 0,
-          created_at: r.created_at,
-        }));
-
-      return NextResponse.json({
-        friendsLeaderboard: leaderboard,
-        pendingRequests,
-        inviteCode: currentUser._id.toString().slice(0, 8).toUpperCase(),
-        totalFriends: friendsIds.length,
-      });
-    } catch (_) {}
-
-    return NextResponse.json({ friendsLeaderboard: [], pendingRequests: [], inviteCode: 'EXAMIZO1', totalFriends: 0 });
+    return NextResponse.json({
+      friendsLeaderboard: leaderboard,
+      pendingRequests,
+      inviteCode: (currentUser._id || currentUser.id).slice(0, 8).toUpperCase(),
+      totalFriends: groupIds.size - 1,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -252,7 +180,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'You cannot invite yourself' }, { status: 400 });
     }
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [String(auth.userId), String(auth.email).toLowerCase()]);
       if (d1Users && d1Users.length > 0) {
@@ -280,56 +208,27 @@ export async function POST(request: Request) {
       console.warn('[friends POST] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const userIndex = (db.users || []).findIndex((u) => u._id === auth.userId);
-      if (userIndex === -1) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
-      const targetFriend = (db.users || []).find((u) => u._id === friendIdToAdd || u.email === friendIdToAdd);
-      if (!targetFriend) {
-        return NextResponse.json({ error: 'Registered student not found' }, { status: 404 });
-      }
-
-      const friends: string[] = db.users[userIndex].friends || [];
-      if (!friends.includes(targetFriend._id)) {
-        friends.push(targetFriend._id);
-        db.users[userIndex].friends = friends;
-        writeSharedDb(db);
-      }
-
-      return NextResponse.json({ success: true, message: `Added ${targetFriend.name} to your friends leaderboard!` });
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const userIndex = (db.users || []).findIndex((u) => u._id === auth.userId || u.id === auth.userId);
+    if (userIndex === -1) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 3. Mongoose mode
-    try {
-      const currentUser = await User.findById(auth.userId);
-      if (!currentUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+    const targetFriend = (db.users || []).find((u) => u._id === friendIdToAdd || u.id === friendIdToAdd || u.email === friendIdToAdd);
+    if (!targetFriend) {
+      return NextResponse.json({ error: 'Registered student not found' }, { status: 404 });
+    }
 
-      const targetFriend = await User.findOne({
-        $or: [{ _id: friendIdToAdd }, { email: friendIdToAdd }],
-      });
+    const friends: string[] = db.users[userIndex].friends || [];
+    const targetId = targetFriend._id || targetFriend.id;
+    if (!friends.includes(targetId)) {
+      friends.push(targetId);
+      db.users[userIndex].friends = friends;
+      writeSharedDb(db);
+    }
 
-      if (!targetFriend) {
-        return NextResponse.json({ error: 'Registered student not found' }, { status: 404 });
-      }
-
-      const currentFriends: string[] = currentUser.friends || [];
-      if (!currentFriends.includes(targetFriend._id.toString())) {
-        currentFriends.push(targetFriend._id.toString());
-        currentUser.friends = currentFriends;
-        await currentUser.save();
-      }
-
-      return NextResponse.json({ success: true, message: `Added ${targetFriend.name} to your friends leaderboard!` });
-    } catch (_) {}
-
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ success: true, message: `Added ${targetFriend.name} to your friends leaderboard!` });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -350,7 +249,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'friendId is required' }, { status: 400 });
     }
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [String(auth.userId), String(auth.email).toLowerCase()]);
       if (d1Users && d1Users.length > 0) {
@@ -369,28 +268,13 @@ export async function DELETE(request: Request) {
       console.warn('[friends DELETE] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const userIndex = (db.users || []).findIndex((u) => u._id === auth.userId);
-      if (userIndex !== -1 && db.users[userIndex].friends) {
-        db.users[userIndex].friends = db.users[userIndex].friends.filter((id: string) => id !== friendIdToRemove);
-        writeSharedDb(db);
-      }
-      return NextResponse.json({ success: true });
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const userIndex = (db.users || []).findIndex((u) => u._id === auth.userId || u.id === auth.userId);
+    if (userIndex !== -1 && db.users[userIndex].friends) {
+      db.users[userIndex].friends = db.users[userIndex].friends.filter((id: string) => id !== friendIdToRemove);
+      writeSharedDb(db);
     }
-
-    // 3. Mongoose mode
-    try {
-      const currentUser = await User.findById(auth.userId);
-      if (currentUser && currentUser.friends) {
-        currentUser.friends = currentUser.friends.filter((id: string) => id !== friendIdToRemove);
-        await currentUser.save();
-      }
-      return NextResponse.json({ success: true });
-    } catch (_) {}
-
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

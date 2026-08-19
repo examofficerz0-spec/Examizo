@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User, Question, Attempt, XPTransaction } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1, executeD1 } from '@/lib/d1';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user, isMemoryMode, isD1 } = authResult;
+    const { user } = authResult;
     if (!user.locked_course_id) {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
     const userId = String(user._id || user.id || auth.userId);
 
-    // 1. Try D1 execution
+    // 1. Primary: Cloudflare D1
     try {
       const qIds = (answers || []).map((a: any) => `'${a.questionId}'`).filter(Boolean);
       let d1Questions: any[] = [];
@@ -124,89 +125,14 @@ export async function POST(req: Request) {
       console.warn('[api/practice/submit] D1 submit fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      let correctCount = 0;
-      let xpEarned = 0;
-      const processedResponses: any[] = [];
-
-      for (const ans of (answers || [])) {
-        const q = (db.questions || []).find((item) => String(item._id) === String(ans.questionId));
-        if (q) {
-          const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
-          if (isCorrect) {
-            correctCount++;
-            xpEarned += 27;
-          }
-          processedResponses.push({
-            question_id: q._id,
-            selected_option: ans.selectedOption,
-            is_correct: isCorrect,
-          });
-        }
-      }
-
-      const totalQuestions = answers.length;
-      const accuracyPercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-
-      const attempt = {
-        _id: generateId(),
-        student_id: user._id || auth.userId,
-        course_id: user.locked_course_id,
-        type: type || 'practice',
-        topic_tag: topicTag || 'General',
-        responses: processedResponses,
-        score: correctCount,
-        accuracy: accuracyPercent,
-        questions_count: totalQuestions,
-        time_spent_seconds: durationSeconds,
-        submission_type: 'manual',
-        created_at: new Date().toISOString(),
-      };
-
-      if (!db.attempts) db.attempts = [];
-      db.attempts.push(attempt);
-
-      if (xpEarned > 0) {
-        user.xp_total = (user.xp_total || 0) + xpEarned;
-        if (!db.xpTransactions) db.xpTransactions = [];
-        db.xpTransactions.push({
-          _id: generateId(),
-          student_id: user._id || auth.userId,
-          attempt_id: attempt._id,
-          xp_amount: xpEarned,
-          reason: `+${xpEarned} XP for practice set (${correctCount} correct answers)`,
-          created_at: new Date().toISOString(),
-        });
-      }
-
-      writeSharedDb(db);
-
-      return NextResponse.json({
-        success: true,
-        attempt,
-        correctCount,
-        totalQuestions,
-        accuracyPercent,
-        xpEarned,
-        newXpTotal: user.xp_total || 0,
-      });
-    }
-
-    // 3. Mongoose Fallback
-    await dbConnect();
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
     let correctCount = 0;
     let xpEarned = 0;
     const processedResponses: any[] = [];
 
     for (const ans of (answers || [])) {
-      let q: any = null;
-      try {
-        q = await Question.findById(ans.questionId);
-      } catch (e) {
-        q = null;
-      }
+      const q = (db.questions || []).find((item) => String(item._id) === String(ans.questionId) || String(item.id) === String(ans.questionId));
       if (q) {
         const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
         if (isCorrect) {
@@ -214,17 +140,19 @@ export async function POST(req: Request) {
           xpEarned += 27;
         }
         processedResponses.push({
-          question_id: q._id,
+          question_id: q._id || q.id,
           selected_option: ans.selectedOption,
           is_correct: isCorrect,
         });
       }
     }
 
-    const totalQuestions = answers.length;
+    const totalQuestions = (answers || []).length;
     const accuracyPercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
-    const attempt = await Attempt.create({
+    const attempt = {
+      _id: generateId(),
+      id: generateId(),
       student_id: user._id || auth.userId,
       course_id: user.locked_course_id,
       type: type || 'practice',
@@ -235,20 +163,27 @@ export async function POST(req: Request) {
       questions_count: totalQuestions,
       time_spent_seconds: durationSeconds,
       submission_type: 'manual',
-      started_at: new Date(),
-      submitted_at: new Date(),
-    });
+      created_at: new Date().toISOString(),
+    };
+
+    if (!db.attempts) db.attempts = [];
+    db.attempts.push(attempt);
 
     if (xpEarned > 0) {
       user.xp_total = (user.xp_total || 0) + xpEarned;
-      if (user.save) await user.save();
-      await XPTransaction.create({
+      if (!db.xpTransactions) db.xpTransactions = [];
+      db.xpTransactions.push({
+        _id: generateId(),
+        id: generateId(),
         student_id: user._id || auth.userId,
         attempt_id: attempt._id,
         xp_amount: xpEarned,
         reason: `+${xpEarned} XP for practice set (${correctCount} correct answers)`,
+        created_at: new Date().toISOString(),
       });
     }
+
+    writeSharedDb(db);
 
     return NextResponse.json({
       success: true,

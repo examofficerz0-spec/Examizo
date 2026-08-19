@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { WeeklyDPP, User, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
@@ -24,16 +22,16 @@ export async function GET() {
       return res;
     }
 
-    const { user, isMemoryMode } = authResult;
+    const { user } = authResult;
     if (!user.locked_course_id) {
       return NextResponse.json({ weeklyDpps: [] });
     }
 
     const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
-      const d1Dpps = await queryD1('SELECT * FROM weekly_dpps WHERE course_id = ? AND is_active = 1 ORDER BY created_at DESC', [userCourseId]);
+      const d1Dpps = await queryD1('SELECT * FROM weekly_dpps WHERE course_id = ? AND (is_active IS NULL OR is_active != 0) ORDER BY created_at DESC', [userCourseId]);
       if (d1Dpps) {
         const formatted = await Promise.all(
           d1Dpps.map(async (d: any) => {
@@ -88,47 +86,23 @@ export async function GET() {
       console.warn('[api/weekly-dpp] D1 query fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
-      const dpps = (db.weeklyDpps || []).filter((d) => {
-        const dppCourseId = String(typeof d.course_id === 'object' ? d.course_id?._id : d.course_id);
-        return validCourseIds.includes(dppCourseId) && d.is_active !== false;
-      });
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const validCourseIds = getEquivalentCourseIds(userCourseId, db.courses || []);
+    const dpps = (db.weeklyDpps || []).filter((d) => {
+      const dppCourseId = String(typeof d.course_id === 'object' ? d.course_id?._id : d.course_id);
+      return validCourseIds.includes(dppCourseId) && d.is_active !== false;
+    });
 
-      const populated = dpps.map((d) => {
-        const dppQuestions = (db.questions || []).filter((q) => (d.question_ids || []).includes(q._id));
-        return {
-          ...d,
-          questions: dppQuestions,
-        };
-      });
+    const populated = dpps.map((d) => {
+      const dppQuestions = (db.questions || []).filter((q) => (d.question_ids || []).includes(q._id));
+      return {
+        ...d,
+        questions: dppQuestions,
+      };
+    });
 
-      return NextResponse.json({ weeklyDpps: populated });
-    }
-
-    // 3. Mongoose Mode Fallback
-    await dbConnect();
-    const allCourses = await Course.find({});
-    const validCourseIds = getEquivalentCourseIds(userCourseId, allCourses);
-
-    const dpps = await WeeklyDPP.find({
-      course_id: { $in: validCourseIds },
-      is_active: true,
-    }).populate('question_ids');
-
-    const formatted = dpps.map((d) => ({
-      _id: d._id.toString(),
-      course_id: d.course_id.toString(),
-      title: d.title,
-      duration_minutes: d.duration_minutes,
-      question_ids: (d.question_ids || []).map((q: any) => q._id?.toString() || q.toString()),
-      questions: d.question_ids || [],
-      created_at: d.created_at,
-    }));
-
-    return NextResponse.json({ weeklyDpps: formatted });
+    return NextResponse.json({ weeklyDpps: populated });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course, Question, Attempt } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { getEquivalentCourseIds } from '@/lib/courseMatcher';
 import { queryD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
@@ -31,15 +28,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user, isMemoryMode } = authResult;
+    const { user } = authResult;
     if (!user.locked_course_id) {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
-    const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
     const userId = String(user._id || user.id || auth.userId);
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Tests = await queryD1('SELECT * FROM mock_tests WHERE id = ? LIMIT 1', [params.id]);
       if (d1Tests && d1Tests.length > 0) {
@@ -83,10 +79,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         // Check if dynamic preset reshuffle is active with subject allocations
         if (isDynamic && Object.keys(subjectAllocations).length > 0) {
-          // Fetch student attempt history for this test or practice to identify wrong vs correct questions
           const attempts = await queryD1(
-            'SELECT responses_json FROM attempts WHERE (student_id = ? OR student_id = ?) ORDER BY created_at ASC',
-            [userId, String(auth.userId)]
+            'SELECT responses_json FROM attempts WHERE (student_id = ? OR student_id = ?) ORDER BY started_at ASC',
+            [userId, String(auth.email || '')]
           );
 
           const questionAttemptMap: Record<string, boolean> = {};
@@ -103,7 +98,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           });
 
           // Fetch all questions under this course
-          const allCourseQs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND is_active = 1', [testCourseId]);
+          const allCourseQs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [testCourseId]);
 
           for (const [sub, count] of Object.entries(subjectAllocations)) {
             const targetCount = Number(count || 0);
@@ -122,9 +117,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             const unattemptedQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === undefined);
             const correctQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === true);
 
-            // Priority 1: Wrong questions always included
-            // Priority 2: Unattempted fresh questions
-            // Priority 3: Correct questions rotated
             const assembledPool = [
               ...seededOrRandomShuffle(wrongQs),
               ...seededOrRandomShuffle(unattemptedQs),
@@ -145,7 +137,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           }
         }
 
-        // Fallback to static question IDs if not dynamic or if assembled list was empty
+        // Fallback to static question IDs
         if (orderedQs.length === 0) {
           let qIds: string[] = [];
           try {
@@ -194,47 +186,20 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       console.warn('[api/mock-tests/[id]] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const rawTest = (db.mockTests || []).find((m) => m._id === params.id || m.id === params.id);
-      if (!rawTest) {
-        return NextResponse.json({ error: 'Test not found' }, { status: 404 });
-      }
-
-      const course = (db.courses || []).find((c) => c._id === rawTest.course_id || c.id === rawTest.course_id);
-      const question_ids = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
-
-      const test = {
-        ...rawTest,
-        course_id: course ? { _id: course._id, name: course.name } : { name: 'Locked Course' },
-        question_ids,
-      };
-
-      return NextResponse.json({ test });
-    }
-
-    // 3. Mongoose Fallback
-    await dbConnect();
-    const rawTest = await MockTest.findById(params.id);
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const rawTest = (db.mockTests || []).find((m) => m._id === params.id || m.id === params.id);
     if (!rawTest) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
-    const allCourses = await Course.find({});
-    const testCourseId = String(typeof rawTest.course_id === 'object' ? (rawTest.course_id as any)?._id : rawTest.course_id);
-    const courseObj = allCourses.find((c) => c._id.toString() === testCourseId);
-    const rawQIds = (rawTest.question_ids || []).map((q: any) => q._id?.toString() || q.toString());
-    const populatedQs = await Question.find({ _id: { $in: rawQIds } });
-
-    const orderedQs = rawQIds
-      .map((qId: string) => populatedQs.find((q: any) => q._id.toString() === qId || String(q._id) === qId))
-      .filter(Boolean);
+    const course = (db.courses || []).find((c) => c._id === rawTest.course_id || c.id === rawTest.course_id);
+    const question_ids = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
 
     const test = {
-      ...rawTest.toObject(),
-      course_id: courseObj ? { _id: courseObj._id.toString(), name: courseObj.name, subjects: courseObj.subjects } : { name: 'Locked Course' },
-      question_ids: orderedQs,
+      ...rawTest,
+      course_id: course ? { _id: course._id, name: course.name } : { name: 'Locked Course' },
+      question_ids,
     };
 
     return NextResponse.json({ test });

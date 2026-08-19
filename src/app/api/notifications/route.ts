@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Notification } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
@@ -35,11 +34,11 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { user: currentUser, isMemoryMode, isD1 } = authResult;
+    const { user: currentUser } = authResult;
     const currentUserId = String(currentUser._id || currentUser.id || auth.userId);
     const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
-    // 1. Try Cloudflare D1
+    // 1. Primary: Cloudflare D1
     try {
       const d1Notifs = await queryD1('SELECT * FROM notifications ORDER BY created_at DESC');
       if (d1Notifs && Array.isArray(d1Notifs)) {
@@ -82,7 +81,7 @@ export async function GET() {
       console.warn('[notifications GET] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
+    // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
     const userCreatedAtTime = currentUser.created_at ? new Date(currentUser.created_at).getTime() : 0;
 
@@ -143,7 +142,7 @@ export async function POST(request: Request) {
     const currentUserId = String(currentUser._id || currentUser.id || auth.userId);
     const userCourseId = currentUser.locked_course_id ? String(currentUser.locked_course_id) : null;
 
-    // 1. Try D1
+    // 1. Primary: Cloudflare D1
     try {
       const d1Notifs = await queryD1('SELECT * FROM notifications');
       if (d1Notifs && Array.isArray(d1Notifs)) {
@@ -186,7 +185,7 @@ export async function POST(request: Request) {
       console.warn('[notifications POST] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode Sync
+    // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
     if (!db.notifications) db.notifications = [];
 

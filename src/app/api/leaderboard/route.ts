@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { User } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -19,14 +21,14 @@ export async function GET() {
       return res;
     }
 
-    const { user, isMemoryMode, isD1 } = authResult;
+    const { user } = authResult;
     if (!user.locked_course_id) {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
 
     const currentUserId = String(user._id || user.id || auth.userId);
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Students = await queryD1(
         "SELECT id, name, xp_total, created_at FROM users WHERE locked_course_id = ? AND status = 'Active' ORDER BY xp_total DESC, created_at ASC",
@@ -65,83 +67,34 @@ export async function GET() {
       console.warn('[api/leaderboard] D1 fallback:', d1Err);
     }
 
-    // 2. Memory Mode
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const students = (db.users || [])
-        .filter((u: any) => String(u.locked_course_id) === String(user.locked_course_id) && u.status === 'Active')
-        .sort((a: any, b: any) => (b.xp_total || 0) - (a.xp_total || 0));
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const students = (db.users || [])
+      .filter((u: any) => String(u.locked_course_id) === String(user.locked_course_id) && u.status === 'Active')
+      .sort((a: any, b: any) => (b.xp_total || 0) - (a.xp_total || 0));
 
-      let userRank = 1;
-      const formattedList = students.map((s: any, idx: number) => {
-        const isSelf = String(s._id || s.id) === currentUserId;
-        if (isSelf) {
-          userRank = idx + 1;
-        }
-        return {
-          id: String(s._id || s.id),
-          user_id: String(s._id || s.id),
-          rank: idx + 1,
-          name: s.name,
-          xp_total: s.xp_total || 0,
-          isSelf,
-          isCurrentUser: isSelf,
-        };
-      });
-
-      return NextResponse.json({
-        leaderboard: formattedList.slice(0, 20),
-        userRank: {
-          user_id: currentUserId,
-          rank: userRank,
-          name: user.name,
-          xp_total: user.xp_total || 0,
-        },
-      });
-    }
-
-    // 3. Mongoose mode (only if !isD1)
-    if (!isD1) {
-      const students = await User.find({
-        locked_course_id: user.locked_course_id,
-        status: 'Active',
-      })
-        .sort({ xp_total: -1, created_at: 1 })
-        .select('name xp_total created_at');
-
-      let userRank = 1;
-      const formattedList = students.map((s, idx) => {
-        const isSelf = s._id.toString() === currentUserId;
-        if (isSelf) {
-          userRank = idx + 1;
-        }
-        return {
-          id: s._id.toString(),
-          user_id: s._id.toString(),
-          rank: idx + 1,
-          name: s.name,
-          xp_total: s.xp_total || 0,
-          isSelf,
-          isCurrentUser: isSelf,
-        };
-      });
-
-      return NextResponse.json({
-        leaderboard: formattedList.slice(0, 20),
-        userRank: {
-          user_id: currentUserId,
-          rank: userRank,
-          name: user.name,
-          xp_total: user.xp_total || 0,
-        },
-      });
-    }
+    let userRank = 1;
+    const formattedList = students.map((s: any, idx: number) => {
+      const isSelf = String(s._id || s.id) === currentUserId;
+      if (isSelf) {
+        userRank = idx + 1;
+      }
+      return {
+        id: String(s._id || s.id),
+        user_id: String(s._id || s.id),
+        rank: idx + 1,
+        name: s.name,
+        xp_total: s.xp_total || 0,
+        isSelf,
+        isCurrentUser: isSelf,
+      };
+    });
 
     return NextResponse.json({
-      leaderboard: [],
+      leaderboard: formattedList.slice(0, 20),
       userRank: {
         user_id: currentUserId,
-        rank: 1,
+        rank: userRank,
         name: user.name,
         xp_total: user.xp_total || 0,
       },
