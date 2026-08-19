@@ -17,7 +17,25 @@ export default function CourseSelectionPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    // 1. Fetch courses immediately
+    fetch('/api/courses', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        const active = (data.courses || [])
+          .filter((c: any) => c.is_active !== false && String(c.is_active) !== 'false')
+          .map((c: any) => ({
+            ...c,
+            _id: String(c._id || c.id),
+            id: String(c.id || c._id),
+          }));
+        setCourses(active);
+        if (active.length > 0) setSelectedCourseId(String(active[0]._id));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+
+    // 2. Verify Auth State and redirect if course is already locked
+    fetch('/api/auth/me', { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) {
           router.push('/login');
@@ -41,24 +59,9 @@ export default function CourseSelectionPage() {
           } else {
             router.push('/dashboard');
           }
-          return;
         }
-        return fetch('/api/courses', { cache: 'no-store' })
-          .then((res) => res.json())
-          .then((data) => {
-            const active = (data.courses || [])
-              .filter((c: any) => c.is_active !== false && String(c.is_active) !== 'false')
-              .map((c: any) => ({
-                ...c,
-                _id: String(c._id || c.id),
-                id: String(c.id || c._id),
-              }));
-            setCourses(active);
-            if (active.length > 0) setSelectedCourseId(String(active[0]._id));
-          });
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch(console.error);
   }, [router]);
 
   const handleConfirmLock = async () => {
