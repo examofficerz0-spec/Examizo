@@ -122,6 +122,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // 6. If user is authenticated but has not selected/locked a course yet:
+  // Restrict them from entering inside the portal pages until they pick their course track.
+  const hasLockedCourse = Boolean(user && user.lockedCourseId && String(user.lockedCourseId).trim().length > 0);
+  if (!hasLockedCourse) {
+    const isCourseSelectionPath = pathname === '/course-selection';
+    const isAllowedApi = pathname.startsWith('/api/course') || pathname.startsWith('/api/courses') || pathname.startsWith('/api/auth');
+
+    if (!isCourseSelectionPath && !isAllowedApi && !pathname.startsWith('/api/')) {
+      return NextResponse.redirect(new URL('/course-selection', request.url));
+    }
+  }
+
   const response = NextResponse.next();
   applySecurityHeaders(response);
   return response;

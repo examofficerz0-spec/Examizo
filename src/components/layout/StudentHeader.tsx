@@ -417,19 +417,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
           {/* Far Right Actions */}
           <div className="flex items-center gap-2.5">
-            {/* Continue Course Selection Button (if no course locked) */}
-            {!currentCourseName && (
-              <Link
-                href="/course-selection"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-xs transition-all shrink-0 animate-pulse border border-amber-500/50"
-                title="Select your study track or exam course"
-              >
-                <BookOpen className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span className="hidden sm:inline">Continue Course Selection</span>
-                <span className="sm:hidden">Select Course</span>
-              </Link>
-            )}
-
             {/* Text Size Increaser */}
             <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
               <button
@@ -640,22 +627,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     </div>
                   </div>
                 </div>
-
-                {/* Continue Course Selection Button inside Dropdown (if active profile has no course) */}
-                {!currentCourseName && (
-                  <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-900/60 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-extrabold text-amber-800 dark:text-amber-300">
-                      <span>⚠️ Course Track Missing</span>
-                    </div>
-                    <Link
-                      href="/course-selection"
-                      onClick={() => setShowProfileMenu(false)}
-                      className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all text-center"
-                    >
-                      <BookOpen className="w-3.5 h-3.5" /> Continue Course Selection →
-                    </Link>
-                  </div>
-                )}
 
                 {/* Netflix-Style Switch Profile Section */}
                 <div className="p-2 space-y-1 border-b border-slate-100 dark:border-slate-800">

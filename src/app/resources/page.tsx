@@ -295,15 +295,6 @@ export default function StudentResourcesPage() {
                 <Clock className="w-4 h-4 text-blue-500 animate-spin" style={{ animationDuration: '6s' }} />
                 Check back soon for new PDF downloads
               </div>
-
-              <div className="pt-1">
-                <Link
-                  href="/course-selection"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition-all"
-                >
-                  <BookOpen className="w-4 h-4" /> Continue Course Selection <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
           </div>
         )}

@@ -8,10 +8,18 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, confirmPassword } = await req.json();
+    const { name, email, password, confirmPassword, courseId, course_id } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    }
+
+    const targetCourseId = courseId || course_id;
+    if (!targetCourseId || !String(targetCourseId).trim()) {
+      return NextResponse.json(
+        { error: 'Course selection is required. An account cannot be created without choosing a target curriculum course.' },
+        { status: 400 }
+      );
     }
 
     if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
@@ -23,6 +31,7 @@ export async function POST(req: Request) {
     }
 
     const lowerEmail = email.toLowerCase().trim();
+    const cleanCourseId = String(targetCourseId).trim();
     const newUserId = generateId();
     const password_hash = await bcrypt.hash(password, 10);
 
@@ -35,7 +44,7 @@ export async function POST(req: Request) {
 
       const d1Success = await executeD1(
         'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, name, lowerEmail, password_hash, 'Active', 0, null]
+        [newUserId, name, lowerEmail, password_hash, 'Active', 0, cleanCourseId]
       );
 
       if (d1Success) {
@@ -43,12 +52,12 @@ export async function POST(req: Request) {
           userId: newUserId,
           email: lowerEmail,
           name,
-          lockedCourseId: null,
+          lockedCourseId: cleanCourseId,
         });
 
         const response = NextResponse.json({
           success: true,
-          user: { id: newUserId, name, email: lowerEmail, lockedCourseId: null },
+          user: { id: newUserId, name, email: lowerEmail, lockedCourseId: cleanCourseId },
         });
 
         response.cookies.set('student_token', token, {
@@ -81,7 +90,7 @@ export async function POST(req: Request) {
         password_hash,
         status: 'Active',
         xp_total: 0,
-        locked_course_id: null,
+        locked_course_id: cleanCourseId,
         created_at: new Date().toISOString(),
       };
 
@@ -92,7 +101,7 @@ export async function POST(req: Request) {
         userId: newUser._id,
         email: newUser.email,
         name: newUser.name,
-        lockedCourseId: null,
+        lockedCourseId: cleanCourseId,
       });
 
       const response = NextResponse.json({
@@ -101,7 +110,7 @@ export async function POST(req: Request) {
           id: newUser._id,
           name: newUser.name,
           email: newUser.email,
-          lockedCourseId: null,
+          lockedCourseId: cleanCourseId,
         },
       });
 
@@ -128,14 +137,14 @@ export async function POST(req: Request) {
       password_hash,
       status: 'Active',
       xp_total: 0,
-      locked_course_id: null,
+      locked_course_id: cleanCourseId,
     });
 
     const token = signUserToken({
       userId: newUser._id.toString(),
       email: newUser.email,
       name: newUser.name,
-      lockedCourseId: null,
+      lockedCourseId: cleanCourseId,
     });
 
     const response = NextResponse.json({
@@ -144,7 +153,7 @@ export async function POST(req: Request) {
         id: newUser._id.toString(),
         name: newUser.name,
         email: newUser.email,
-        lockedCourseId: null,
+        lockedCourseId: cleanCourseId,
       },
     });
 

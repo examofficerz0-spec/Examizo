@@ -3,7 +3,7 @@ import { dbConnect } from '@/lib/db';
 import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1 } from '@/lib/d1';
 
 function parseJwtPayload(token: string) {
   try {
@@ -75,16 +75,39 @@ export async function POST(req: Request) {
       const existing = await queryD1('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
       let user: any = existing && existing.length > 0 ? existing[0] : null;
 
+      // If user does not exist in DB yet, DO NOT insert into DB!
+      // They will ONLY be registered into the DB when they choose a course on /course-selection.
       if (!user) {
-        const userId = generateId();
-        const created = await executeD1(
-          'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [userId, name, email, 'google_oauth_authenticated', 'Active', 0, null]
-        );
+        const pendingUserId = generateId();
+        const token = signUserToken({
+          userId: pendingUserId,
+          email,
+          name,
+          lockedCourseId: null,
+        });
 
-        if (created) {
-          user = { id: userId, name, email, locked_course_id: null, xp_total: 0 };
-        }
+        const response = NextResponse.json({
+          success: true,
+          needsCourseSelection: true,
+          user: {
+            id: pendingUserId,
+            name,
+            email,
+            lockedCourseId: null,
+          },
+        });
+
+        response.cookies.set({
+          name: 'student_token',
+          value: token,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
       }
 
       if (user) {
@@ -150,20 +173,37 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
         }
       } else {
-        user = {
-          _id: generateId(),
-          name,
+        // Do not insert into DB yet - pending course selection
+        const pendingUserId = generateId();
+        const token = signUserToken({
+          userId: pendingUserId,
           email,
-          password_hash: 'google_oauth_authenticated',
-          locked_course_id: null,
-          role: 'student',
-          status: 'Active',
-          xp_total: 0,
-          rank: 1,
-          created_at: new Date().toISOString(),
-        };
-        db.users.push(user);
-        writeSharedDb(db);
+          name,
+          lockedCourseId: null,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          needsCourseSelection: true,
+          user: {
+            id: pendingUserId,
+            name,
+            email,
+            lockedCourseId: null,
+          },
+        });
+
+        response.cookies.set({
+          name: 'student_token',
+          value: token,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
       }
 
       const token = signUserToken({
@@ -210,14 +250,37 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
       }
     } else {
-      user = await User.create({
-        name,
+      // Pending course selection - do not create record yet
+      const pendingUserId = generateId();
+      const token = signUserToken({
+        userId: pendingUserId,
         email,
-        password_hash: 'google_oauth_authenticated',
-        role: 'student',
-        status: 'Active',
-        xp_total: 0,
+        name,
+        lockedCourseId: null,
       });
+
+      const response = NextResponse.json({
+        success: true,
+        needsCourseSelection: true,
+        user: {
+          id: pendingUserId,
+          name,
+          email,
+          lockedCourseId: null,
+        },
+      });
+
+      response.cookies.set({
+        name: 'student_token',
+        value: token,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60,
+        path: '/',
+      });
+
+      return response;
     }
 
     const token = signUserToken({
