@@ -12,7 +12,7 @@ function parseJwtPayload(token: string) {
     const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-    
+
     if (typeof Buffer !== 'undefined') {
       const json = Buffer.from(padded, 'base64').toString('utf-8');
       return JSON.parse(json);
@@ -70,156 +70,96 @@ export async function POST(req: Request) {
     email = email.toLowerCase().trim();
     name = name || email.split('@')[0];
 
-    // 1. Try Cloudflare D1 Google Auth
+    // Find user across D1, Memory DB, and MongoDB
+    let existingUser: any = null;
+
+    // A. Check Cloudflare D1
     try {
-      const existing = await queryD1('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
-      let user: any = existing && existing.length > 0 ? existing[0] : null;
-
-      // If user does not exist in DB yet, DO NOT insert into DB!
-      // They will ONLY be registered into the DB when they choose a course on /course-selection.
-      if (!user) {
-        const pendingUserId = generateId();
-        const token = signUserToken({
-          userId: pendingUserId,
-          email,
-          name,
-          lockedCourseId: null,
-        });
-
-        const response = NextResponse.json({
-          success: true,
-          needsCourseSelection: true,
-          user: {
-            id: pendingUserId,
-            name,
-            email,
-            lockedCourseId: null,
-          },
-        });
-
-        response.cookies.set({
-          name: 'student_token',
-          value: token,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60,
-          path: '/',
-        });
-
-        return response;
-      }
-
-      if (user) {
-        const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
-        const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
-
-        if (isDeleted) {
-          return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
-        }
-        if (isSuspended) {
-          return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
-        }
-
-        const token = signUserToken({
-          userId: user.id,
-          email: user.email,
-          name: user.name,
-          lockedCourseId: user.locked_course_id || null,
-        });
-
-        const response = NextResponse.json({
-          success: true,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            lockedCourseId: user.locked_course_id || null,
-          },
-        });
-
-        response.cookies.set({
-          name: 'student_token',
-          value: token,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 24 * 60 * 60,
-          path: '/',
-        });
-
-        return response;
+      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [email]);
+      if (d1Users && d1Users.length > 0) {
+        const u = d1Users[0];
+        existingUser = {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          status: u.status || 'Active',
+          xp_total: u.xp_total || 0,
+          locked_course_id: u.locked_course_id || null,
+        };
       }
     } catch (e) {
-      console.warn('[Google D1 Warning]:', e);
+      console.warn('[Google D1 Lookup Warning]:', e);
     }
 
-    // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
-
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      if (!db.users) db.users = [];
-
-      let user = db.users.find((u) => u.email?.toLowerCase() === email);
-
-      if (user) {
-        const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
-        const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
-        if (isDeleted) {
-          return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
+    // B. Check Memory DB (shared-db.json)
+    if (!existingUser) {
+      try {
+        const db = readSharedDb();
+        if (db.users) {
+          const memUser = db.users.find((u: any) => (u.email || '').toLowerCase().trim() === email);
+          if (memUser) {
+            existingUser = {
+              id: String(memUser._id || memUser.id),
+              name: memUser.name,
+              email: memUser.email,
+              status: memUser.status || 'Active',
+              xp_total: memUser.xp_total || 0,
+              locked_course_id: memUser.locked_course_id || null,
+            };
+          }
         }
-        if (isSuspended) {
-          return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
+      } catch (_) {}
+    }
+
+    // C. Check MongoDB
+    if (!existingUser) {
+      try {
+        const { isMemoryMode } = await dbConnect();
+        if (!isMemoryMode) {
+          const mUser = await User.findOne({ email });
+          if (mUser) {
+            existingUser = {
+              id: mUser._id.toString(),
+              name: mUser.name,
+              email: mUser.email,
+              status: mUser.status || 'Active',
+              xp_total: mUser.xp_total || 0,
+              locked_course_id: mUser.locked_course_id ? mUser.locked_course_id.toString() : null,
+            };
+          }
         }
-      } else {
-        // Do not insert into DB yet - pending course selection
-        const pendingUserId = generateId();
-        const token = signUserToken({
-          userId: pendingUserId,
-          email,
-          name,
-          lockedCourseId: null,
-        });
+      } catch (_) {}
+    }
 
-        const response = NextResponse.json({
-          success: true,
-          needsCourseSelection: true,
-          user: {
-            id: pendingUserId,
-            name,
-            email,
-            lockedCourseId: null,
-          },
-        });
+    // If user was deleted or suspended
+    if (existingUser) {
+      const status = String(existingUser.status || '').toLowerCase();
+      const isDeleted = status === 'deleted' || existingUser.name === 'Deleted User' || existingUser.email.startsWith('deleted_');
+      const isSuspended = status === 'suspended';
 
-        response.cookies.set({
-          name: 'student_token',
-          value: token,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60,
-          path: '/',
-        });
-
-        return response;
+      if (isDeleted) {
+        return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
+      }
+      if (isSuspended) {
+        return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
       }
 
+      // Existing active user with locked course
       const token = signUserToken({
-        userId: String(user._id),
-        email: user.email,
-        name: user.name,
-        lockedCourseId: user.locked_course_id || null,
+        userId: existingUser.id,
+        email: existingUser.email,
+        name: existingUser.name,
+        lockedCourseId: existingUser.locked_course_id || null,
       });
 
       const response = NextResponse.json({
         success: true,
+        needsCourseSelection: !existingUser.locked_course_id,
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          lockedCourseId: user.locked_course_id,
+          id: existingUser.id,
+          name: existingUser.name,
+          email: existingUser.email,
+          lockedCourseId: existingUser.locked_course_id || null,
         },
       });
 
@@ -236,67 +176,23 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // 3. Mongoose Mode Fallback
-    let user = await User.findOne({ email });
-
-    if (user) {
-      const userStatus = String(user.status || '').toLowerCase();
-      const isSuspended = userStatus === 'suspended';
-      const isDeleted = userStatus === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
-      if (isDeleted) {
-        return NextResponse.json({ error: 'This account has been deleted. Please create a new account.' }, { status: 401 });
-      }
-      if (isSuspended) {
-        return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
-      }
-    } else {
-      // Pending course selection - do not create record yet
-      const pendingUserId = generateId();
-      const token = signUserToken({
-        userId: pendingUserId,
-        email,
-        name,
-        lockedCourseId: null,
-      });
-
-      const response = NextResponse.json({
-        success: true,
-        needsCourseSelection: true,
-        user: {
-          id: pendingUserId,
-          name,
-          email,
-          lockedCourseId: null,
-        },
-      });
-
-      response.cookies.set({
-        name: 'student_token',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
-        path: '/',
-      });
-
-      return response;
-    }
-
+    // Brand new user -> create pending onboarding session (not in DB yet)
+    const pendingUserId = generateId();
     const token = signUserToken({
-      userId: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      lockedCourseId: user.locked_course_id ? user.locked_course_id.toString() : null,
+      userId: pendingUserId,
+      email,
+      name,
+      lockedCourseId: null,
     });
 
     const response = NextResponse.json({
       success: true,
+      needsCourseSelection: true,
       user: {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        lockedCourseId: user.locked_course_id ? user.locked_course_id.toString() : null,
+        id: pendingUserId,
+        name,
+        email,
+        lockedCourseId: null,
       },
     });
 
@@ -306,7 +202,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
 
