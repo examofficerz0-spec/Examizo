@@ -6,7 +6,7 @@ import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton, translateToHindi } from '@/components/common/HindiTranslateButton';
 import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
 import {
-  Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
+  Clock, Bookmark, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Award,
   AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart
 } from 'lucide-react';
 
@@ -620,7 +620,17 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   });
   const currentQInfo = currentQ ? getQuestionSubjectAndTopic(currentQ) : { subject: 'General', topic: '' };
 
+  const [selectedPaletteSubject, setSelectedPaletteSubject] = useState<string | null>(null);
 
+  const activeSubject = (selectedPaletteSubject && testSubjects.includes(selectedPaletteSubject))
+    ? selectedPaletteSubject
+    : (currentQInfo.subject || testSubjects[0] || 'General');
+
+  useEffect(() => {
+    if (currentQInfo.subject && testSubjects.includes(currentQInfo.subject)) {
+      setSelectedPaletteSubject(currentQInfo.subject);
+    }
+  }, [currentIdx, currentQInfo.subject]);
 
   // Helper function to update question state
   const updateQuestionState = (qId: string, updates: Partial<{ selectedOption: number | null; isMFR: boolean; isVisited: boolean }>) => {
@@ -1225,24 +1235,102 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
             </div>
 
-            {/* Subject Section Grids */}
-            {testSubjects.map((subject) => {
-              const subQList = subjectGroupedQuestions[subject].questions;
-              const isCurrentSubject = currentQInfo.subject === subject;
+            {/* Subject Section Selection Dropdown (Hides other sections into dropdown) */}
+            {testSubjects.length > 1 && (
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] md:text-xs font-black uppercase text-slate-500 tracking-wider">
+                    Section
+                  </label>
+                  <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400">
+                    {testSubjects.length} Sections
+                  </span>
+                </div>
+
+                {/* Section Dropdown Selector */}
+                <div className="relative">
+                  <select
+                    value={activeSubject}
+                    onChange={(e) => {
+                      const newSub = e.target.value;
+                      setSelectedPaletteSubject(newSub);
+                      const firstQ = subjectGroupedQuestions[newSub]?.questions[0];
+                      if (firstQ) navigateTo(firstQ.originalIdx);
+                    }}
+                    className="w-full py-2 pl-3 pr-8 text-xs font-black bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs focus:ring-2 focus:ring-brand-600 appearance-none cursor-pointer"
+                  >
+                    {testSubjects.map((sub) => {
+                      const subQ = subjectGroupedQuestions[sub]?.questions || [];
+                      const doneCount = subQ.filter(({ question: q }) => {
+                        const st = userState[q._id];
+                        return st?.selectedOption !== null && st?.selectedOption !== undefined;
+                      }).length;
+
+                      return (
+                        <option key={sub} value={sub}>
+                          {sub} ({doneCount}/{subQ.length} Done)
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                {/* Section Quick Switcher Badges */}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {testSubjects.map((sub) => {
+                    const subQ = subjectGroupedQuestions[sub]?.questions || [];
+                    const isActive = activeSubject === sub;
+                    const doneCount = subQ.filter(({ question: q }) => {
+                      const st = userState[q._id];
+                      return st?.selectedOption !== null && st?.selectedOption !== undefined;
+                    }).length;
+
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaletteSubject(sub);
+                          const firstQ = subjectGroupedQuestions[sub]?.questions[0];
+                          if (firstQ) navigateTo(firstQ.originalIdx);
+                        }}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all ${
+                          isActive
+                            ? 'bg-[#0B192C] text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <span>{sub}</span>
+                        <span className={`text-[9px] px-1 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                          {doneCount}/{subQ.length}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Active Subject Section Grid */}
+            {(() => {
+              const currentSubjectData = subjectGroupedQuestions[activeSubject] || subjectGroupedQuestions[testSubjects[0]];
+              if (!currentSubjectData) return null;
+              const subQList = currentSubjectData.questions;
 
               return (
-                <div key={subject} className="space-y-1.5 md:space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="space-y-1.5 md:space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex justify-between items-center text-[9px] md:text-xs font-black text-slate-900 dark:text-white">
-                    <span className="flex items-center gap-1">
-                      <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isCurrentSubject ? 'bg-brand-600 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'}`} />
-                      <span className="truncate max-w-[60px] md:max-w-none">{subject}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-brand-600 animate-pulse" />
+                      <span className="truncate">{activeSubject}</span>
                     </span>
                     <span className="text-[8px] md:text-[10px] text-slate-400 font-medium shrink-0 ml-1">
-                      ({subQList.length})
+                      ({subQList.length} Questions)
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-4 md:grid-cols-5 gap-1 md:gap-2">
+                  <div className="grid grid-cols-4 md:grid-cols-5 gap-1 md:gap-2 max-h-[50vh] overflow-y-auto pr-1">
                     {subQList.map(({ question: q, originalIdx: idx }) => {
                       const st = userState[q._id];
                       const isCurrent = idx === currentIdx;
@@ -1262,7 +1350,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                           key={q._id}
                           onClick={() => navigateTo(idx)}
                           className={`h-7 md:h-9 rounded-lg font-mono text-[9px] md:text-xs flex items-center justify-center border transition-all ${stateColor} ${
-                            isCurrent ? 'ring-2 ring-brand-800 ring-offset-1' : ''
+                            isCurrent ? 'ring-2 ring-brand-800 ring-offset-1 font-black shadow-sm' : ''
                           }`}
                         >
                           {idx + 1}
@@ -1272,7 +1360,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
       </div>
