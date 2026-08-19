@@ -31,6 +31,26 @@ import {
 
 import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 
+const cleanQuestionText = (text: any): string => {
+  if (!text || typeof text !== 'string') return '';
+  let cleaned = text.trim();
+
+  // 1. Remove trailing prefixes/suffixes like (Set 2, item 18), [Set 1, item 5], (Item 12), (Set 2), [Set A, Question 4]
+  cleaned = cleaned
+    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*(?:item|iteam)\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '');
+
+  // 2. Remove leading prefixes like (Set 2, item 18), [Set 1, item 5], Q1., Question 1:, etc.
+  cleaned = cleaned
+    .replace(/^[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
+    .replace(/^[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
+    .replace(/^(?:q(?:uestion)?\s*\d+[\s\.\:\-]+|\d+[\s\.\:\-]+)/gi, '');
+
+  return cleaned.trim();
+};
+
 export default function PracticeSetsPage() {
   const initialCache = getClientUserCache('__PRACTICE_CACHE__');
   const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
@@ -1018,10 +1038,10 @@ export default function PracticeSetsPage() {
 
                       <div className="flex items-start justify-between gap-3 mb-4">
                         <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-relaxed flex-1">
-                          {hindiTranslations[currentQ._id]?.question ?? currentQ.question_text}
+                          {hindiTranslations[currentQ._id]?.question ?? cleanQuestionText(currentQ.question_text)}
                         </h2>
                         <HindiTranslateButton
-                          texts={[currentQ.question_text, ...getNormalizedOptions(currentQ)]}
+                          texts={[cleanQuestionText(currentQ.question_text), ...getNormalizedOptions(currentQ)]}
                           isTranslated={!!hindiTranslations[currentQ._id]}
                           onTranslated={(translated) => handleTranslated(currentQ._id, translated)}
                           onReset={() => handleResetTranslation(currentQ._id)}

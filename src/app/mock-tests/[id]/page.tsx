@@ -49,6 +49,26 @@ const GK_GS_CANONICAL_MODULES: { match: RegExp; name: string }[] = [
   { match: /^(?:indian\s*polity|polity|constitution|civics)/i, name: 'Indian Polity' },
 ];
 
+const cleanQuestionText = (text: any): string => {
+  if (!text || typeof text !== 'string') return '';
+  let cleaned = text.trim();
+
+  // 1. Remove trailing prefixes/suffixes like (Set 2, item 18), [Set 1, item 5], (Item 12), (Set 2), [Set A, Question 4]
+  cleaned = cleaned
+    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '')
+    .replace(/\s*[\(\[\{]\s*(?:item|iteam)\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '');
+
+  // 2. Remove leading prefixes like (Set 2, item 18), [Set 1, item 5], Q1., Question 1:, etc.
+  cleaned = cleaned
+    .replace(/^[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
+    .replace(/^[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
+    .replace(/^(?:q(?:uestion)?\s*\d+[\s\.\:\-]+|\d+[\s\.\:\-]+)/gi, '');
+
+  return cleaned.trim();
+};
+
 function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
   if (!q) return { subject: 'General', topic: 'General Topics' };
 
@@ -1082,8 +1102,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     {/* Question Text */}
                     <div className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-relaxed">
                       {activeLanguage === 'hi'
-                        ? hindiTranslations[currentQ?._id]?.question || currentQ?.question_text
-                        : currentQ?.question_text}
+                        ? hindiTranslations[currentQ?._id]?.question || cleanQuestionText(currentQ?.question_text)
+                        : cleanQuestionText(currentQ?.question_text)}
                     </div>
 
                     {/* Question Diagram / Image */}
