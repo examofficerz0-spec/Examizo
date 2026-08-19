@@ -113,6 +113,50 @@
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
       "created_at": "2026-08-13T04:46:08.706Z"
+    },
+    {
+      "_id": "lbghyex2dmt04bnzq",
+      "id": "lbghyex2dmt04bnzq",
+      "name": "Safari Test Student",
+      "email": "test_safari_1787145558279@examizo.test",
+      "password_hash": "$2a$10$pTVXhPbb9AWzpjZ6ES4DLeVOF0H4epkjGfrqZKbCJLk3HcpMNylK2",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "course_jee_2027",
+      "created_at": "2026-08-19T13:19:21.822Z"
+    },
+    {
+      "_id": "6qo0pow7mmt04c076",
+      "id": "6qo0pow7mmt04c076",
+      "name": "Safari Test Student",
+      "email": "test_safari_1787145576430@examizo.test",
+      "password_hash": "$2a$10$urerKPHiCxjcLdM7n5A9P.9l8miY8fsLbyaAxleYBfzizIwjy1K0K",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "course_jee_2027",
+      "created_at": "2026-08-19T13:19:37.227Z"
+    },
+    {
+      "_id": "ijcngxv5omt04habe",
+      "id": "ijcngxv5omt04habe",
+      "name": "Safari Test Student",
+      "email": "test_safari_1787145821616@examizo.test",
+      "password_hash": "$2a$10$ZFxbDJZ1/KC8WW0.ivJ3G.Pg0otgRxMDTIoJZXe.LrQIe2fceOIFi",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "a2dmfatfwmszyy4et",
+      "created_at": "2026-08-19T13:23:43.286Z"
+    },
+    {
+      "_id": "ymtpm8rsamt04j5y0",
+      "id": "ymtpm8rsamt04j5y0",
+      "name": "Safari Test Student",
+      "email": "test_safari_1787145910469@examizo.test",
+      "password_hash": "$2a$10$u2HnrmCZHvdZaO1OfEeE5Ohc1CP/7U.6U30gMaQb5btLaJqc9zi4G",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "a2dmfatfwmszyy4et",
+      "created_at": "2026-08-19T13:25:10.857Z"
     }
   ],
   "courses": [

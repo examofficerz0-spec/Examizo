@@ -66,6 +66,7 @@ const PUBLIC_PATHS = [
 ];
 
 const PUBLIC_API_PREFIXES = [
+  '/api/courses',
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/google',
