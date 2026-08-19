@@ -3211,52 +3211,6 @@
   ],
   "mockTests": [
     {
-      "_id": "wf8nr3qjxms7ddfk2",
-      "course_id": "1339osvcems5xpvjb",
-      "title": "NEET Standard Full-Length Paper 2024",
-      "type": "full",
-      "duration_minutes": 200,
-      "cutoff_marks": 520,
-      "question_ids": [
-        "ozmhoolqdms7d8a4p",
-        "te12iknx4ms7d8a4p",
-        "0tg3tcynwms7d8a4p",
-        "0n4ioyhvyms7d8a4p",
-        "uotmvuo83ms7d8a4p",
-        "sowmflcfwms7cype0",
-        "myaz2ckirms7cype0",
-        "erzlblvyhms7cype0",
-        "iddxyx3klms7cx62h",
-        "lxd6v7gqfms7cx62h",
-        "toe8gmo45ms7cx62h",
-        "85pgoxneems7cx62h"
-      ],
-      "is_active": true,
-      "created_at": "2026-07-30T10:27:20.450Z"
-    },
-    {
-      "_id": "4ahxjxl6gms7am0gq",
-      "course_id": "course_jee_2027",
-      "title": "JEE Main Grand Mock Examination",
-      "type": "full",
-      "duration_minutes": 180,
-      "cutoff_marks": 120,
-      "question_ids": [
-        "89ntsf4g7ms60o4uo",
-        "ay6091h9gms60o4uo",
-        "0wcal1eocms60o4uo",
-        "5bm2ugd6jms60o4uo",
-        "om8w4qnabms60o4uo",
-        "jkyegql8mms60o4uo",
-        "95pslkhcnms60o4uo",
-        "zmljtfixoms60o4uo",
-        "gyiih2tx0ms60o4uo",
-        "jvjrhm0ooms60o4uo"
-      ],
-      "is_active": true,
-      "created_at": "2026-07-30T09:10:01.946Z"
-    },
-    {
       "_id": "7gl0z9umfms66d0j8",
       "course_id": "course_jee_2027",
       "title": "ert",
