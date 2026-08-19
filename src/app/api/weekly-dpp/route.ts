@@ -59,6 +59,7 @@ export async function GET() {
                   _id: q.id,
                   id: q.id,
                   question_text: q.question_text,
+                  image_url: q.image_url || '',
                   options: opts,
                   correct_option: Number(q.correct_option || 0),
                   explanation: q.explanation || '',
