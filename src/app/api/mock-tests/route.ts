@@ -30,22 +30,22 @@ export async function GET() {
     }
 
     const rawCourseId = user.locked_course_id;
-    const courseId = typeof rawCourseId === 'object' && rawCourseId?._id ? String(rawCourseId._id) : String(rawCourseId);
+    const courseId = typeof rawCourseId === 'object'
+      ? String((rawCourseId as any)?._id || (rawCourseId as any)?.id || '')
+      : String(rawCourseId);
 
     // 1. Try D1 first
     try {
       // Load all courses to find equivalent course IDs for this student's track
       const d1Courses = await queryD1('SELECT * FROM courses');
       const validCourseIds = getEquivalentCourseIds(courseId, d1Courses || []);
+      const searchCourseIds = validCourseIds.length > 0 ? validCourseIds : [courseId];
 
-      let d1Tests: any[] = [];
-      if (validCourseIds.length > 0) {
-        const placeholders = validCourseIds.map(() => '?').join(',');
-        d1Tests = await queryD1(
-          `SELECT * FROM mock_tests WHERE course_id IN (${placeholders}) AND is_active = 1 ORDER BY created_at DESC`,
-          validCourseIds
-        );
-      }
+      const placeholders = searchCourseIds.map(() => '?').join(',');
+      const d1Tests = await queryD1(
+        `SELECT * FROM mock_tests WHERE course_id IN (${placeholders}) AND is_active = 1 ORDER BY created_at DESC`,
+        searchCourseIds
+      );
 
       if (d1Tests && d1Tests.length > 0) {
         const tests = await Promise.all(
@@ -59,26 +59,30 @@ export async function GET() {
 
             let qs: any[] = [];
             if (qIds.length > 0) {
-              const quotedIds = qIds.map((id) => `'${id}'`).join(',');
-              const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
-              qs = (d1Qs || []).map((q: any) => {
-                let opts: string[] = [];
-                try {
-                  opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
-                } catch (e) {
-                  opts = [];
-                }
-                return {
-                  _id: q.id,
-                  id: q.id,
-                  question_text: q.question_text,
-                  options: opts,
-                  correct_option: Number(q.correct_option || 0),
-                  explanation: q.explanation || '',
-                  detailed_explanation: q.detailed_explanation || '',
-                  topic_tag: q.topic_tag || 'General',
-                };
-              });
+              try {
+                const quotedIds = qIds.map((id) => `'${id}'`).join(',');
+                const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
+                qs = (d1Qs || []).map((q: any) => {
+                  let opts: string[] = [];
+                  try {
+                    opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
+                  } catch (e) {
+                    opts = [];
+                  }
+                  return {
+                    _id: q.id,
+                    id: q.id,
+                    question_text: q.question_text,
+                    options: opts,
+                    correct_option: Number(q.correct_option || 0),
+                    explanation: q.explanation || '',
+                    detailed_explanation: q.detailed_explanation || '',
+                    topic_tag: q.topic_tag || 'General',
+                  };
+                });
+              } catch (qErr) {
+                console.warn('[api/mock-tests] Question fetch error:', qErr);
+              }
             }
 
             return {
@@ -86,9 +90,9 @@ export async function GET() {
               id: m.id,
               course_id: m.course_id,
               title: m.title,
-              type: m.type,
-              duration_minutes: m.duration_minutes,
-              cutoff_marks: m.cutoff_marks,
+              type: m.type || 'full',
+              duration_minutes: Number(m.duration_minutes || 60),
+              cutoff_marks: Number(m.cutoff_marks || 0),
               question_ids: qs,
               questions_count: qIds.length,
               is_active: m.is_active !== 0,

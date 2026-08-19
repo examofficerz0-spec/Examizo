@@ -11,8 +11,9 @@ import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 export default function MockTestsListPage() {
   const router = useRouter();
   const initialCache = getClientUserCache('__MOCK_TESTS_CACHE__');
-  const [tests, setTests] = useState<any[]>(initialCache || []);
-  const [loading, setLoading] = useState(!initialCache);
+  const hasValidCache = Boolean(initialCache && Array.isArray(initialCache) && initialCache.length > 0);
+  const [tests, setTests] = useState<any[]>(hasValidCache ? initialCache : []);
+  const [loading, setLoading] = useState<boolean>(!hasValidCache);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
 
   // Pre-test warning modal state
@@ -21,11 +22,13 @@ export default function MockTestsListPage() {
   const [selectedLang, setSelectedLang] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
-    fetch('/api/mock-tests')
+    fetch('/api/mock-tests', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
-        const list = data.tests || [];
-        setClientUserCache('__MOCK_TESTS_CACHE__', list);
+        const list = Array.isArray(data.tests) ? data.tests : [];
+        if (list.length > 0) {
+          setClientUserCache('__MOCK_TESTS_CACHE__', list);
+        }
         setTests(list);
       })
       .catch(console.error)
@@ -154,48 +157,51 @@ export default function MockTestsListPage() {
               </div>
             </div>
           ) : (
-            filteredTests.map((testItem) => (
-              <div
-                key={testItem._id}
-                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs hover:border-blue-300 dark:hover:border-blue-800 transition-all flex flex-col justify-between space-y-4 group"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60">
-                      {testItem.type || 'Full Mock'}
-                    </span>
-                    <span className="text-xs font-bold text-slate-400">
-                      ⏱ {testItem.duration_minutes || 60} Mins
-                    </span>
+            filteredTests.map((testItem) => {
+              const testId = testItem._id || testItem.id;
+              return (
+                <div
+                  key={testId}
+                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs hover:border-blue-300 dark:hover:border-blue-800 transition-all flex flex-col justify-between space-y-4 group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60">
+                        {testItem.type || 'Full Mock'}
+                      </span>
+                      <span className="text-xs font-bold text-slate-400">
+                        ⏱ {testItem.duration_minutes || 60} Mins
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {testItem.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 font-medium">
+                        {testItem.description || 'Full-length examination simulation for course assessment.'}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {testItem.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 font-medium">
-                      {testItem.description || 'Full-length examination simulation for course assessment.'}
-                    </p>
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
+                    <div className="text-[11px] font-bold text-slate-500">
+                      <span>{testItem.questions_count || testItem.question_ids?.length || 0} Questions</span>
+                      <span className="mx-1">•</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-black">+{testItem.cutoff_bonus_xp || 100} XP Bonus</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStartTest(testId)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 group-hover:scale-105 cursor-pointer"
+                    >
+                      <PlayCircle className="w-4 h-4" /> Start
+                    </button>
                   </div>
                 </div>
-
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
-                  <div className="text-[11px] font-bold text-slate-500">
-                    <span>{testItem.question_ids?.length || 0} Questions</span>
-                    <span className="mx-1">•</span>
-                    <span className="text-amber-600 dark:text-amber-400 font-black">+{testItem.cutoff_bonus_xp || 100} XP Bonus</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleStartTest(testItem._id)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 group-hover:scale-105"
-                  >
-                    <PlayCircle className="w-4 h-4" /> Start
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
