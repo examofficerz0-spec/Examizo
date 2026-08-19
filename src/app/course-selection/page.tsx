@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap } from 'lucide-react';
+import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CourseSelectionPage() {
   const router = useRouter();
@@ -15,6 +15,19 @@ export default function CourseSelectionPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const compScrollRef = useRef<HTMLDivElement>(null);
+  const schoolScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = ref.current.clientWidth * 0.85;
+      ref.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   useEffect(() => {
     // 1. Fetch courses immediately
@@ -71,15 +84,15 @@ export default function CourseSelectionPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/course/select', {
+      const res = await fetch('/api/courses/lock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: selectedCourseId }),
+        body: JSON.stringify({ course_id: selectedCourseId }),
       });
 
       const data = await res.json();
-      if (!res.ok && !data.alreadyLocked && !data.lockedCourseId) {
-        setError(data.error || 'Failed to lock course selection');
+      if (!res.ok) {
+        setError(data.error || 'Failed to lock course');
         setShowConfirmModal(false);
       } else {
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -93,8 +106,9 @@ export default function CourseSelectionPage() {
           window.location.href = '/dashboard';
         }
       }
-    } catch (err) {
-      window.location.href = '/dashboard';
+    } catch (err: any) {
+      setError('A network error occurred while locking your course');
+      setShowConfirmModal(false);
     } finally {
       setSubmitting(false);
     }
@@ -102,104 +116,103 @@ export default function CourseSelectionPage() {
 
   const selectedCourse = courses.find((c) => String(c._id) === String(selectedCourseId));
 
-  const isSchoolCategory = (c: any) => {
-    const cat = String(c?.category || '').toLowerCase().trim();
-    const name = String(c?.name || '').toLowerCase().trim();
-    const str = `${cat} ${name}`;
-    return str.includes('school') || str.includes('class') || str.includes('3-12') || str.includes('6-12') || str.includes('board') || str.includes('grade');
+  // Category classification
+  const isSchoolExam = (c: any) => {
+    const cat = (c.category || '').toLowerCase();
+    const name = (c.name || '').toLowerCase();
+    return (
+      cat.includes('school') ||
+      cat.includes('class') ||
+      cat.includes('cbse') ||
+      cat.includes('icse') ||
+      name.includes('class') ||
+      name.includes('cbse') ||
+      name.includes('grade')
+    );
   };
 
-  const schoolCourses = courses.filter((c) => isSchoolCategory(c));
-  const competitiveCourses = courses.filter((c) => !isSchoolCategory(c));
+  const competitiveCourses = courses.filter((c) => !isSchoolExam(c));
+  const schoolCourses = courses.filter((c) => isSchoolExam(c));
 
+  // Extract distinct boards for School Exams filter
   const availableBoards = Array.from(
-    new Set(schoolCourses.map((c) => c.board || 'CBSE').filter(Boolean))
+    new Set(
+      schoolCourses
+        .map((c) => (c.board && c.board !== 'N/A' && c.board.trim() ? c.board.trim() : 'CBSE'))
+        .filter(Boolean)
+    )
   );
 
   const filteredSchoolCourses = schoolCourses.filter((c) => {
     if (selectedBoardFilter === 'all') return true;
-    return (c.board || 'CBSE').toLowerCase() === selectedBoardFilter.toLowerCase();
+    const board = (c.board || 'CBSE').toLowerCase();
+    return board === selectedBoardFilter.toLowerCase();
   });
 
   const displayedCourses =
-    activeTab === 'competitive'
+    activeTab === 'all'
+      ? [...competitiveCourses, ...filteredSchoolCourses]
+      : activeTab === 'competitive'
       ? competitiveCourses
-      : activeTab === 'school'
-      ? filteredSchoolCourses
-      : courses;
-
-  useEffect(() => {
-    if (displayedCourses.length > 0) {
-      const existsInTab = displayedCourses.some((c) => String(c._id) === String(selectedCourseId));
-      if (!existsInTab) {
-        setSelectedCourseId(String(displayedCourses[0]._id));
-      }
-    }
-  }, [activeTab, displayedCourses, selectedCourseId]);
+      : filteredSchoolCourses;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6">
-      <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-10 shadow-sm">
-        <div className="text-center mb-8">
-          <Logo size={44} className="justify-center mb-4" subtitle="MANDATORY COURSE LOCKING" />
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">
-            Select Your Preparation Track
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl w-full mx-auto">
+        <div className="flex justify-center mb-6">
+          <Logo />
+        </div>
+
+        <div className="text-center max-w-xl mx-auto mb-6">
+          <span className="px-3 py-1 bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-bold text-xs rounded-full uppercase tracking-wider mb-3 inline-block">
+            Step 1 of 1: Academic Track Selection
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+            Select &amp; Lock Your Target Exam Course
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 max-w-lg mx-auto mt-2">
-            Choose your target track from our <strong className="text-slate-700 dark:text-slate-300">Competitive Exams</strong> or <strong className="text-slate-700 dark:text-slate-300">School Exams (Class 3-12)</strong> catalog. Once confirmed, this selection will be permanently locked.
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Choose your academic syllabus track below. Once confirmed, your question bank, mock examinations, and peer leaderboard will be tailored to this track.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 bg-rose-50 border border-rose-200 text-rose-600 text-xs rounded-xl text-center font-medium">
-            {error}
+          <div className="max-w-md mx-auto mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Category Navigation Tabs with Smooth Sliding Background Pill */}
-        <div className="relative flex justify-center items-center p-1.5 mb-8 bg-slate-100 rounded-2xl max-w-md mx-auto select-none">
-          {/* Animated Sliding Background Pill */}
-          <div
-            className={`absolute top-1.5 bottom-1.5 rounded-xl shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              activeTab === 'all' ? 'bg-blue-600' : activeTab === 'competitive' ? 'bg-amber-500' : 'bg-emerald-600'
-            }`}
-            style={{
-              width: 'calc(33.333% - 4px)',
-              left: activeTab === 'all' ? '6px' : activeTab === 'competitive' ? 'calc(33.333% + 2px)' : 'calc(66.666% - 2px)',
-            }}
-          />
-
+        {/* Category Tabs Header */}
+        <div className="flex justify-center items-center gap-2 mb-6">
           <button
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'all'
-                ? 'text-white font-black'
-                : 'text-slate-600 hover:text-slate-900 font-bold'
+                ? 'bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
             }`}
           >
-            All Track ({courses.length})
+            All Tracks ({courses.length})
           </button>
-
           <button
             type="button"
             onClick={() => setActiveTab('competitive')}
-            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
               activeTab === 'competitive'
-                ? 'text-white font-black'
-                : 'text-slate-600 hover:text-slate-900 font-bold'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
             }`}
           >
             <Trophy className="w-3.5 h-3.5" /> Competitive ({competitiveCourses.length})
           </button>
-
           <button
             type="button"
             onClick={() => setActiveTab('school')}
-            className={`relative z-10 flex-1 py-2 px-3 text-xs transition-colors duration-200 flex items-center justify-center gap-1.5 ${
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
               activeTab === 'school'
-                ? 'text-white font-black'
-                : 'text-slate-600 hover:text-slate-900 font-bold'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" /> School ({schoolCourses.length})
@@ -207,40 +220,67 @@ export default function CourseSelectionPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500">Fetching available courses...</div>
+          <div className="p-12 text-center text-xs text-slate-500 font-bold">Fetching available courses...</div>
         ) : displayedCourses.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl mb-8">
             <BookOpen className="w-8 h-8 mx-auto text-slate-400 mb-2" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Courses Available in this Category</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-              Please check other categories or ask an administrator to add courses in the Admin Portal (Port 3001).
+              Please check other categories or ask an administrator to add courses in the Admin Portal.
             </p>
           </div>
         ) : (
           <div className="space-y-8 mb-8">
-            {/* Competitive Section if viewing all or competitive tab */}
+            {/* Competitive Section (Horizontal 3-card carousel) */}
             {(activeTab === 'all' || activeTab === 'competitive') && competitiveCourses.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-1.5 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-lg">
-                    <Trophy className="w-4 h-4" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-lg">
+                      <Trophy className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                        Competitive Entrance Exams
+                      </h2>
+                      <p className="text-[11px] text-slate-500">JEE Mains &amp; Advanced, NEET Medical Entrance, and National Exams</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                      Competitive Entrance Exams
-                    </h2>
-                    <p className="text-[11px] text-slate-500">JEE Mains & Advanced, NEET Medical Entrance, and National Exams</p>
-                  </div>
+
+                  {competitiveCourses.length > 3 && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleScroll(compScrollRef, 'left')}
+                        className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-amber-50 hover:border-amber-300 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                        title="Scroll Left"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleScroll(compScrollRef, 'right')}
+                        className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-amber-50 hover:border-amber-300 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                        title="Scroll Right"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Single-row Horizontal Scroll Container */}
+                <div
+                  ref={compScrollRef}
+                  className="flex items-stretch gap-4 overflow-x-auto pb-3 pt-1 scroll-smooth snap-x snap-mandatory scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700"
+                >
                   {competitiveCourses.map((course) => {
                     const isSelected = String(selectedCourseId) === String(course._id);
                     return (
                       <div
                         key={String(course._id)}
                         onClick={() => setSelectedCourseId(String(course._id))}
-                        className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
+                        className={`flex-shrink-0 w-[88%] sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-11px)] snap-start cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'border-amber-500 bg-amber-50/40 dark:border-amber-500 dark:bg-amber-950/20 shadow-md ring-2 ring-amber-500/20'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-amber-300 dark:hover:border-amber-800'
@@ -254,7 +294,7 @@ export default function CourseSelectionPage() {
                             {isSelected && <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
                           </div>
                           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{course.name}</h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 mb-4">{course.description}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">{course.description}</p>
                         </div>
 
                         <div>
@@ -276,10 +316,10 @@ export default function CourseSelectionPage() {
               </div>
             )}
 
-            {/* School Exams Section if viewing all or school tab */}
+            {/* School Exams Section (Horizontal 3-card carousel) */}
             {(activeTab === 'all' || activeTab === 'school') && schoolCourses.length > 0 && (
               <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-lg">
                       <GraduationCap className="w-4 h-4" />
@@ -288,48 +328,75 @@ export default function CourseSelectionPage() {
                       <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                         School Exams (Class 3 to 12)
                       </h2>
-                      <p className="text-[11px] text-slate-500">Board exam prep, grade-wise science & maths tracks (Class 3 - 12)</p>
+                      <p className="text-[11px] text-slate-500">Board exam prep, grade-wise science &amp; maths tracks (Class 3 - 12)</p>
                     </div>
                   </div>
 
-                  {/* Board Filter Pills */}
-                  <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedBoardFilter('all')}
-                      className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
-                        selectedBoardFilter === 'all'
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      All Boards
-                    </button>
-                    {availableBoards.map((bName) => (
+                  <div className="flex items-center gap-2">
+                    {/* Board Filter Pills */}
+                    <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
                       <button
-                        key={bName}
                         type="button"
-                        onClick={() => setSelectedBoardFilter(bName)}
+                        onClick={() => setSelectedBoardFilter('all')}
                         className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
-                          selectedBoardFilter.toLowerCase() === bName.toLowerCase()
+                          selectedBoardFilter === 'all'
                             ? 'bg-emerald-600 text-white shadow-xs'
                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
-                        {bName}
+                        All Boards
                       </button>
-                    ))}
+                      {availableBoards.map((bName) => (
+                        <button
+                          key={bName}
+                          type="button"
+                          onClick={() => setSelectedBoardFilter(bName)}
+                          className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg transition-all ${
+                            selectedBoardFilter.toLowerCase() === bName.toLowerCase()
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {bName}
+                        </button>
+                      ))}
+                    </div>
+
+                    {filteredSchoolCourses.length > 3 && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleScroll(schoolScrollRef, 'left')}
+                          className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                          title="Scroll Left"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleScroll(schoolScrollRef, 'right')}
+                          className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                          title="Scroll Right"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Single-row Horizontal Scroll Container */}
+                <div
+                  ref={schoolScrollRef}
+                  className="flex items-stretch gap-4 overflow-x-auto pb-3 pt-1 scroll-smooth snap-x snap-mandatory scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700"
+                >
                   {filteredSchoolCourses.map((course) => {
                     const isSelected = String(selectedCourseId) === String(course._id);
                     return (
                       <div
                         key={String(course._id)}
                         onClick={() => setSelectedCourseId(String(course._id))}
-                        className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
+                        className={`flex-shrink-0 w-[88%] sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-11px)] snap-start cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'border-emerald-600 bg-emerald-50/40 dark:border-emerald-500 dark:bg-emerald-950/20 shadow-md ring-2 ring-emerald-500/20'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-emerald-300 dark:hover:border-emerald-800'
@@ -384,48 +451,49 @@ export default function CourseSelectionPage() {
             disabled={!selectedCourseId || loading || courses.length === 0}
             onClick={() => setShowConfirmModal(true)}
             type="button"
-            className="px-8 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold text-sm rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-8 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold text-sm rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            <Lock className="w-4 h-4" /> Confirm & Permanently Lock Selected Course
+            <Lock className="w-4 h-4" /> Confirm &amp; Permanently Lock Selected Course
           </button>
-          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-            Warning: Course selection cannot be edited from your profile after confirmation (RULE-01).
+          <p className="text-[11px] text-slate-500 font-medium">
+            Permanent Lock Active: Course cannot be altered once confirmed.
           </p>
         </div>
       </div>
 
       {/* Confirmation Modal */}
-      {showConfirmModal && selectedCourse && (
+      {showConfirmModal && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-lg text-center">
-            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-3">
-              <ShieldAlert className="w-6 h-6" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-1">Confirm Permanent Lock</h3>
-            <p className="text-xs text-slate-500 mb-4">
-              You are selecting <strong className="text-slate-900 dark:text-white">{selectedCourse.name}</strong> ({selectedCourse.category || 'Competitive Exams'}). All your practice sets, mock tests, and leaderboard rankings will be permanently scoped to this course.
+            <h3 className="text-base font-bold text-slate-900 dark:text-white text-center mb-2">
+              Lock Course: {selectedCourse?.name}?
+            </h3>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 text-center mb-6 leading-relaxed">
+              Once you lock this course track, your dashboard will strictly load questions and mock examinations for{' '}
+              <strong>{selectedCourse?.name}</strong>.
             </p>
 
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-300 text-xs font-semibold mb-6">
-              This choice is irreversible and cannot be changed later.
-            </div>
-
-            <div className="flex justify-center gap-3">
+            <div className="flex gap-3">
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-300"
+                className="flex-1 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-100"
               >
-                Cancel
+                Go Back
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={handleConfirmLock}
-                className="px-5 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-lg shadow-sm disabled:opacity-50"
+                className="flex-1 py-2.5 bg-brand-800 hover:bg-brand-900 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1"
               >
-                {submitting ? 'Locking...' : 'Yes, Confirm & Lock'}
+                {submitting ? 'Locking...' : 'Yes, Lock Course'}
               </button>
             </div>
           </div>
