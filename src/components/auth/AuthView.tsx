@@ -347,37 +347,17 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
             }
           },
           error_callback: (err: any) => {
-            console.warn('Google popup error:', err);
-            // Try fallback to One Tap / ID token prompt
-            if (google?.accounts?.id) {
-              google.accounts.id.prompt((notification: any) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                  setError('Google popup was blocked. Please allow popups or use email & password.');
-                  setGoogleAuthLoading(false);
-                }
-              });
-            } else {
-              setError('Google sign-in popup was blocked. Please allow popups for this site.');
-              setGoogleAuthLoading(false);
-            }
+            console.warn('Google popup error, falling back to direct OAuth redirect:', err);
+            redirectToGoogleOAuth(clientId);
           },
         });
 
         tokenClient.requestAccessToken({ prompt: 'select_account' });
-
-        // Safety timeout
-        setTimeout(() => {
-          setGoogleAuthLoading((prev: boolean) => {
-            if (prev) {
-              setError('Google sign-in timed out. Please try again.');
-              return false;
-            }
-            return prev;
-          });
-        }, 90000);
         return;
       } catch (err) {
-        console.warn('initTokenClient error:', err);
+        console.warn('initTokenClient error, falling back to direct OAuth:', err);
+        redirectToGoogleOAuth(clientId);
+        return;
       }
     }
 
@@ -398,8 +378,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
         google.accounts.id.prompt((notification: any) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            setError('Google sign-in prompt is unavailable in your browser. Please sign in with email and password.');
-            setGoogleAuthLoading(false);
+            redirectToGoogleOAuth(clientId);
           }
         });
         return;
@@ -408,9 +387,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       }
     }
 
-    // ── Fallback when Google SDK is completely unavailable / blocked ──
-    setError('Google Sign-In is temporarily unavailable or blocked by your browser extensions. Please sign in with your email and password.');
-    setGoogleAuthLoading(false);
+    // ── Strategy 3: Ultimate 100% Reliable Direct OAuth Redirect ──
+    redirectToGoogleOAuth(clientId);
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
