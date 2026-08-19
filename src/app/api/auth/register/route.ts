@@ -12,16 +12,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
-    const targetCourseId = courseId || course_id;
-    if (!targetCourseId || !String(targetCourseId).trim()) {
-      return NextResponse.json(
-        { error: 'Course selection is required. An account cannot be created without choosing a target curriculum course.' },
-        { status: 400 }
-      );
-    }
+    const targetCourseId = courseId || course_id ? String(courseId || course_id).trim() : null;
 
-    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters with at least one letter and one number' }, { status: 400 });
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
 
     if (confirmPassword && password !== confirmPassword) {
@@ -29,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const lowerEmail = email.toLowerCase().trim();
-    const cleanCourseId = String(targetCourseId).trim();
+    const cleanCourseId = targetCourseId || null;
     const newUserId = generateId();
     const password_hash = await bcrypt.hash(password, 10);
 

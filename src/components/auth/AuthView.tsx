@@ -151,8 +151,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCourseId) {
-      setError('Please select a target course / grade curriculum.');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -169,7 +169,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           email,
           password,
           confirmPassword,
-          courseId: selectedCourseId,
         }),
       });
 
@@ -186,6 +185,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
         } else if (joinHostId) {
           router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+        } else if (!data.user?.lockedCourseId) {
+          router.push('/course-selection');
         } else {
           router.push('/dashboard');
         }
@@ -726,37 +727,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
-                      Target Course Curriculum *
-                    </label>
-                    <select
-                      required
-                      value={selectedCourseId}
-                      onChange={(e) => setSelectedCourseId(e.target.value)}
-                      className="w-full pl-3 pr-8 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-bold transition-all cursor-pointer"
-                    >
-                      {courses.length === 0 ? (
-                        <option value="">Loading courses...</option>
-                      ) : (
-                        courses.map((c: any) => (
-                          <option key={c._id || c.id} value={c._id || c.id}>
-                            {c.name} {c.category ? `(${c.category})` : ''}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                      🔒 Your account will be registered and locked to this curriculum track upon signup.
-                    </p>
-                  </div>
-
                   <button
                     type="submit"
-                    disabled={loading || !selectedCourseId}
+                    disabled={loading}
                     className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2 cursor-pointer"
                   >
-                    {loading ? 'Registering Account...' : 'Create Account & Start Learning'}
+                    {loading ? 'Creating Account...' : 'Create Account'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
