@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course, Question } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
@@ -24,7 +22,7 @@ export async function GET() {
       return res;
     }
 
-    const { user, isMemoryMode } = authResult;
+    const { user } = authResult;
     if (!user.locked_course_id) {
       return NextResponse.json({ error: 'No course locked' }, { status: 400 });
     }
@@ -34,9 +32,8 @@ export async function GET() {
       ? String((rawCourseId as any)?._id || (rawCourseId as any)?.id || '')
       : String(rawCourseId);
 
-    // 1. Try D1 first
+    // 1. Primary: Cloudflare D1
     try {
-      // Load all courses to find equivalent course IDs for this student's track
       const d1Courses = await queryD1('SELECT * FROM courses');
       const validCourseIds = getEquivalentCourseIds(courseId, d1Courses || []);
       const searchCourseIds = validCourseIds.length > 0 ? validCourseIds : [courseId];
@@ -107,44 +104,19 @@ export async function GET() {
       console.warn('[api/mock-tests] D1 query fallback:', d1Err);
     }
 
-    // 2. Memory Mode Fallback
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
 
-      const tests = (db.mockTests || [])
-        .filter((m) => {
-          const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
-          return validCourseIds.includes(testCourseId) && m.is_active !== false;
-        })
-        .map((m) => {
-          const qList = (m.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId)).filter(Boolean);
-          return { ...m, question_ids: qList };
-        });
-
-      return NextResponse.json({ tests });
-    }
-
-    // 3. Mongoose Fallback
-    await dbConnect();
-    const allCourses = await Course.find({});
-    const validCourseIds = getEquivalentCourseIds(courseId, allCourses);
-
-    const rawTests = await MockTest.find({
-      course_id: { $in: validCourseIds },
-      is_active: true,
-    });
-
-    const tests = await Promise.all(
-      rawTests.map(async (m) => {
-        const rawQIds = (m.question_ids || []).map((q: any) => q._id?.toString() || q.toString());
-        const qs = await Question.find({ _id: { $in: rawQIds } });
-        return {
-          ...m.toObject(),
-          question_ids: qs,
-        };
+    const tests = (db.mockTests || [])
+      .filter((m: any) => {
+        const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
+        return validCourseIds.includes(testCourseId) && m.is_active !== false;
       })
-    );
+      .map((m: any) => {
+        const qList = (m.question_ids || []).map((qId: string) => (db.questions || []).find((q: any) => q._id === qId || q.id === qId)).filter(Boolean);
+        return { ...m, question_ids: qList };
+      });
 
     return NextResponse.json({ tests });
   } catch (error: any) {

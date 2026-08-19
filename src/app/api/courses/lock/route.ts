@@ -24,13 +24,31 @@ export async function POST(req: Request) {
 
     // 1. Primary: Cloudflare D1
     try {
-      const d1Courses = await queryD1('SELECT id, name FROM courses WHERE id = ? OR _id = ? LIMIT 1', [cleanCourseId, cleanCourseId]);
+      const d1Courses = await queryD1('SELECT id, name FROM courses WHERE id = ? LIMIT 1', [cleanCourseId]);
       if (d1Courses && d1Courses.length > 0) {
-        await executeD1('UPDATE users SET locked_course_id = ? WHERE id = ? OR LOWER(email) = ?', [
+        const matchedCourse = d1Courses[0];
+
+        await executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [
           cleanCourseId,
-          auth.userId,
+          'Active',
+          String(auth.userId),
           auth.email.toLowerCase().trim(),
         ]);
+
+        // Mirror to sharedDb for local consistency
+        try {
+          const db = readSharedDb();
+          if (db.users) {
+            const userIndex = (db.users || []).findIndex(
+              (u: any) => String(u._id) === String(auth.userId) || String(u.id) === String(auth.userId) || u.email?.toLowerCase() === auth.email?.toLowerCase()
+            );
+            if (userIndex !== -1) {
+              db.users[userIndex].locked_course_id = cleanCourseId;
+              db.users[userIndex].status = 'Active';
+              writeSharedDb(db);
+            }
+          }
+        } catch (_) {}
 
         const token = signUserToken({
           userId: auth.userId,
@@ -43,7 +61,7 @@ export async function POST(req: Request) {
           success: true,
           course: {
             id: cleanCourseId,
-            name: d1Courses[0].name,
+            name: matchedCourse.name,
           },
           lockedCourseId: cleanCourseId,
         });
@@ -64,17 +82,18 @@ export async function POST(req: Request) {
 
     // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
-    const course = (db.courses || []).find((c) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId);
+    const course = (db.courses || []).find((c: any) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId);
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
     const userIndex = (db.users || []).findIndex(
-      (u) => String(u._id) === auth.userId || String(u.id) === auth.userId || u.email?.toLowerCase() === auth.email?.toLowerCase()
+      (u: any) => String(u._id) === String(auth.userId) || String(u.id) === String(auth.userId) || u.email?.toLowerCase() === auth.email?.toLowerCase()
     );
 
     if (userIndex !== -1) {
       db.users[userIndex].locked_course_id = cleanCourseId;
+      db.users[userIndex].status = 'Active';
       writeSharedDb(db);
     }
 

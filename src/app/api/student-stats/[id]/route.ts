@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         let courseName = 'Unassigned Track';
 
         if (userCourseId) {
-          const d1Courses = await queryD1('SELECT name FROM courses WHERE id = ? OR _id = ? LIMIT 1', [userCourseId, userCourseId]);
+          const d1Courses = await queryD1('SELECT name FROM courses WHERE id = ? LIMIT 1', [userCourseId]);
           if (d1Courses && d1Courses.length > 0) courseName = d1Courses[0].name;
         }
 
