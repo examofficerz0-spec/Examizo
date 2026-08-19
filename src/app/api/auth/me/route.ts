@@ -16,14 +16,34 @@ export async function GET() {
   try {
     const authResult = await getUserFromAuth(auth);
     if (
-      !authResult ||
-      !authResult.user ||
-      authResult.user.status === 'Deleted' ||
+      authResult?.user &&
+      (authResult.user.status === 'Deleted' ||
       authResult.user.name === 'Deleted User' ||
       authResult.user.status === 'Suspended' ||
       authResult.user.status === 'suspended' ||
-      authResult.user.status === 'SUSPENDED'
+      authResult.user.status === 'SUSPENDED')
     ) {
+      const res = NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
+      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
+      return res;
+    }
+
+    if (!authResult || !authResult.user) {
+      if (auth && !auth.lockedCourseId) {
+        // Pending onboarding student who has not chosen a course yet
+        return NextResponse.json({
+          authenticated: true,
+          user: {
+            id: auth.userId,
+            name: auth.name || auth.email?.split('@')[0] || 'Student',
+            email: auth.email,
+            lockedCourse: null,
+            xp_total: 0,
+            status: 'Pending',
+          },
+        });
+      }
+
       const res = NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
       res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
       return res;

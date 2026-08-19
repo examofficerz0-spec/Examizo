@@ -12,7 +12,7 @@ export async function GET() {
     // 1. Try Cloudflare D1
     try {
       const d1Courses = await queryD1('SELECT * FROM courses WHERE is_active = 1 ORDER BY created_at DESC');
-      if (d1Courses) {
+      if (d1Courses && d1Courses.length > 0) {
         const formatted = d1Courses.map((c: any) => {
           let subjects = [];
           try {

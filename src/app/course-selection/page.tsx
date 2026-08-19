@@ -46,7 +46,13 @@ export default function CourseSelectionPage() {
         return fetch('/api/courses', { cache: 'no-store' })
           .then((res) => res.json())
           .then((data) => {
-            const active = (data.courses || []).filter((c: any) => c.is_active !== false && String(c.is_active) !== 'false');
+            const active = (data.courses || [])
+              .filter((c: any) => c.is_active !== false && String(c.is_active) !== 'false')
+              .map((c: any) => ({
+                ...c,
+                _id: String(c._id || c.id),
+                id: String(c.id || c._id),
+              }));
             setCourses(active);
             if (active.length > 0) setSelectedCourseId(String(active[0]._id));
           });
