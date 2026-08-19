@@ -86,17 +86,21 @@ export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
           @keyframes ezHatEntrance {
             0% {
               transform: translateY(-65px) translateX(15px) rotate(-26deg) scale(1.25);
+              -webkit-transform: translateY(-65px) translateX(15px) rotate(-26deg) scale(1.25);
               opacity: 0;
             }
             60% {
               transform: translateY(6px) translateX(-2px) rotate(4deg) scale(0.96);
+              -webkit-transform: translateY(6px) translateX(-2px) rotate(4deg) scale(0.96);
               opacity: 1;
             }
             80% {
               transform: translateY(-3px) translateX(1px) rotate(-2deg) scale(1.02);
+              -webkit-transform: translateY(-3px) translateX(1px) rotate(-2deg) scale(1.02);
             }
             100% {
               transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+              -webkit-transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
               opacity: 1;
             }
           }
@@ -105,15 +109,19 @@ export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
           @keyframes ezHatInfiniteFloat {
             0%, 100% {
               transform: translateY(0px) rotate(0deg);
+              -webkit-transform: translateY(0px) rotate(0deg);
             }
             25% {
               transform: translateY(-4.5px) rotate(-3deg);
+              -webkit-transform: translateY(-4.5px) rotate(-3deg);
             }
             50% {
               transform: translateY(-1px) rotate(1.8deg);
+              -webkit-transform: translateY(-1px) rotate(1.8deg);
             }
             75% {
               transform: translateY(-3.5px) rotate(-1.5deg);
+              -webkit-transform: translateY(-3.5px) rotate(-1.5deg);
             }
           }
 
@@ -121,15 +129,19 @@ export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
           @keyframes ezTasselContinuousLoop {
             0%, 100% {
               transform: rotate(0deg);
+              -webkit-transform: rotate(0deg);
             }
             25% {
               transform: rotate(-26deg);
+              -webkit-transform: rotate(-26deg);
             }
             50% {
               transform: rotate(20deg);
+              -webkit-transform: rotate(20deg);
             }
             75% {
               transform: rotate(-14deg);
+              -webkit-transform: rotate(-14deg);
             }
           }
 
@@ -137,69 +149,100 @@ export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
           @keyframes ezTasselBrushContinuous {
             0%, 100% {
               transform: rotate(0deg) skewX(0deg);
+              -webkit-transform: rotate(0deg) skewX(0deg);
             }
             25% {
               transform: rotate(-16deg) skewX(-10deg);
+              -webkit-transform: rotate(-16deg) skewX(-10deg);
             }
             50% {
               transform: rotate(14deg) skewX(8deg);
+              -webkit-transform: rotate(14deg) skewX(8deg);
             }
             75% {
               transform: rotate(-8deg) skewX(-4deg);
+              -webkit-transform: rotate(-8deg) skewX(-4deg);
             }
           }
 
           @keyframes ezELandBounce {
             0%, 55% {
               transform: translateY(0) scaleY(1);
+              -webkit-transform: translateY(0) scaleY(1);
             }
             65% {
               transform: translateY(3px) scaleY(0.97);
+              -webkit-transform: translateY(3px) scaleY(0.97);
             }
             80% {
               transform: translateY(-1px) scaleY(1.01);
+              -webkit-transform: translateY(-1px) scaleY(1.01);
             }
             100% {
               transform: translateY(0) scaleY(1);
+              -webkit-transform: translateY(0) scaleY(1);
             }
           }
 
           .ez-hat-animated {
             transform-origin: 110px 72px;
+            -webkit-transform-origin: 110px 72px;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             animation: ezHatEntrance 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards, ezHatInfiniteFloat 3.2s ease-in-out 1.1s infinite;
+            -webkit-animation: ezHatEntrance 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards, ezHatInfiniteFloat 3.2s ease-in-out 1.1s infinite;
           }
 
           .ez-tassel-loop {
             transform-origin: 64px 72px;
+            -webkit-transform-origin: 64px 72px;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             animation: ezTasselContinuousLoop 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+            -webkit-animation: ezTasselContinuousLoop 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
           }
 
           .ez-tassel-brush-loop {
             transform-origin: 62px 90px;
+            -webkit-transform-origin: 62px 90px;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             animation: ezTasselBrushContinuous 2.4s ease-in-out infinite;
+            -webkit-animation: ezTasselBrushContinuous 2.4s ease-in-out infinite;
           }
 
           .ez-e-animated {
             transform-origin: 110px 140px;
+            -webkit-transform-origin: 110px 140px;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
             animation: ezELandBounce 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            -webkit-animation: ezELandBounce 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
 
           .group\\/icon:hover .ez-hat-animated,
           .group:hover .ez-hat-animated,
           .examizo-container:hover .ez-hat-animated {
             animation: ezHatEntrance 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards, ezHatInfiniteFloat 2.6s ease-in-out 0.85s infinite;
+            -webkit-animation: ezHatEntrance 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards, ezHatInfiniteFloat 2.6s ease-in-out 0.85s infinite;
           }
 
           .group\\/icon:hover .ez-tassel-loop,
           .group:hover .ez-tassel-loop,
           .examizo-container:hover .ez-tassel-loop {
             animation: ezTasselContinuousLoop 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+            -webkit-animation: ezTasselContinuousLoop 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
           }
 
           .group\\/icon:hover .ez-e-animated,
           .group:hover .ez-e-animated,
           .examizo-container:hover .ez-e-animated {
             animation: ezELandBounce 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            -webkit-animation: ezELandBounce 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
           }
         `}</style>
 

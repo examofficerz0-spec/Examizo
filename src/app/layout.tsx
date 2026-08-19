@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
@@ -11,12 +11,34 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+};
+
 export const metadata: Metadata = {
   title: 'Examizo - Competitive Exam Preparation Portal',
   description: 'Student application for topic-wise practice sets, full-length mock tests, progress tracking, and course leaderboards.',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Examizo',
+  },
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
   },
 };
 
@@ -27,6 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.cloudflare.com" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Examizo" />
+        <link rel="apple-touch-icon" href="/icon.png" />
         <script src="https://accounts.google.com/gsi/client" async defer id="google-gsi-script"></script>
         <script
           dangerouslySetInnerHTML={{
@@ -34,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased">
+      <body className="bg-slate-50 text-slate-900 min-h-screen min-h-[100dvh] font-sans antialiased">
         <HeaderProvider>
           <GlobalHeader />
           {children}
