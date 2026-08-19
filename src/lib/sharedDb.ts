@@ -17,6 +17,7 @@ export interface SharedDbData {
   courses: any[];
   questions: any[];
   mockTests: any[];
+  testPresets?: any[];
   weeklyDpps?: any[];
   resources?: any[];
   attempts: any[];

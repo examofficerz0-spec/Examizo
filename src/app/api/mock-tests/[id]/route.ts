@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/db';
-import { User, MockTest, Course, Question } from '@/lib/models';
+import { User, MockTest, Course, Question, Attempt } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
@@ -9,6 +9,15 @@ import { queryD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+function seededOrRandomShuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -28,6 +37,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const userCourseId = typeof user.locked_course_id === 'object' && user.locked_course_id?._id ? String(user.locked_course_id._id) : String(user.locked_course_id);
+    const userId = String(user._id || user.id || auth.userId);
 
     // 1. Try D1 first
     try {
@@ -36,46 +46,129 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         const rawTest = d1Tests[0];
         const testCourseId = String(rawTest.course_id);
 
-        let qIds: string[] = [];
+        let subjectAllocations: Record<string, number> = {};
         try {
-          qIds = typeof rawTest.question_ids_json === 'string' ? JSON.parse(rawTest.question_ids_json) : (rawTest.question_ids_json || []);
+          subjectAllocations = typeof rawTest.subject_allocations_json === 'string'
+            ? JSON.parse(rawTest.subject_allocations_json)
+            : (rawTest.subject_allocations_json || {});
         } catch (e) {
-          qIds = [];
+          subjectAllocations = {};
         }
 
+        const isDynamic = rawTest.is_dynamic_reshuffle === 1 || Boolean(rawTest.is_dynamic_reshuffle);
+
+        const formatQuestion = (q: any) => {
+          let opts: string[] = [];
+          try {
+            opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
+          } catch (e) {
+            opts = [];
+          }
+          return {
+            _id: q.id,
+            id: q.id,
+            question_text: q.question_text,
+            image_url: q.image_url || '',
+            subject: q.subject || (q.topic_tag && q.topic_tag.includes('-') ? q.topic_tag.split('-')[0].trim() : 'General'),
+            options: opts,
+            correct_option: Number(q.correct_option || 0),
+            explanation: q.explanation || '',
+            detailed_explanation: q.detailed_explanation || '',
+            topic_tag: q.topic_tag || 'General',
+            marks: Number(q.marks || 1),
+          };
+        };
+
         let orderedQs: any[] = [];
-        if (qIds.length > 0) {
-          const quotedIds = qIds.map((id) => `'${id}'`).join(',');
-          const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
-          orderedQs = qIds
-            .map((qId) => {
-              const q = (d1Qs || []).find((item: any) => item.id === qId || String(item.id) === String(qId));
-              if (!q) return null;
-              let opts: string[] = [];
-              try {
-                opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
-              } catch (e) {
-                opts = [];
+
+        // Check if dynamic preset reshuffle is active with subject allocations
+        if (isDynamic && Object.keys(subjectAllocations).length > 0) {
+          // Fetch student attempt history for this test or practice to identify wrong vs correct questions
+          const attempts = await queryD1(
+            'SELECT responses_json FROM attempts WHERE (student_id = ? OR student_id = ?) ORDER BY created_at ASC',
+            [userId, String(auth.userId)]
+          );
+
+          const questionAttemptMap: Record<string, boolean> = {};
+          (attempts || []).forEach((att: any) => {
+            let responses: any[] = [];
+            try {
+              responses = typeof att.responses_json === 'string' ? JSON.parse(att.responses_json) : (att.responses_json || []);
+            } catch (_) {}
+            responses.forEach((resp: any) => {
+              if (resp.question_id) {
+                questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
               }
-              return {
-                _id: q.id,
-                id: q.id,
-                question_text: q.question_text,
-                image_url: q.image_url || '',
-                options: opts,
-                correct_option: Number(q.correct_option || 0),
-                explanation: q.explanation || '',
-                detailed_explanation: q.detailed_explanation || '',
-                topic_tag: q.topic_tag || 'General',
-                marks: Number(q.marks || 1),
-              };
-            })
-            .filter(Boolean);
+            });
+          });
+
+          // Fetch all questions under this course
+          const allCourseQs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND is_active = 1', [testCourseId]);
+
+          for (const [sub, count] of Object.entries(subjectAllocations)) {
+            const targetCount = Number(count || 0);
+            if (targetCount <= 0) continue;
+
+            const subLower = sub.toLowerCase().trim();
+            const matchingQs = (allCourseQs || [])
+              .filter((q: any) => {
+                const qSub = (q.subject || '').toLowerCase().trim();
+                const tag = (q.topic_tag || '').toLowerCase().trim();
+                return qSub === subLower || tag.startsWith(subLower) || tag.includes(subLower);
+              })
+              .map(formatQuestion);
+
+            const wrongQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === false);
+            const unattemptedQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === undefined);
+            const correctQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === true);
+
+            // Priority 1: Wrong questions always included
+            // Priority 2: Unattempted fresh questions
+            // Priority 3: Correct questions rotated
+            const assembledPool = [
+              ...seededOrRandomShuffle(wrongQs),
+              ...seededOrRandomShuffle(unattemptedQs),
+              ...seededOrRandomShuffle(correctQs),
+            ];
+
+            const seen = new Set<string>();
+            const subSelected: any[] = [];
+            for (const q of assembledPool) {
+              if (!seen.has(String(q.id))) {
+                seen.add(String(q.id));
+                subSelected.push(q);
+                if (subSelected.length >= targetCount) break;
+              }
+            }
+
+            orderedQs.push(...subSelected);
+          }
+        }
+
+        // Fallback to static question IDs if not dynamic or if assembled list was empty
+        if (orderedQs.length === 0) {
+          let qIds: string[] = [];
+          try {
+            qIds = typeof rawTest.question_ids_json === 'string' ? JSON.parse(rawTest.question_ids_json) : (rawTest.question_ids_json || []);
+          } catch (e) {
+            qIds = [];
+          }
+
+          if (qIds.length > 0) {
+            const quotedIds = qIds.map((id) => `'${id}'`).join(',');
+            const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
+            orderedQs = qIds
+              .map((qId) => {
+                const q = (d1Qs || []).find((item: any) => item.id === qId || String(item.id) === String(qId));
+                return q ? formatQuestion(q) : null;
+              })
+              .filter(Boolean);
+          }
         }
 
         const d1Courses = await queryD1('SELECT * FROM courses WHERE id = ? LIMIT 1', [testCourseId]);
         const courseRow = d1Courses?.[0];
-        let subjects = [];
+        let subjects: string[] = [];
         try {
           subjects = typeof courseRow?.subjects_json === 'string' ? JSON.parse(courseRow.subjects_json) : (courseRow?.subjects_json || []);
         } catch (e) {
@@ -89,6 +182,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           type: rawTest.type,
           duration_minutes: rawTest.duration_minutes,
           cutoff_marks: rawTest.cutoff_marks,
+          is_dynamic_reshuffle: isDynamic,
+          subject_allocations: subjectAllocations,
           course_id: courseRow ? { _id: courseRow.id, name: courseRow.name, subjects } : { name: 'Locked Course' },
           question_ids: orderedQs,
         };
