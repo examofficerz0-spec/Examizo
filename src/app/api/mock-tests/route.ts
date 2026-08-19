@@ -34,8 +34,20 @@ export async function GET() {
 
     // 1. Try D1 first
     try {
-      const d1Tests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND is_active = 1 ORDER BY created_at DESC', [courseId]);
-      if (d1Tests) {
+      // Load all courses to find equivalent course IDs for this student's track
+      const d1Courses = await queryD1('SELECT * FROM courses');
+      const validCourseIds = getEquivalentCourseIds(courseId, d1Courses || []);
+
+      let d1Tests: any[] = [];
+      if (validCourseIds.length > 0) {
+        const placeholders = validCourseIds.map(() => '?').join(',');
+        d1Tests = await queryD1(
+          `SELECT * FROM mock_tests WHERE course_id IN (${placeholders}) AND is_active = 1 ORDER BY created_at DESC`,
+          validCourseIds
+        );
+      }
+
+      if (d1Tests && d1Tests.length > 0) {
         const tests = await Promise.all(
           d1Tests.map(async (m: any) => {
             let qIds: string[] = [];
