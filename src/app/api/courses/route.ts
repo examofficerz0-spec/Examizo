@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { queryD1 } from '@/lib/d1';
 
@@ -9,7 +7,7 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    // 1. Try Cloudflare D1
+    // 1. Primary: Cloudflare D1
     try {
       const d1Courses = await queryD1('SELECT * FROM courses ORDER BY created_at DESC');
       if (d1Courses && d1Courses.length > 0) {
@@ -48,16 +46,9 @@ export async function GET() {
       console.warn('[Student Courses GET D1 Error]:', e);
     }
 
-    // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const courses = (db.courses || []).filter((c) => c.is_active !== false && String(c.is_active) !== 'false');
-      return NextResponse.json({ courses });
-    }
-
-    // 3. Mongoose Fallback
-    const courses = await Course.find({ is_active: { $ne: false } }).sort({ created_at: -1 });
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const courses = (db.courses || []).filter((c) => c.is_active !== false && String(c.is_active) !== 'false');
     return NextResponse.json({ courses });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

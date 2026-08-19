@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User, Course } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
-import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1, executeD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +22,7 @@ export async function POST(req: Request) {
 
     const cleanCourseId = courseId.trim();
 
-    // 1. Try Cloudflare D1 first
+    // 1. Primary: Cloudflare D1
     try {
       const d1Courses = await queryD1('SELECT id, name FROM courses WHERE id = ? OR _id = ? LIMIT 1', [cleanCourseId, cleanCourseId]);
       if (d1Courses && d1Courses.length > 0) {
@@ -65,58 +62,21 @@ export async function POST(req: Request) {
       console.warn('[Courses Lock D1 Error]:', e);
     }
 
-    // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const course = (db.courses || []).find((c) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId);
-      if (!course) {
-        return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-      }
-
-      const userIndex = (db.users || []).findIndex(
-        (u) => String(u._id) === auth.userId || String(u.id) === auth.userId || u.email?.toLowerCase() === auth.email?.toLowerCase()
-      );
-
-      if (userIndex !== -1) {
-        db.users[userIndex].locked_course_id = cleanCourseId;
-        writeSharedDb(db);
-      }
-
-      const token = signUserToken({
-        userId: auth.userId,
-        email: auth.email,
-        name: auth.name,
-        lockedCourseId: cleanCourseId,
-      });
-
-      const response = NextResponse.json({
-        success: true,
-        course: {
-          id: cleanCourseId,
-          name: course.name,
-        },
-        lockedCourseId: cleanCourseId,
-      });
-
-      response.cookies.set('student_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 7 * 24 * 60 * 60,
-        path: '/',
-        sameSite: 'lax',
-      });
-
-      return response;
-    }
-
-    // 3. Mongoose Fallback
-    const course = await Course.findById(cleanCourseId);
+    // 2. Shared DB Local Resilience Fallback
+    const db = readSharedDb();
+    const course = (db.courses || []).find((c) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId);
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    await User.findByIdAndUpdate(auth.userId, { locked_course_id: cleanCourseId });
+    const userIndex = (db.users || []).findIndex(
+      (u) => String(u._id) === auth.userId || String(u.id) === auth.userId || u.email?.toLowerCase() === auth.email?.toLowerCase()
+    );
+
+    if (userIndex !== -1) {
+      db.users[userIndex].locked_course_id = cleanCourseId;
+      writeSharedDb(db);
+    }
 
     const token = signUserToken({
       userId: auth.userId,
