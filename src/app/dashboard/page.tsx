@@ -27,7 +27,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
+import { getClientUserCache, setClientUserCache, clearAllClientUserCaches } from '@/lib/clientCache';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
@@ -102,18 +102,20 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/dashboard')
+    fetch('/api/dashboard', { cache: 'no-store' })
       .then((res) => {
-        if (res.status === 401) {
-          router.push('/login');
+        if (res.status === 401 || res.status === 403) {
+          clearAllClientUserCaches();
+          window.location.href = '/login?error=account_deleted';
           return null;
         }
         return res.json();
       })
       .then((data) => {
         if (!data || !isMounted) return;
-        if (data.error === 'Unauthorized') {
-          router.push('/login');
+        if (data.error === 'Unauthorized' || data.error?.includes('deleted') || data.error?.includes('not found')) {
+          clearAllClientUserCaches();
+          window.location.href = '/login?error=account_deleted';
           return;
         }
         if (data.needsCourseSelection) {
