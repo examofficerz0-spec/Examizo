@@ -48,17 +48,18 @@ export default function CourseSelectionPage() {
           router.push('/login');
           return;
         }
-        if (meData.user?.lockedCourse) {
+        if (meData.user?.lockedCourse || meData.user?.lockedCourseId || meData.user?.locked_course_id) {
           const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
           const joinCode = urlParams?.get('joinCode');
           const joinHostId = urlParams?.get('joinHostId');
           if (joinCode) {
-            router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+            window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
           } else if (joinHostId) {
-            router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+            window.location.href = `/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`;
           } else {
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
           }
+          return;
         }
       })
       .catch(console.error);
@@ -77,7 +78,7 @@ export default function CourseSelectionPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) {
+      if (!res.ok && !data.alreadyLocked && !data.lockedCourseId) {
         setError(data.error || 'Failed to lock course selection');
         setShowConfirmModal(false);
       } else {
@@ -85,16 +86,15 @@ export default function CourseSelectionPage() {
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
         if (joinCode) {
-          router.push(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+          window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
         } else if (joinHostId) {
-          router.push(`/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`);
+          window.location.href = `/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`;
         } else {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
       }
     } catch (err) {
-      setError('An error occurred');
-      setShowConfirmModal(false);
+      window.location.href = '/dashboard';
     } finally {
       setSubmitting(false);
     }

@@ -38,6 +38,7 @@ export async function GET() {
             name: auth.name || auth.email?.split('@')[0] || 'Student',
             email: auth.email,
             lockedCourse: null,
+            lockedCourseId: null,
             xp_total: 0,
             status: 'Pending',
           },
@@ -52,10 +53,14 @@ export async function GET() {
     const { user, isMemoryMode } = authResult;
 
     let lockedCourse: any = null;
-    if (user.locked_course_id) {
+    const rawCourseId = user.locked_course_id || auth.lockedCourseId;
+
+    if (rawCourseId) {
+      const courseIdStr = String(typeof rawCourseId === 'object' ? (rawCourseId._id || rawCourseId.id) : rawCourseId);
+
       // 1. Try Cloudflare D1
       try {
-        const d1Courses = await queryD1('SELECT * FROM courses WHERE id = ? LIMIT 1', [user.locked_course_id]);
+        const d1Courses = await queryD1('SELECT * FROM courses WHERE id = ? LIMIT 1', [courseIdStr]);
         if (d1Courses && d1Courses.length > 0) {
           const c = d1Courses[0];
           let subjects = [];
@@ -83,17 +88,27 @@ export async function GET() {
       // 2. Memory Mode fallback
       if (!lockedCourse && isMemoryMode) {
         const db = readSharedDb();
-        lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(user.locked_course_id) || String(c.id) === String(user.locked_course_id)) || null;
+        lockedCourse = (db.courses || []).find((c: any) => String(c._id) === courseIdStr || String(c.id) === courseIdStr) || null;
       }
 
       // 3. Mongoose Fallback
       if (!lockedCourse) {
         try {
-          lockedCourse = await Course.findById(user.locked_course_id);
+          lockedCourse = await Course.findById(courseIdStr);
         } catch (e) {
           const db = readSharedDb();
-          lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(user.locked_course_id) || String(c.id) === String(user.locked_course_id)) || null;
+          lockedCourse = (db.courses || []).find((c: any) => String(c._id) === courseIdStr || String(c.id) === courseIdStr) || null;
         }
+      }
+
+      // Default course object if not found in db
+      if (!lockedCourse) {
+        lockedCourse = {
+          _id: courseIdStr,
+          id: courseIdStr,
+          name: 'Enrolled Course',
+          category: 'Course Track',
+        };
       }
     }
 
@@ -104,6 +119,7 @@ export async function GET() {
         name: user.name,
         email: user.email,
         lockedCourse,
+        lockedCourseId: rawCourseId ? String(rawCourseId) : null,
         xp_total: user.xp_total || 0,
         status: user.status,
       },

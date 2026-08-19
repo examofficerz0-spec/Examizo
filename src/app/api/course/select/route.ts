@@ -68,11 +68,32 @@ export async function POST(req: Request) {
     } else {
       const { user, isMemoryMode, isD1 } = authResult;
 
+      // If user already has a locked course, keep it locked, update session token, and proceed
       if (user.locked_course_id) {
-        return NextResponse.json(
-          { error: 'RULE-01 Violation: Your course selection is permanently locked and cannot be changed.' },
-          { status: 403 }
-        );
+        const existingCourseId = String(user.locked_course_id);
+        const resolvedUserId = user._id ? String(user._id) : userId;
+        const newToken = signUserToken({
+          userId: resolvedUserId,
+          email: emailLower,
+          name: user.name || name,
+          lockedCourseId: existingCourseId,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          lockedCourseId: existingCourseId,
+          alreadyLocked: true,
+        });
+
+        response.cookies.set('student_token', newToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+
+        return response;
       }
 
       // Update in Cloudflare D1
