@@ -4100,50 +4100,5 @@
       "timestamp": "2026-07-29T11:43:58.609Z"
     }
   ],
-  "weeklyDpps": [
-    {
-      "_id": "d7yp3ss6ilb",
-      "course_id": "1339osvcems5xpvjb",
-      "title": "neetet",
-      "duration_minutes": 30,
-      "question_ids": [
-        "r91z6j1lfms7d8a4p",
-        "sfrbsi11mms7d8a4p",
-        "ozmhoolqdms7d8a4p",
-        "te12iknx4ms7d8a4p",
-        "sakisbb1qms7cype0",
-        "2xy10qi4lms7cype0",
-        "aja4bo1dcms7cype0",
-        "82l2ovnzyms7cype0",
-        "yebun5qanms7cype0",
-        "dfx1168e2ms7cx62h",
-        "q13o87k5qms7cx62h",
-        "85pgoxneems7cx62h",
-        "iddxyx3klms7cx62h",
-        "lxd6v7gqfms7cx62h"
-      ],
-      "is_active": true,
-      "created_at": "2026-07-30T10:27:55.631Z"
-    },
-    {
-      "_id": "jor2l6fr9r",
-      "course_id": "course_jee_2027",
-      "title": "ereek",
-      "duration_minutes": 30,
-      "question_ids": [
-        "89ntsf4g7ms60o4uo",
-        "ay6091h9gms60o4uo",
-        "0wcal1eocms60o4uo",
-        "5bm2ugd6jms60o4uo",
-        "om8w4qnabms60o4uo",
-        "95pslkhcnms60o4uo",
-        "jkyegql8mms60o4uo",
-        "zmljtfixoms60o4uo",
-        "gyiih2tx0ms60o4uo",
-        "jvjrhm0ooms60o4uo"
-      ],
-      "is_active": true,
-      "created_at": "2026-07-30T10:01:13.020Z"
-    }
-  ]
+  "weeklyDpps": []
 }
