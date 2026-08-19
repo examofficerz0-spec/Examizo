@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1 } from '@/lib/d1';
+import { queryD1, executeD1 } from '@/lib/d1';
+import bcrypt from 'bcryptjs';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 function parseJwtPayload(token: string) {
   try {
@@ -67,15 +69,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unable to retrieve email from Google authentication.' }, { status: 400 });
     }
 
-    email = email.toLowerCase().trim();
-    name = name || email.split('@')[0];
+    const lowerEmail = email.toLowerCase().trim();
+    const cleanName = (name || lowerEmail.split('@')[0]).trim();
 
-    // Find user across D1, Memory DB, and MongoDB
+    // Check if user already exists
     let existingUser: any = null;
 
     // A. Check Cloudflare D1
     try {
-      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [email]);
+      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
       if (d1Users && d1Users.length > 0) {
         const u = d1Users[0];
         existingUser = {
@@ -96,7 +98,7 @@ export async function POST(req: Request) {
       try {
         const db = readSharedDb();
         if (db.users) {
-          const memUser = db.users.find((u: any) => (u.email || '').toLowerCase().trim() === email);
+          const memUser = db.users.find((u: any) => (u.email || '').toLowerCase().trim() === lowerEmail);
           if (memUser) {
             existingUser = {
               id: String(memUser._id || memUser.id),
@@ -111,9 +113,7 @@ export async function POST(req: Request) {
       } catch (_) {}
     }
 
-
-
-    // If user was deleted or suspended
+    // Existing User handling
     if (existingUser) {
       const status = String(existingUser.status || '').toLowerCase();
       const isDeleted = status === 'deleted' || existingUser.name === 'Deleted User' || existingUser.email.startsWith('deleted_');
@@ -126,7 +126,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Your account is suspended. Please contact support to restore access.', isSuspended: true }, { status: 403 });
       }
 
-      // Existing active user with locked course
       const token = signUserToken({
         userId: existingUser.id,
         email: existingUser.email,
@@ -158,12 +157,42 @@ export async function POST(req: Request) {
       return response;
     }
 
-    // Brand new user -> create pending onboarding session (not in DB yet)
-    const pendingUserId = generateId();
+    // Brand New User -> Immediately register into Cloudflare D1 and SharedDb!
+    const newUserId = generateId();
+    const dummyPasswordHash = await bcrypt.hash(`google_oauth_${generateId()}_${Date.now()}`, 10);
+
+    // 1. Insert into Cloudflare D1
+    try {
+      await executeD1(
+        'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, cleanName, lowerEmail, dummyPasswordHash, 'Active', 0, null]
+      );
+    } catch (d1Err) {
+      console.warn('[Google D1 User Insert Warning]:', d1Err);
+    }
+
+    // 2. Sync to SharedDb
+    try {
+      const db = readSharedDb();
+      if (!db.users) db.users = [];
+      db.users.push({
+        _id: newUserId,
+        id: newUserId,
+        name: cleanName,
+        email: lowerEmail,
+        password_hash: dummyPasswordHash,
+        status: 'Active',
+        xp_total: 0,
+        locked_course_id: null,
+        created_at: new Date().toISOString(),
+      });
+      writeSharedDb(db);
+    } catch (_) {}
+
     const token = signUserToken({
-      userId: pendingUserId,
-      email,
-      name,
+      userId: newUserId,
+      email: lowerEmail,
+      name: cleanName,
       lockedCourseId: null,
     });
 
@@ -171,9 +200,9 @@ export async function POST(req: Request) {
       success: true,
       needsCourseSelection: true,
       user: {
-        id: pendingUserId,
-        name,
-        email,
+        id: newUserId,
+        name: cleanName,
+        email: lowerEmail,
         lockedCourseId: null,
       },
     });
@@ -184,7 +213,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });
 
