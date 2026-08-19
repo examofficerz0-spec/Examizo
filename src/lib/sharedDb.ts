@@ -39,13 +39,7 @@ const initialDb: SharedDbData = {
   notifications: [],
 };
 
-let cachedMemoryDb: SharedDbData | null = null;
-let lastReadTime = 0;
-
 export function readSharedDb(): SharedDbData {
-  if (cachedMemoryDb && Date.now() - lastReadTime < 3000) {
-    return cachedMemoryDb;
-  }
   const dbPath = getDbPath();
   try {
     if (!fs.existsSync(dbPath)) {
@@ -72,18 +66,14 @@ export function readSharedDb(): SharedDbData {
       writeSharedDb(data);
     }
 
-    cachedMemoryDb = data;
-    lastReadTime = Date.now();
     return data;
   } catch (error) {
     console.error('Error reading shared database:', error);
-    return cachedMemoryDb || initialDb;
+    return initialDb;
   }
 }
 
 export function writeSharedDb(data: SharedDbData): void {
-  cachedMemoryDb = data;
-  lastReadTime = Date.now();
   const dbPath = getDbPath();
   try {
     const dir = path.dirname(dbPath);
