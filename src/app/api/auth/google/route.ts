@@ -111,25 +111,7 @@ export async function POST(req: Request) {
       } catch (_) {}
     }
 
-    // C. Check MongoDB
-    if (!existingUser) {
-      try {
-        const { isMemoryMode } = await dbConnect();
-        if (!isMemoryMode) {
-          const mUser = await User.findOne({ email });
-          if (mUser) {
-            existingUser = {
-              id: mUser._id.toString(),
-              name: mUser.name,
-              email: mUser.email,
-              status: mUser.status || 'Active',
-              xp_total: mUser.xp_total || 0,
-              locked_course_id: mUser.locked_course_id ? mUser.locked_course_id.toString() : null,
-            };
-          }
-        }
-      } catch (_) {}
-    }
+
 
     // If user was deleted or suspended
     if (existingUser) {

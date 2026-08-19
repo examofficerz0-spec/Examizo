@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { executeD1, queryD1 } from '@/lib/d1';
-import { User } from '@/lib/models';
-import { dbConnect } from '@/lib/db';
+import { executeD1 } from '@/lib/d1';
 
 export async function POST(req: Request) {
   try {
@@ -59,27 +57,6 @@ export async function POST(req: Request) {
         }
         writeSharedDb(db);
       } catch (_) {}
-
-      // Mongoose DB insert
-      try {
-        const { isMemoryMode } = await dbConnect();
-        if (!isMemoryMode) {
-          await User.findOneAndUpdate(
-            { email: emailLower },
-            {
-              $set: {
-                name,
-                email: emailLower,
-                password_hash: 'google_oauth_authenticated',
-                status: 'Active',
-                locked_course_id: cleanCourseId,
-              },
-              $setOnInsert: { xp_total: 0 },
-            },
-            { upsert: true, new: true }
-          );
-        }
-      } catch (_) {}
     } else {
       const { user } = authResult;
       const targetUserId = String(user._id || user.id || auth.userId);
@@ -106,17 +83,6 @@ export async function POST(req: Request) {
             dbUser.status = 'Active';
             writeSharedDb(db);
           }
-        }
-      } catch (_) {}
-
-      // Update in Mongoose
-      try {
-        const { isMemoryMode } = await dbConnect();
-        if (!isMemoryMode) {
-          await User.findOneAndUpdate(
-            { $or: [{ _id: targetUserId }, { email: emailLower }] },
-            { $set: { locked_course_id: cleanCourseId, status: 'Active' } }
-          );
         }
       } catch (_) {}
     }

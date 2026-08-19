@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { Course } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
@@ -50,7 +49,7 @@ export async function GET() {
       return res;
     }
 
-    const { user, isMemoryMode } = authResult;
+    const { user } = authResult;
 
     let lockedCourse: any = null;
     const rawCourseId = user.locked_course_id || auth.lockedCourseId;
@@ -86,19 +85,9 @@ export async function GET() {
       }
 
       // 2. Memory Mode fallback
-      if (!lockedCourse && isMemoryMode) {
+      if (!lockedCourse) {
         const db = readSharedDb();
         lockedCourse = (db.courses || []).find((c: any) => String(c._id) === courseIdStr || String(c.id) === courseIdStr) || null;
-      }
-
-      // 3. Mongoose Fallback
-      if (!lockedCourse) {
-        try {
-          lockedCourse = await Course.findById(courseIdStr);
-        } catch (e) {
-          const db = readSharedDb();
-          lockedCourse = (db.courses || []).find((c: any) => String(c._id) === courseIdStr || String(c.id) === courseIdStr) || null;
-        }
       }
 
       // Default course object if not found in db

@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
 import { queryD1, executeD1 } from '@/lib/d1';
@@ -37,7 +35,7 @@ export async function POST(req: Request) {
 
     // 1. Try Cloudflare D1 registration
     try {
-      const existing = await queryD1('SELECT id FROM users WHERE email = ? LIMIT 1', [lowerEmail]);
+      const existing = await queryD1('SELECT id FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
       if (existing && existing.length > 0) {
         return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
       }
@@ -48,6 +46,24 @@ export async function POST(req: Request) {
       );
 
       if (d1Success) {
+        // Also sync memory store
+        try {
+          const db = readSharedDb();
+          if (!db.users) db.users = [];
+          db.users.push({
+            _id: newUserId,
+            id: newUserId,
+            name,
+            email: lowerEmail,
+            password_hash,
+            status: 'Active',
+            xp_total: 0,
+            locked_course_id: cleanCourseId,
+            created_at: new Date().toISOString(),
+          });
+          writeSharedDb(db);
+        } catch (_) {}
+
         const token = signUserToken({
           userId: newUserId,
           email: lowerEmail,
@@ -75,73 +91,30 @@ export async function POST(req: Request) {
     }
 
     // 2. Memory DB fallback
-    const { isMemoryMode } = await dbConnect();
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      const existing = db.users.find((u) => u.email.toLowerCase() === lowerEmail);
-      if (existing) {
-        return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
-      }
-
-      const newUser = {
-        _id: newUserId,
-        name,
-        email: lowerEmail,
-        password_hash,
-        status: 'Active',
-        xp_total: 0,
-        locked_course_id: cleanCourseId,
-        created_at: new Date().toISOString(),
-      };
-
-      db.users.push(newUser);
-      writeSharedDb(db);
-
-      const token = signUserToken({
-        userId: newUser._id,
-        email: newUser.email,
-        name: newUser.name,
-        lockedCourseId: cleanCourseId,
-      });
-
-      const response = NextResponse.json({
-        success: true,
-        user: {
-          id: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-          lockedCourseId: cleanCourseId,
-        },
-      });
-
-      response.cookies.set('student_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
-        path: '/',
-      });
-
-      return response;
-    }
-
-    // 3. Atlas Mongoose mode
-    const existing = await User.findOne({ email: lowerEmail });
+    const db = readSharedDb();
+    const existing = (db.users || []).find((u) => u.email.toLowerCase() === lowerEmail);
     if (existing) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
     }
 
-    const newUser = await User.create({
+    const newUser = {
+      _id: newUserId,
+      id: newUserId,
       name,
       email: lowerEmail,
       password_hash,
       status: 'Active',
       xp_total: 0,
       locked_course_id: cleanCourseId,
-    });
+      created_at: new Date().toISOString(),
+    };
+
+    if (!db.users) db.users = [];
+    db.users.push(newUser);
+    writeSharedDb(db);
 
     const token = signUserToken({
-      userId: newUser._id.toString(),
+      userId: newUser._id,
       email: newUser.email,
       name: newUser.name,
       lockedCourseId: cleanCourseId,
@@ -150,7 +123,7 @@ export async function POST(req: Request) {
     const response = NextResponse.json({
       success: true,
       user: {
-        id: newUser._id.toString(),
+        id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         lockedCourseId: cleanCourseId,

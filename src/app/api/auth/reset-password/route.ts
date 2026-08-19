@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { dbConnect } from '@/lib/db';
-import { User } from '@/lib/models';
 import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { queryD1, executeD1 } from '@/lib/d1';
 import bcrypt from 'bcryptjs';
@@ -45,38 +43,19 @@ export async function POST(req: Request) {
     }
 
     // 2. Memory Mode Fallback
-    const { isMemoryMode } = await dbConnect();
+    const db = readSharedDb();
+    if (!db.users) db.users = [];
 
-    if (isMemoryMode) {
-      const db = readSharedDb();
-      if (!db.users) db.users = [];
+    const user = db.users.find((u: any) => u.email?.toLowerCase().trim() === lowerEmail);
 
-      const user = db.users.find((u: any) => u.email?.toLowerCase().trim() === lowerEmail);
-
-      if (!user) {
-        return NextResponse.json({ error: 'No account found with this email address' }, { status: 404 });
-      }
-
-      user.password_hash = hashedPassword;
-      writeSharedDb(db);
-
-      return NextResponse.json({ success: true, message: 'Password updated successfully! You can now log in.' });
+    if (!user) {
+      return NextResponse.json({ error: 'No account found with this email address' }, { status: 404 });
     }
 
-    // 3. Mongoose / Atlas Mode
-    try {
-      const user = await User.findOne({ email: lowerEmail });
-      if (!user) {
-        return NextResponse.json({ error: 'No account found with this email address' }, { status: 404 });
-      }
+    user.password_hash = hashedPassword;
+    writeSharedDb(db);
 
-      user.password_hash = hashedPassword;
-      await user.save();
-
-      return NextResponse.json({ success: true, message: 'Password updated successfully! You can now log in.' });
-    } catch (_) {}
-
-    return NextResponse.json({ error: 'No account found with this email address' }, { status: 404 });
+    return NextResponse.json({ success: true, message: 'Password updated successfully! You can now log in.' });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }

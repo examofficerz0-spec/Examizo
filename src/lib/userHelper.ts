@@ -1,9 +1,6 @@
-import { dbConnect } from '@/lib/db';
-import { User } from '@/lib/models';
 import { readSharedDb } from '@/lib/sharedDb';
 import { UserPayload } from '@/lib/auth';
 import { queryD1 } from '@/lib/d1';
-import mongoose from 'mongoose';
 
 export interface UserLookupResult {
   user: any;
@@ -17,9 +14,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
   const emailLower = auth.email ? auth.email.toLowerCase().trim() : '';
   const userIdStr = auth.userId ? String(auth.userId) : '';
 
-  // 1. Try Cloudflare D1 database lookup first
+  // 1. Primary: Cloudflare D1 database lookup
   try {
-    const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [userIdStr, emailLower]);
+    const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR LOWER(email) = ? LIMIT 1', [userIdStr, emailLower]);
     if (d1Users && d1Users.length > 0) {
       const u = d1Users[0];
       const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
@@ -47,37 +44,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     console.warn('[getUserFromAuth] D1 lookup warning:', e);
   }
 
-  // 2. Try Mongoose Mode lookup if Mongo connection is present
-  try {
-    const { isMemoryMode } = await dbConnect();
-    if ((mongoose.connection.readyState as number) === 1 || !isMemoryMode) {
-      let user = null;
-      if (auth.userId && mongoose.Types.ObjectId.isValid(auth.userId)) {
-        user = await User.findById(auth.userId);
-      }
-      if (!user && auth.userId) {
-        user = await User.findOne({ _id: auth.userId });
-      }
-      if (!user && emailLower) {
-        user = await User.findOne({ email: emailLower });
-      }
-      if (!user && emailLower) {
-        user = await User.findOne({ account_email: emailLower });
-      }
-      if (user) {
-        const isSuspended = String(user.status || '').toLowerCase() === 'suspended';
-        const isDeleted = String(user.status || '').toLowerCase() === 'deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
-        if (isDeleted || isSuspended) {
-          return null;
-        }
-        return { user, isMemoryMode: false };
-      }
-    }
-  } catch (e) {
-    console.warn('[getUserFromAuth] Mongoose lookup warning:', e);
-  }
-
-  // 3. Memory DB mode lookup
+  // 2. Resilient Local Memory DB fallback
   try {
     const db = readSharedDb();
     if (db && db.users) {
