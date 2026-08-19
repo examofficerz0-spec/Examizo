@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton, translateToHindi } from '@/components/common/HindiTranslateButton';
+import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
 import {
   Clock, Bookmark, ChevronLeft, ChevronRight, CheckCircle2, Award,
   AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart
@@ -1107,18 +1108,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     </div>
 
                     {/* Question Diagram / Image */}
-                    {(currentQ?.image_url || currentQ?.image || currentQ?.question_image) && (
-                      <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl inline-block max-w-full">
-                        <img
-                          src={currentQ.image_url || currentQ.image || currentQ.question_image}
-                          alt="Question Diagram"
-                          className="max-h-72 max-w-full object-contain rounded-xl shadow-xs"
-                          onError={(e) => {
-                            console.warn('Failed to load mock test question image:', currentQ.image_url);
-                          }}
-                        />
-                      </div>
-                    )}
+                    <QuestionDiagram src={currentQ?.image_url || currentQ?.image || currentQ?.question_image} />
 
                     {/* Options Grid */}
                     <div className="grid grid-cols-1 gap-3 pt-2">

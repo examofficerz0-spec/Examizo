@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useHeader } from '@/context/HeaderContext';
 import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
+import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
 import {
   HelpCircle,
   CheckCircle2,
@@ -1048,18 +1049,7 @@ export default function PracticeSetsPage() {
                         />
                       </div>
 
-                      {(currentQ.image_url || (currentQ as any).image || (currentQ as any).question_image) && (
-                        <div className="mb-5 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl inline-block max-w-full">
-                          <img
-                            src={currentQ.image_url || (currentQ as any).image || (currentQ as any).question_image}
-                            alt="Question Diagram"
-                            className="max-h-72 max-w-full object-contain rounded-lg shadow-xs"
-                            onError={(e) => {
-                              console.warn('Failed to load question image:', currentQ.image_url);
-                            }}
-                          />
-                        </div>
-                      )}
+                      <QuestionDiagram src={currentQ.image_url || (currentQ as any).image || (currentQ as any).question_image} />
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */
