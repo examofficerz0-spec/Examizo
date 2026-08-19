@@ -60,7 +60,13 @@ export async function GET() {
           return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
         });
 
-        const profiles = sortedD1Users.map((u: any) => {
+        const validD1Users = sortedD1Users.filter((u: any) => {
+          const isPrimary = !u.email.includes('+');
+          // Sub-profiles MUST have a selected course to be recognized as created
+          return isPrimary || (u.locked_course_id && String(u.locked_course_id).trim().length > 0);
+        });
+
+        const profiles = validD1Users.map((u: any) => {
           const isPrimary = !u.email.includes('+');
           return {
             id: u.id,
@@ -88,6 +94,10 @@ export async function GET() {
       const family = (db.users || []).filter((u: any) => {
         if (u.status === 'Deleted' || u.name === 'Deleted User') return false;
         const uEmail = (u.email || '').toLowerCase().trim();
+        const isPrimary = !uEmail.includes('+');
+        if (!isPrimary && (!u.locked_course_id || !String(u.locked_course_id).trim())) {
+          return false;
+        }
         const uAcct = (u.account_email || '').toLowerCase().trim();
         const uHandle = (uAcct || uEmail).split('@')[0].split('+')[0].trim();
         return uHandle === baseHandle || String(u._id) === String(currentUser._id);
@@ -125,17 +135,22 @@ export async function GET() {
     const courses = await Course.find({ is_active: true }).lean();
     const courseMap = new Map(courses.map((c) => [c._id.toString(), c.name]));
 
-    const profiles = family.map((u: any) => ({
-      id: u._id.toString(),
-      name: u.name,
-      email: u.email,
-      accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
-      lockedCourseId: u.locked_course_id ? u.locked_course_id.toString() : null,
-      lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id.toString()) || null) : null,
-      isActive: u._id.toString() === currentUser._id.toString(),
-      isPrimary: !u.email.includes('+'),
-      xp_total: u.xp_total || 0,
-    }));
+    const profiles = family
+      .filter((u: any) => {
+        const isPrimary = !u.email.includes('+');
+        return isPrimary || (u.locked_course_id && String(u.locked_course_id).trim().length > 0);
+      })
+      .map((u: any) => ({
+        id: u._id.toString(),
+        name: u.name,
+        email: u.email,
+        accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
+        lockedCourseId: u.locked_course_id ? u.locked_course_id.toString() : null,
+        lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id.toString()) || null) : null,
+        isActive: u._id.toString() === currentUser._id.toString(),
+        isPrimary: !u.email.includes('+'),
+        xp_total: u.xp_total || 0,
+      }));
 
     return NextResponse.json({ success: true, profiles });
   } catch (error: any) {

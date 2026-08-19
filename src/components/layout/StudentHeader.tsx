@@ -66,6 +66,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
+  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
+  const [selectedCourseForNewProfile, setSelectedCourseForNewProfile] = useState<string>('');
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -293,9 +295,30 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     }
   };
 
+  const openAddProfileModal = () => {
+    setNewProfileName('');
+    setSelectedCourseForNewProfile('');
+    setCreateError('');
+    setShowAddProfileModal(true);
+    fetch('/api/courses')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.courses)) {
+          setAvailableCourses(data.courses);
+          if (data.courses.length > 0) {
+            setSelectedCourseForNewProfile(String(data.courses[0]._id || data.courses[0].id));
+          }
+        }
+      })
+      .catch(console.error);
+  };
+
   const handleCreateProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProfileName.trim()) return;
+    if (!newProfileName.trim() || !selectedCourseForNewProfile) {
+      setCreateError('Please enter a profile name and choose a target course curriculum.');
+      return;
+    }
 
     setCreateError('');
     setCreateLoading(true);
@@ -304,7 +327,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       const res = await fetch('/api/profile/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newProfileName.trim() }),
+        body: JSON.stringify({
+          name: newProfileName.trim(),
+          courseId: selectedCourseForNewProfile,
+        }),
       });
 
       const data = await res.json();
@@ -313,8 +339,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       } else {
         setShowAddProfileModal(false);
         setNewProfileName('');
-        // NEW PROFILE HAS NO COURSE LOCKED YET -> REDIRECT DIRECTLY TO /course-selection!
-        window.location.href = '/course-selection';
+        setSelectedCourseForNewProfile('');
+        // Sub-profile is registered with course locked -> reload or go directly to dashboard!
+        window.location.href = '/dashboard';
       }
     } catch (err) {
       setCreateError('Failed to create profile');
@@ -697,9 +724,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     <button
                       type="button"
                       onClick={() => {
-                        setNewProfileName('');
-                        setCreateError('');
-                        setShowAddProfileModal(true);
+                        openAddProfileModal();
                         setShowProfileMenu(false);
                       }}
                       className="w-full mt-1 flex items-center justify-center gap-2 p-2 rounded-xl border border-dashed border-blue-300 dark:border-blue-800/80 bg-blue-50/50 hover:bg-blue-100/50 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-bold transition-all cursor-pointer"
@@ -747,7 +772,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Create New User Profile</h3>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Create New Sub-Profile</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Select curriculum course to register this profile</p>
                 </div>
               </div>
               <button
@@ -760,7 +786,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             </div>
 
             {createError && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-medium">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-xl text-rose-900 dark:text-rose-200 text-xs font-medium">
                 {createError}
               </div>
             )}
@@ -774,11 +800,31 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   autoFocus
                   value={newProfileName}
                   onChange={(e) => setNewProfileName(e.target.value)}
-                  placeholder="e.g. Ram, Student 2, JEE Prep 2026"
+                  placeholder="e.g. Ram, Student 2, Grade 7"
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Target Course Curriculum *</label>
+                <select
+                  required
+                  value={selectedCourseForNewProfile}
+                  onChange={(e) => setSelectedCourseForNewProfile(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
+                >
+                  {availableCourses.length === 0 ? (
+                    <option value="">Loading courses...</option>
+                  ) : (
+                    availableCourses.map((c: any) => (
+                      <option key={c._id || c.id} value={c._id || c.id}>
+                        {c.name} {c.category ? `(${c.category})` : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
                 <p className="text-[10px] text-slate-400 leading-normal pt-1">
-                  💡 Creating this profile will immediately take you to the <strong>Course Selection Menu</strong> to lock the target course for this new profile.
+                  🔒 The profile will only be registered once the target course curriculum is selected.
                 </p>
               </div>
 
@@ -792,10 +838,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || !newProfileName.trim()}
+                  disabled={createLoading || !newProfileName.trim() || !selectedCourseForNewProfile}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
-                  {createLoading ? 'Creating Profile...' : 'Create Profile & Select Course'}
+                  {createLoading ? 'Registering...' : 'Create & Lock Course'}
                 </button>
               </div>
             </form>

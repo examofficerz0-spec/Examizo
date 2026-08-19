@@ -12,12 +12,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name } = await req.json();
+    const body = await req.json();
+    const name = body.name;
+    const courseId = body.courseId || body.course_id || body.locked_course_id;
+
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Profile name is required' }, { status: 400 });
     }
 
+    if (!courseId || !String(courseId).trim()) {
+      return NextResponse.json(
+        { error: 'Course selection is required. A profile or sub-profile cannot be created without selecting a target curriculum course.' },
+        { status: 400 }
+      );
+    }
+
     const cleanName = name.trim();
+    const cleanCourseId = String(courseId).trim();
+
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -45,7 +57,7 @@ export async function POST(req: Request) {
         const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@exammaster.internal`;
 
         await executeD1(
-          `INSERT INTO users (id, name, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+          `INSERT INTO users (id, name, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             profileId,
             cleanName,
@@ -56,6 +68,7 @@ export async function POST(req: Request) {
             '[]',
             '[]',
             new Date().toISOString(),
+            cleanCourseId,
           ]
         );
 
@@ -69,7 +82,7 @@ export async function POST(req: Request) {
               email: profileEmail,
               password_hash: currentUser.password_hash || 'profile_nopass',
               account_email: mainEmail,
-              locked_course_id: null,
+              locked_course_id: cleanCourseId,
               status: 'Active',
               xp_total: 0,
               created_at: new Date().toISOString(),
@@ -78,12 +91,12 @@ export async function POST(req: Request) {
           }
         } catch (_) {}
 
-        // Sign JWT token for the newly created profile
+        // Sign JWT token for the newly created profile with lockedCourseId
         const token = signUserToken({
           userId: profileId,
           email: profileEmail,
           name: cleanName,
-          lockedCourseId: null,
+          lockedCourseId: cleanCourseId,
         });
 
         const response = NextResponse.json({
@@ -92,9 +105,9 @@ export async function POST(req: Request) {
             id: profileId,
             name: cleanName,
             email: profileEmail,
-            lockedCourseId: null,
+            lockedCourseId: cleanCourseId,
           },
-          needsCourseSelection: true,
+          needsCourseSelection: false,
         });
 
         response.cookies.set('student_token', token, {
@@ -136,7 +149,7 @@ export async function POST(req: Request) {
         email: profileEmail,
         password_hash: currentUser.password_hash || 'profile_nopass',
         account_email: mainEmail,
-        locked_course_id: null,
+        locked_course_id: cleanCourseId,
         status: 'Active',
         xp_total: 0,
         created_at: new Date().toISOString(),
@@ -153,7 +166,7 @@ export async function POST(req: Request) {
         userId: String(newProfile._id),
         email: newProfile.email,
         name: newProfile.name,
-        lockedCourseId: null,
+        lockedCourseId: cleanCourseId,
       });
 
       const response = NextResponse.json({
@@ -162,9 +175,9 @@ export async function POST(req: Request) {
           id: String(newProfile._id),
           name: newProfile.name,
           email: newProfile.email,
-          lockedCourseId: null,
+          lockedCourseId: cleanCourseId,
         },
-        needsCourseSelection: true,
+        needsCourseSelection: false,
       });
 
       response.cookies.set('student_token', token, {
@@ -206,7 +219,7 @@ export async function POST(req: Request) {
         email: profileEmail,
         password_hash: currentUser.password_hash,
         account_email: mainEmail,
-        locked_course_id: null,
+        locked_course_id: cleanCourseId,
         status: 'Active',
         xp_total: 0,
       });
@@ -215,7 +228,7 @@ export async function POST(req: Request) {
         userId: newProfile._id.toString(),
         email: newProfile.email,
         name: newProfile.name,
-        lockedCourseId: null,
+        lockedCourseId: cleanCourseId,
       });
 
       const response = NextResponse.json({
@@ -224,9 +237,9 @@ export async function POST(req: Request) {
           id: newProfile._id.toString(),
           name: newProfile.name,
           email: newProfile.email,
-          lockedCourseId: null,
+          lockedCourseId: cleanCourseId,
         },
-        needsCourseSelection: true,
+        needsCourseSelection: false,
       });
 
       response.cookies.set('student_token', token, {
