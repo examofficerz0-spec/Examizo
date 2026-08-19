@@ -92,13 +92,7 @@ export async function middleware(request: NextRequest) {
   const user = token ? await verifyToken(token) : null;
   const isAuthenticated = !!user;
 
-  // 2. If authenticated user tries to access /login or /register, redirect to /dashboard
-  if (isAuthenticated && (pathname === '/login' || pathname === '/register')) {
-    const dashboardUrl = new URL('/dashboard', request.url);
-    return NextResponse.redirect(dashboardUrl);
-  }
-
-  // 3. Check if path is public
+  // 2. Check if path is public
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
   const isPublicApi = PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 

@@ -117,7 +117,7 @@ export default function GalleryPage() {
           {/* Action Button - Get Started Only */}
           <div className="flex items-center gap-3">
             <Link
-              href="/register"
+              href="/login"
               className="px-5 py-2.5 text-sm font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
               <span>Get Started</span>
@@ -252,7 +252,7 @@ export default function GalleryPage() {
             </p>
           </div>
           <Link
-            href="/register"
+            href="/login"
             className="px-8 py-4 bg-white text-slate-900 hover:bg-slate-100 rounded-2xl font-black text-sm shadow-lg transition-all hover:-translate-y-0.5 shrink-0 flex items-center gap-2"
           >
             <span>Start Free Practice</span>
@@ -330,7 +330,7 @@ export default function GalleryPage() {
               </div>
 
               <Link
-                href="/register"
+                href="/login"
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-md shrink-0 flex items-center gap-2"
               >
                 <span>Try Live Practice</span>

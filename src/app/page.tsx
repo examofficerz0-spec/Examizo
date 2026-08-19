@@ -193,7 +193,7 @@ export default function LandingPage() {
           {/* Action Button - Get Started Only */}
           <div className="flex items-center gap-3">
             <Link
-              href="/register"
+              href="/login"
               className="px-5 py-2.5 text-sm font-extrabold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
               <span>Get Started</span>
@@ -263,7 +263,7 @@ export default function LandingPage() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
                 <Link
-                  href="/register"
+                  href="/login"
                   className="w-full sm:w-auto px-8 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm sm:text-base shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2.5"
                 >
                   <span>Start Free Practice Now</span>
@@ -371,7 +371,7 @@ export default function LandingPage() {
                   </div>
 
                   <Link
-                    href="/register"
+                    href="/login"
                     className="w-full py-3 text-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all block"
                   >
                     Try Live Practice →
@@ -532,7 +532,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <Link
-                href="/register"
+                href="/login"
                 className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 hover:shadow-blue-600/35 transition-all shrink-0 text-center flex items-center justify-center gap-2"
               >
                 <span>Explore School Courses</span>

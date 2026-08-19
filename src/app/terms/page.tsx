@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
               <span>Back to Home</span>
             </Link>
             <Link
-              href="/register"
+              href="/login"
               className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/25 transition-all"
             >
               Get Started
