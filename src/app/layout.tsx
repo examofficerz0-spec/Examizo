@@ -14,6 +14,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Examizo - Competitive Exam Preparation Portal',
   description: 'Student application for topic-wise practice sets, full-length mock tests, progress tracking, and course leaderboards.',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

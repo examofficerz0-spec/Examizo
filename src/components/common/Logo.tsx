@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { ExamizoIcon } from './ExamizoIcon';
 
 interface LogoProps {
   className?: string;
@@ -7,31 +7,32 @@ interface LogoProps {
   showText?: boolean;
   subtitle?: string;
   textColor?: string;
+  animate?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
-  size = 36,
+  size = 38,
   showText = true,
   textColor,
+  animate = true,
 }) => {
   return (
-    <div className={`flex items-center gap-2.5 group ${className}`}>
-      <div
-        style={{ width: size, height: size }}
-        className="rounded-xl bg-blue-600 group-hover:bg-blue-700 transition-colors flex items-center justify-center shadow-xs shrink-0 border border-blue-500/30 text-white"
-      >
-        <BookOpen className="w-5 h-5 text-white stroke-[2.5]" />
+    <div className={`flex items-center gap-2.5 group examizo-container cursor-pointer select-none ${className}`}>
+      <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
+        <ExamizoIcon size={size} animate={animate} />
       </div>
 
       {showText && (
-        <span
-          className={`font-black text-lg tracking-tight font-sans group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors ${
-            textColor || 'text-slate-900 dark:text-white'
-          }`}
-        >
-          Examizo
-        </span>
+        <div className="flex flex-col">
+          <span
+            className={`font-black text-xl tracking-tight font-sans transition-colors duration-200 ${
+              textColor || 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
+            }`}
+          >
+            Examizo
+          </span>
+        </div>
       )}
     </div>
   );
