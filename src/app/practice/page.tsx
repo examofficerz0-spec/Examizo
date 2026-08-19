@@ -296,7 +296,8 @@ export default function PracticeSetsPage() {
         if (qList.length > 0) return qList;
       }
     }
-    return [];
+    // Dynamic Weekly DPP from Course Question Bank
+    return questions;
   };
 
   const hasCourseWeeklyDpp = useMemo(() => {
@@ -307,8 +308,9 @@ export default function PracticeSetsPage() {
   // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
   // 1. Shuffles from questions belonging to the enrolled course.
   // 2. Priority Order:
-  //    a) Questions student got WRONG previously (repeat for mastery & correction)
-  //    b) Questions student got CORRECT & UNATTEMPTED questions (repeat/fill remaining up to 10)
+  //    a) Questions student got WRONG previously (repeat continuously until student solves it correctly)
+  //    b) Questions student has NOT attempted yet (fresh questions from the course bank)
+  //    c) Questions student got CORRECT (reshuffle/rotate)
   // 3. Seeded by (weekNumber + year * 100) so questions stay fixed Mon 00:00 to Sun 23:59:59
   // 4. Automatically reshuffles every Monday at 00:00:00 when week number changes!
   const getCourseWeeklyDPPSet = (candidateQs: any[], seed: number): any[] => {
@@ -352,8 +354,8 @@ export default function PracticeSetsPage() {
 
     const orderedPool = [
       ...seededShuffle(wrongQs, seed),
-      ...seededShuffle(correctQs, seed + 100),
-      ...seededShuffle(unattemptedQs, seed + 200),
+      ...seededShuffle(unattemptedQs, seed + 100),
+      ...seededShuffle(correctQs, seed + 200),
     ];
 
     const result: any[] = [];
