@@ -16,6 +16,36 @@ function seededOrRandomShuffle<T>(arr: T[]): T[] {
   return copy;
 }
 
+const normalizeQuestionSignature = (qText: string): string => {
+  if (!qText || typeof qText !== 'string') return '';
+  return qText
+    .toLowerCase()
+    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const deduplicateQuestions = (list: any[]): any[] => {
+  const seenIds = new Set<string>();
+  const seenSigs = new Set<string>();
+  const uniqueList: any[] = [];
+
+  for (const q of (list || [])) {
+    if (!q) continue;
+    const qId = String(q._id || q.id || '');
+    const sig = normalizeQuestionSignature(q.question_text || '');
+
+    if (qId && seenIds.has(qId)) continue;
+    if (sig && seenSigs.has(sig)) continue;
+
+    if (qId) seenIds.add(qId);
+    if (sig) seenSigs.add(sig);
+    uniqueList.push(q);
+  }
+  return uniqueList;
+};
+
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const auth = getAuthenticatedUser();
@@ -84,7 +114,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             [userId, String(auth.email || '')]
           );
 
-          const questionAttemptMap: Record<string, boolean> = {};
+          const idAttemptMap: Record<string, boolean> = {};
+          const sigAttemptMap: Record<string, boolean> = {};
+
           (attempts || []).forEach((att: any) => {
             let responses: any[] = [];
             try {
@@ -92,7 +124,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             } catch (_) {}
             responses.forEach((resp: any) => {
               if (resp.question_id) {
-                questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
+                const qId = String(resp.question_id);
+                const isCorrect = Boolean(resp.is_correct);
+                idAttemptMap[qId] = isCorrect;
               }
             });
           });
@@ -100,39 +134,64 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           // Fetch all questions under this course
           const allCourseQs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [testCourseId]);
 
+          (allCourseQs || []).forEach((q: any) => {
+            const qId = String(q.id || q._id);
+            if (idAttemptMap[qId] !== undefined) {
+              const sig = normalizeQuestionSignature(q.question_text);
+              if (sig) sigAttemptMap[sig] = idAttemptMap[qId];
+            }
+          });
+
+          const getQuestionStatus = (q: any): 'wrong' | 'unattempted' | 'correct' => {
+            const qId = String(q?._id || q?.id || '');
+            const sig = normalizeQuestionSignature(q?.question_text || '');
+
+            if (qId && idAttemptMap[qId] !== undefined) {
+              return idAttemptMap[qId] ? 'correct' : 'wrong';
+            }
+            if (sig && sigAttemptMap[sig] !== undefined) {
+              return sigAttemptMap[sig] ? 'correct' : 'wrong';
+            }
+            return 'unattempted';
+          };
+
           for (const [sub, count] of Object.entries(subjectAllocations)) {
             const targetCount = Number(count || 0);
             if (targetCount <= 0) continue;
 
             const subLower = sub.toLowerCase().trim();
-            const matchingQs = (allCourseQs || [])
-              .filter((q: any) => {
-                const qSub = (q.subject || '').toLowerCase().trim();
-                const tag = (q.topic_tag || '').toLowerCase().trim();
-                return qSub === subLower || tag.startsWith(subLower) || tag.includes(subLower);
-              })
-              .map(formatQuestion);
+            const matchingQs = deduplicateQuestions(
+              (allCourseQs || [])
+                .filter((q: any) => {
+                  const qSub = (q.subject || '').toLowerCase().trim();
+                  const tag = (q.topic_tag || '').toLowerCase().trim();
+                  return qSub === subLower || tag.startsWith(subLower) || tag.includes(subLower);
+                })
+                .map(formatQuestion)
+            );
 
-            const wrongQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === false);
-            const unattemptedQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === undefined);
-            const correctQs = matchingQs.filter((q: any) => questionAttemptMap[String(q.id)] === true);
+            const wrongQs = matchingQs.filter((q: any) => getQuestionStatus(q) === 'wrong');
+            const unattemptedQs = matchingQs.filter((q: any) => getQuestionStatus(q) === 'unattempted');
+            const correctQs = matchingQs.filter((q: any) => getQuestionStatus(q) === 'correct');
+
+            // Priority 1: Wrong questions repeat continuously so student can correct mistakes
+            const selectedWrong = seededOrRandomShuffle(wrongQs);
+
+            // Priority 2: Fresh unattempted questions
+            const remainingNeeded = Math.max(0, targetCount - selectedWrong.length);
+            const selectedUnattempted = seededOrRandomShuffle(unattemptedQs).slice(0, remainingNeeded);
+
+            // Priority 3: Correct questions only if needed to fill targetCount
+            const stillNeeded = Math.max(0, targetCount - (selectedWrong.length + selectedUnattempted.length));
+            const selectedCorrect = stillNeeded > 0 ? seededOrRandomShuffle(correctQs).slice(0, stillNeeded) : [];
 
             const assembledPool = [
-              ...seededOrRandomShuffle(wrongQs),
-              ...seededOrRandomShuffle(unattemptedQs),
-              ...seededOrRandomShuffle(correctQs),
+              ...selectedWrong,
+              ...selectedUnattempted,
+              ...selectedCorrect,
             ];
 
-            const seen = new Set<string>();
-            const subSelected: any[] = [];
-            for (const q of assembledPool) {
-              if (!seen.has(String(q.id))) {
-                seen.add(String(q.id));
-                subSelected.push(q);
-                if (subSelected.length >= targetCount) break;
-              }
-            }
-
+            const subSelected = deduplicateQuestions(assembledPool).slice(0, targetCount);
             orderedQs.push(...subSelected);
           }
         }
@@ -149,12 +208,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           if (qIds.length > 0) {
             const quotedIds = qIds.map((id) => `'${id}'`).join(',');
             const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
-            orderedQs = qIds
+            const loadedQs = qIds
               .map((qId) => {
                 const q = (d1Qs || []).find((item: any) => item.id === qId || String(item.id) === String(qId));
                 return q ? formatQuestion(q) : null;
               })
               .filter(Boolean);
+            orderedQs = deduplicateQuestions(loadedQs);
           }
         }
 
@@ -194,7 +254,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const course = (db.courses || []).find((c) => c._id === rawTest.course_id || c.id === rawTest.course_id);
-    const question_ids = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
+    const rawQuestions = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
+    const question_ids = deduplicateQuestions(rawQuestions);
 
     const test = {
       ...rawTest,

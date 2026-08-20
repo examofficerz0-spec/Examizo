@@ -8,6 +8,36 @@ import { queryD1 } from '@/lib/d1';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const normalizeQuestionSignature = (qText: string): string => {
+  if (!qText || typeof qText !== 'string') return '';
+  return qText
+    .toLowerCase()
+    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const deduplicateQuestions = (list: any[]): any[] => {
+  const seenIds = new Set<string>();
+  const seenSigs = new Set<string>();
+  const uniqueList: any[] = [];
+
+  for (const q of (list || [])) {
+    if (!q) continue;
+    const qId = String(q._id || q.id || '');
+    const sig = normalizeQuestionSignature(q.question_text || '');
+
+    if (qId && seenIds.has(qId)) continue;
+    if (sig && seenSigs.has(sig)) continue;
+
+    if (qId) seenIds.add(qId);
+    if (sig) seenSigs.add(sig);
+    uniqueList.push(q);
+  }
+  return uniqueList;
+};
+
 export async function GET() {
   try {
     const auth = getAuthenticatedUser();
@@ -46,7 +76,7 @@ export async function GET() {
             if (qIds.length > 0) {
               const quoted = qIds.map((id) => `'${id}'`).join(',');
               const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quoted})`);
-              questions = (d1Qs || []).map((q: any) => {
+              const loaded = (d1Qs || []).map((q: any) => {
                 let opts: string[] = [];
                 try {
                   opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
@@ -65,6 +95,7 @@ export async function GET() {
                   topic_tag: q.topic_tag || 'General',
                 };
               });
+              questions = deduplicateQuestions(loaded);
             }
 
             return {
@@ -95,7 +126,8 @@ export async function GET() {
     });
 
     const populated = dpps.map((d) => {
-      const dppQuestions = (db.questions || []).filter((q) => (d.question_ids || []).includes(q._id));
+      const rawDppQuestions = (db.questions || []).filter((q) => (d.question_ids || []).includes(q._id));
+      const dppQuestions = deduplicateQuestions(rawDppQuestions);
       return {
         ...d,
         questions: dppQuestions,

@@ -70,6 +70,36 @@ const cleanQuestionText = (text: any): string => {
   return cleaned.trim();
 };
 
+const normalizeQuestionSignature = (qText: string): string => {
+  if (!qText || typeof qText !== 'string') return '';
+  return qText
+    .toLowerCase()
+    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const deduplicateQuestions = (list: any[]): any[] => {
+  const seenIds = new Set<string>();
+  const seenSigs = new Set<string>();
+  const uniqueList: any[] = [];
+
+  for (const q of (list || [])) {
+    if (!q) continue;
+    const qId = String(q._id || q.id || '');
+    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
+
+    if (qId && seenIds.has(qId)) continue;
+    if (sig && seenSigs.has(sig)) continue;
+
+    if (qId) seenIds.add(qId);
+    if (sig) seenSigs.add(sig);
+    uniqueList.push(q);
+  }
+  return uniqueList;
+};
+
 function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
   if (!q) return { subject: 'General', topic: 'General Topics' };
 
@@ -253,7 +283,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         const rawQuestions = Array.isArray(data.test?.question_ids) ? data.test.question_ids : [];
         const courseSubjectsList: string[] = data.test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Botany', 'Zoology'];
 
-        const normalizedQuestions = rawQuestions.map((q: any, idx: number) => {
+        const rawNormalizedQuestions = rawQuestions.map((q: any, idx: number) => {
           if (typeof q === 'string') {
             return {
               _id: q,
@@ -272,6 +302,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
             topic_tag: q.topic_tag || 'General',
           };
         }).filter(Boolean);
+
+        const normalizedQuestions = deduplicateQuestions(rawNormalizedQuestions);
 
         // ─── SUBJECT-SCOPED QUESTION RESHUFFLING PER ATTEMPT ───
         // Questions are grouped strictly by subject and shuffled ONLY within each subject group
