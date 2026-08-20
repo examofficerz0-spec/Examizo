@@ -52,6 +52,36 @@ const cleanQuestionText = (text: any): string => {
   return cleaned.trim();
 };
 
+const normalizeQuestionSignature = (qText: string): string => {
+  if (!qText || typeof qText !== 'string') return '';
+  return qText
+    .toLowerCase()
+    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const deduplicateQuestions = (list: any[]): any[] => {
+  const seenIds = new Set<string>();
+  const seenSigs = new Set<string>();
+  const uniqueList: any[] = [];
+
+  for (const q of (list || [])) {
+    if (!q) continue;
+    const qId = String(q._id || q.id || '');
+    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
+
+    if (qId && seenIds.has(qId)) continue;
+    if (sig && seenSigs.has(sig)) continue;
+
+    if (qId) seenIds.add(qId);
+    if (sig) seenSigs.add(sig);
+    uniqueList.push(q);
+  }
+  return uniqueList;
+};
+
 export default function PracticeSetsPage() {
   const initialCache = getClientUserCache('__PRACTICE_CACHE__');
   const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
@@ -134,7 +164,8 @@ export default function PracticeSetsPage() {
 
       setClientUserCache('__PRACTICE_CACHE__', cacheObj);
 
-      setQuestions(data.questions || []);
+      const dedupedQuestions = deduplicateQuestions(data.questions || []);
+      setQuestions(dedupedQuestions);
       setTopicCounts(data.topicCounts || {});
       if (data.completedTopics) setCompletedTopics(data.completedTopics);
       if (data.userAttempts) setUserAttempts(data.userAttempts);
@@ -307,36 +338,61 @@ export default function PracticeSetsPage() {
 
   // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
   // 1. Shuffles from questions belonging to the enrolled course.
+  // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
+  // 1. Shuffles from questions belonging to the enrolled course.
   // 2. Priority Order:
   //    a) Questions student got WRONG previously (repeat continuously until student solves it correctly)
   //    b) Questions student has NOT attempted yet (fresh questions from the course bank)
-  //    c) Questions student got CORRECT (reshuffle/rotate)
+  //    c) Questions student got CORRECT (only if needed to fill up to 10)
   // 3. Seeded by (weekNumber + year * 100) so questions stay fixed Mon 00:00 to Sun 23:59:59
   // 4. Automatically reshuffles every Monday at 00:00:00 when week number changes!
   const getCourseWeeklyDPPSet = (candidateQs: any[], seed: number): any[] => {
     if (!candidateQs || candidateQs.length === 0) return [];
 
-    const questionAttemptMap: Record<string, boolean> = {};
+    const uniqueCandidates = deduplicateQuestions(candidateQs);
+    if (uniqueCandidates.length === 0) return [];
 
     const sortedAttempts = [...userAttempts].sort(
       (a, b) => new Date(a.created_at || a.started_at || 0).getTime() - new Date(b.created_at || b.started_at || 0).getTime()
     );
 
+    const idAttemptMap: Record<string, boolean> = {};
+    const sigAttemptMap: Record<string, boolean> = {};
+
     sortedAttempts.forEach((att) => {
       if (Array.isArray(att.responses)) {
         att.responses.forEach((resp: any) => {
           if (resp.question_id) {
-            questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
+            const qId = String(resp.question_id);
+            const isCorrect = Boolean(resp.is_correct);
+            idAttemptMap[qId] = isCorrect;
+
+            const matchedQ = questions.find((q) => String(q._id || q.id) === qId);
+            if (matchedQ?.question_text) {
+              const sig = normalizeQuestionSignature(cleanQuestionText(matchedQ.question_text));
+              if (sig) sigAttemptMap[sig] = isCorrect;
+            }
           }
         });
       }
     });
 
-    const getQId = (q: any) => String(q?._id || q?.id || '');
+    const getQuestionStatus = (q: any): 'wrong' | 'unattempted' | 'correct' => {
+      const qId = String(q?._id || q?.id || '');
+      const sig = normalizeQuestionSignature(cleanQuestionText(q?.question_text || ''));
 
-    const wrongQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === false);
-    const unattemptedQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === undefined);
-    const correctQs = candidateQs.filter((q) => questionAttemptMap[getQId(q)] === true);
+      if (qId && idAttemptMap[qId] !== undefined) {
+        return idAttemptMap[qId] ? 'correct' : 'wrong';
+      }
+      if (sig && sigAttemptMap[sig] !== undefined) {
+        return sigAttemptMap[sig] ? 'correct' : 'wrong';
+      }
+      return 'unattempted';
+    };
+
+    const wrongQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'wrong');
+    const unattemptedQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'unattempted');
+    const correctQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'correct');
 
     const seededShuffle = (arr: any[], customSeed: number) => {
       const copy = [...arr];
@@ -352,58 +408,81 @@ export default function PracticeSetsPage() {
       return copy;
     };
 
+    // Priority 1: Wrong questions repeat continuously until mastered
+    const selectedWrong = seededShuffle(wrongQs, seed);
+
+    // Priority 2: Fresh unattempted questions
+    const remainingNeeded = Math.max(0, 10 - selectedWrong.length);
+    const selectedUnattempted = seededShuffle(unattemptedQs, seed + 100).slice(0, remainingNeeded);
+
+    // Priority 3: Correct questions only if needed to fill up to 10
+    const stillNeeded = Math.max(0, 10 - (selectedWrong.length + selectedUnattempted.length));
+    const selectedCorrect = stillNeeded > 0 ? seededShuffle(correctQs, seed + 200).slice(0, stillNeeded) : [];
+
     const orderedPool = [
-      ...seededShuffle(wrongQs, seed),
-      ...seededShuffle(unattemptedQs, seed + 100),
-      ...seededShuffle(correctQs, seed + 200),
+      ...selectedWrong,
+      ...selectedUnattempted,
+      ...selectedCorrect,
     ];
 
-    const result: any[] = [];
-    const seenIds = new Set<string>();
-    for (const q of orderedPool) {
-      const qId = getQId(q);
-      if (!seenIds.has(qId)) {
-        seenIds.add(qId);
-        result.push(q);
-      }
-    }
-
-    return result.slice(0, 10);
+    return deduplicateQuestions(orderedPool).slice(0, 10);
   };
 
-  // Smart 10-Question Selection Algorithm for Practice Sets
+  // Smart 10-Question Selection Algorithm for Daily Practice Sets
+  // Rules:
+  // 1. Max 10 questions per set
+  // 2. No question repeats within a set (strict deduplication by ID and text)
+  // 3. Questions that the student got CORRECT do NOT repeat unless all questions in the topic have been completed
+  // 4. Questions that the student got WRONG repeat first until the student solves them correctly
   const getSmartPracticeSet = (rawCandidateQs: any[]): any[] => {
     if (!rawCandidateQs || rawCandidateQs.length === 0) return [];
 
-    const questionAttemptMap: Record<string, boolean> = {};
+    // 1. Deduplicate candidate questions
+    const uniqueCandidates = deduplicateQuestions(rawCandidateQs);
+    if (uniqueCandidates.length === 0) return [];
 
+    // 2. Build attempt history map
     const sortedAttempts = [...userAttempts].sort(
       (a, b) => new Date(a.created_at || a.started_at || 0).getTime() - new Date(b.created_at || b.started_at || 0).getTime()
     );
+
+    const idAttemptMap: Record<string, boolean> = {};
+    const sigAttemptMap: Record<string, boolean> = {};
 
     sortedAttempts.forEach((att) => {
       if (Array.isArray(att.responses)) {
         att.responses.forEach((resp: any) => {
           if (resp.question_id) {
-            questionAttemptMap[String(resp.question_id)] = Boolean(resp.is_correct);
+            const qId = String(resp.question_id);
+            const isCorrect = Boolean(resp.is_correct);
+            idAttemptMap[qId] = isCorrect;
+
+            const matchedQ = questions.find((q) => String(q._id || q.id) === qId);
+            if (matchedQ?.question_text) {
+              const sig = normalizeQuestionSignature(cleanQuestionText(matchedQ.question_text));
+              if (sig) sigAttemptMap[sig] = isCorrect;
+            }
           }
         });
       }
     });
 
-    const getQId = (q: any) => String(q?._id || q?.id || '');
+    const getQuestionStatus = (q: any): 'wrong' | 'unattempted' | 'correct' => {
+      const qId = String(q?._id || q?.id || '');
+      const sig = normalizeQuestionSignature(cleanQuestionText(q?.question_text || ''));
 
-    const wrongQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[getQId(q)] === false
-    );
+      if (qId && idAttemptMap[qId] !== undefined) {
+        return idAttemptMap[qId] ? 'correct' : 'wrong';
+      }
+      if (sig && sigAttemptMap[sig] !== undefined) {
+        return sigAttemptMap[sig] ? 'correct' : 'wrong';
+      }
+      return 'unattempted';
+    };
 
-    const unattemptedQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[getQId(q)] === undefined
-    );
-
-    const correctQs = rawCandidateQs.filter(
-      (q) => questionAttemptMap[getQId(q)] === true
-    );
+    const wrongQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'wrong');
+    const unattemptedQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'unattempted');
+    const correctQs = uniqueCandidates.filter((q) => getQuestionStatus(q) === 'correct');
 
     const randomShuffle = (arr: any[]) => {
       const copy = [...arr];
@@ -414,23 +493,24 @@ export default function PracticeSetsPage() {
       return copy;
     };
 
+    // Priority 1: Wrongly answered questions repeat so student can master them
+    const selectedWrong = randomShuffle(wrongQs);
+
+    // Priority 2: Fresh unattempted questions from the topic
+    const remainingNeededFor10 = Math.max(0, 10 - selectedWrong.length);
+    const selectedUnattempted = randomShuffle(unattemptedQs).slice(0, remainingNeededFor10);
+
+    // Priority 3: Only if (wrong + unattempted) < 10, fill remaining slots with previously correct questions
+    const stillNeeded = Math.max(0, 10 - (selectedWrong.length + selectedUnattempted.length));
+    const selectedCorrect = stillNeeded > 0 ? randomShuffle(correctQs).slice(0, stillNeeded) : [];
+
     const orderedPool = [
-      ...randomShuffle(wrongQs),
-      ...randomShuffle(unattemptedQs),
-      ...randomShuffle(correctQs),
+      ...selectedWrong,
+      ...selectedUnattempted,
+      ...selectedCorrect,
     ];
 
-    const result: any[] = [];
-    const seenIds = new Set<string>();
-    for (const q of orderedPool) {
-      const qId = getQId(q);
-      if (!seenIds.has(qId)) {
-        seenIds.add(qId);
-        result.push(q);
-      }
-    }
-
-    return result.slice(0, 10);
+    return deduplicateQuestions(orderedPool).slice(0, 10);
   };
 
   const handleOpenWeeklyChallenge = () => {
@@ -670,14 +750,14 @@ export default function PracticeSetsPage() {
   const subjectQuestionMap: Record<string, any[]> = useMemo(() => {
     const map: Record<string, any[]> = {};
     courseSubjects.forEach((s) => {
-      map[s] = questions.filter((q) => doesQuestionMatchSubject(q, s, courseSubjects));
+      map[s] = deduplicateQuestions(questions.filter((q) => doesQuestionMatchSubject(q, s, courseSubjects)));
     });
     return map;
   }, [courseSubjects, questions]);
 
   const activeSubjectQuestions = useMemo(() => {
     if (!selectedSubject) return [];
-    return questions.filter((q) => doesQuestionMatchSubject(q, selectedSubject, courseSubjects));
+    return deduplicateQuestions(questions.filter((q) => doesQuestionMatchSubject(q, selectedSubject, courseSubjects)));
   }, [selectedSubject, courseSubjects, questions]);
 
   const getCleanTopicTitle = (rawTopicTag: string, currentSubject: string): string => {
@@ -767,6 +847,9 @@ export default function PracticeSetsPage() {
       const tName = getCleanTopicTitle(q.topic_tag || q.topic, selectedSubject);
       if (!map[tName]) map[tName] = [];
       map[tName].push(q);
+    });
+    Object.keys(map).forEach((k) => {
+      map[k] = deduplicateQuestions(map[k]);
     });
     return map;
   }, [activeSubjectQuestions, selectedSubject]);

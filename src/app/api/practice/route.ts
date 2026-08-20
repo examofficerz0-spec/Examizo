@@ -109,6 +109,23 @@ export async function GET(req: Request) {
           })
           .filter((q: any) => !isMalformedQuestion(q.question_text, q.options));
 
+        // Deduplicate questions by normalized text signature
+        const seenSignatures = new Set<string>();
+        const uniqueFormattedQuestions: any[] = [];
+        for (const q of formattedQuestions) {
+          const sig = (q.question_text || '')
+            .toLowerCase()
+            .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+            .replace(/[^\w\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (sig && !seenSignatures.has(sig)) {
+            seenSignatures.add(sig);
+            uniqueFormattedQuestions.push(q);
+          }
+        }
+        formattedQuestions = uniqueFormattedQuestions;
+
         const subjectSet = new Set<string>();
         if (Array.isArray(configuredSubjects)) {
           configuredSubjects.forEach((s) => {
@@ -227,6 +244,22 @@ export async function GET(req: Request) {
     const db = readSharedDb();
     const courseObj = (db.courses || []).find((c) => String(c._id) === courseId || String(c.id) === courseId);
     let questions = (db.questions || []).filter((q) => String(q.course_id) === courseId && q.is_active !== false);
+
+    const seenFallbackSignatures = new Set<string>();
+    const uniqueFallbackQuestions: any[] = [];
+    for (const q of questions) {
+      const sig = (q.question_text || '')
+        .toLowerCase()
+        .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (sig && !seenFallbackSignatures.has(sig)) {
+        seenFallbackSignatures.add(sig);
+        uniqueFallbackQuestions.push(q);
+      }
+    }
+    questions = uniqueFallbackQuestions;
 
     const topicCounts: Record<string, number> = {};
     questions.forEach((q) => {

@@ -2336,22 +2336,6 @@
       "created_at": "2026-08-02T01:38:52.501Z"
     },
     {
-      "_id": "3zihdztn9msb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "Which of the following compounds shows optical isomerism?",
-      "options": [
-        "A compound with a plane of symmetry",
-        "A compound with a chiral carbon",
-        "Any symmetric alkane",
-        "Ethene"
-      ],
-      "correct_option": 1,
-      "explanation": "Optical isomerism (chirality) arises when a carbon atom is bonded to four different groups, creating non-superimposable mirror images (enantiomers).",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
       "_id": "2lmdrgnnlmsb4tdjp",
       "course_id": "ynzp9kszdms7g1ytt",
       "topic_tag": "Chemistry - Organic Chemistry",
@@ -2366,102 +2350,6 @@
       "explanation": "Acid-catalyzed hydration of alkenes using dilute sulfuric acid and water follows Markovnikov's rule to produce secondary or tertiary alcohols as major products.",
       "is_active": true,
       "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "00kt67w7jmsb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "What is the general formula for alkynes?",
-      "options": [
-        "CnH2n",
-        "CnH2n+2",
-        "CnH2n-2",
-        "CnH2n-6"
-      ],
-      "correct_option": 2,
-      "explanation": "Alkynes contain one triple bond (one sigma and two pi bonds), giving them the general molecular formula CnH2n-2.",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "ihanhadxlmsb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "Which type of isomerism is shown by butan-1-ol and butan-2-ol?",
-      "options": [
-        "Chain isomerism",
-        "Position isomerism",
-        "Functional isomerism",
-        "Geometrical isomerism"
-      ],
-      "correct_option": 1,
-      "explanation": "Both compounds have the same molecular formula (C4H10O) and functional group (-OH), but the hydroxyl group is attached to different carbon positions (C-1 vs C-2), which represents position isomerism.",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "4ml1b3qbemsb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "Which of the following is an example of a nucleophilic substitution reaction?",
-      "options": [
-        "Addition of HBr to ethene",
-        "Reaction of alkyl halide with NaOH",
-        "Combustion of methane",
-        "Polymerization of ethylene"
-      ],
-      "correct_option": 1,
-      "explanation": "Alkyl halides react with hydroxide ions (a nucleophile) to substitute the halogen atom, forming an alcohol. This is a classic example of nucleophilic substitution (SN1/SN2).",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "d9j6k97qimsb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "What is the IUPAC name of CH3-CH2-CH2-OH?",
-      "options": [
-        "Propan-1-ol",
-        "Propan-2-ol",
-        "Ethanol",
-        "Butan-1-ol"
-      ],
-      "correct_option": 0,
-      "explanation": "The three-carbon chain with -OH on the terminal carbon is named propan-1-ol.",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "guro20qnpmsb4tdjp",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "Which functional group is present in alcohols?",
-      "options": [
-        "-COOH",
-        "-OH",
-        "-CHO",
-        "-NH2"
-      ],
-      "correct_option": 1,
-      "explanation": "Alcohols are characterized by the hydroxyl (-OH) functional group attached to a saturated carbon atom.",
-      "is_active": true,
-      "created_at": "2026-08-02T01:38:52.501Z"
-    },
-    {
-      "_id": "tutkprpajmsb4ndps",
-      "course_id": "ynzp9kszdms7g1ytt",
-      "topic_tag": "Chemistry - Organic Chemistry",
-      "question_text": "Which functional group is present in alcohols?",
-      "options": [
-        "-COOH",
-        "-OH",
-        "-CHO",
-        "-NH2"
-      ],
-      "correct_option": 0,
-      "explanation": "Option A (-COOH) is the correct answer based on standard principles.",
-      "is_active": true,
-      "created_at": "2026-08-02T01:34:12.784Z"
     },
     {
       "_id": "ke3pdswxhms7g2oj0",
