@@ -11,14 +11,14 @@ import { PageLoader } from '@/components/common/PageLoader';
 
 export default function LeaderboardPage() {
   const router = useRouter();
-  const initialCache = getSwrCache<any>('leaderboard_cache');
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
   const [selectedStudentStatsId, setSelectedStudentStatsId] = useState<string | null>(null);
   
   // Global Leaderboard State
-  const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
-  const [userRank, setUserRank] = useState<any>(initialCache?.userRank || null);
-  const [loadingGlobal, setLoadingGlobal] = useState(!initialCache);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [userRank, setUserRank] = useState<any>(null);
+  const [loadingGlobal, setLoadingGlobal] = useState(true);
 
   // Friends Leaderboard State
   const [friendsList, setFriendsList] = useState<any[]>([]);
@@ -49,17 +49,25 @@ export default function LeaderboardPage() {
 
   // Fetch Global Leaderboard
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<any>('leaderboard_cache');
+    if (cached) {
+      if (Array.isArray(cached.leaderboard)) setLeaderboard(cached.leaderboard);
+      if (cached.userRank) setUserRank(cached.userRank);
+      setLoadingGlobal(false);
+    }
+
     fetch('/api/leaderboard', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data) {
           const cacheObj = {
-            leaderboard: data.leaderboard || [],
+            leaderboard: Array.isArray(data.leaderboard) ? data.leaderboard : [],
             userRank: data.userRank || null,
           };
           setSwrCache('leaderboard_cache', cacheObj);
-          setLeaderboard(data.leaderboard || []);
-          setUserRank(data.userRank || null);
+          setLeaderboard(cacheObj.leaderboard);
+          setUserRank(cacheObj.userRank);
         }
       })
       .catch(console.error)

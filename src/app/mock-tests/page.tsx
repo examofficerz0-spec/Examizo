@@ -9,10 +9,9 @@ import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
 export default function MockTestsListPage() {
   const router = useRouter();
-  const initialCache = getSwrCache<any[]>('mock_tests');
-  const hasValidCache = Boolean(initialCache && Array.isArray(initialCache) && initialCache.length > 0);
-  const [tests, setTests] = useState<any[]>(hasValidCache ? (initialCache as any[]) : []);
-  const [loading, setLoading] = useState<boolean>(!hasValidCache);
+  const [mounted, setMounted] = useState(false);
+  const [tests, setTests] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
 
   // Pre-test warning modal state
@@ -21,6 +20,13 @@ export default function MockTestsListPage() {
   const [selectedLang, setSelectedLang] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<any[]>('mock_tests');
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      setTests(cached);
+      setLoading(false);
+    }
+
     fetch('/api/mock-tests', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {

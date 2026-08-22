@@ -32,9 +32,9 @@ interface GalleryPhoto {
 }
 
 export default function GalleryPage() {
-  const initialCache = getSwrCache<GalleryPhoto[]>('student_gallery_cache');
-  const [photos, setPhotos] = useState<GalleryPhoto[]>(initialCache || []);
-  const [loading, setLoading] = useState(!initialCache);
+  const [mounted, setMounted] = useState(false);
+  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -42,6 +42,13 @@ export default function GalleryPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<GalleryPhoto[]>('student_gallery_cache');
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      setPhotos(cached);
+      setLoading(false);
+    }
+
     fetch('/api/gallery', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {

@@ -34,9 +34,9 @@ interface ResourceItem {
 }
 
 export default function ResourcesListPage() {
-  const initialCache = getSwrCache<any[]>('resources_cache');
-  const [resources, setResources] = useState<any[]>(initialCache || []);
-  const [loading, setLoading] = useState(!initialCache);
+  const [mounted, setMounted] = useState(false);
+  const [resources, setResources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -44,6 +44,13 @@ export default function ResourcesListPage() {
   const [courseName, setCourseName] = useState<string>('');
 
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<any[]>('resources_cache');
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      setResources(cached);
+      setLoading(false);
+    }
+
     fetch('/api/resources', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {

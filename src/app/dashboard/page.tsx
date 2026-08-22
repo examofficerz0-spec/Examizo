@@ -36,11 +36,11 @@ import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
-  const initialCache = getSwrCache<any>('dashboard_cache');
-  const [userData, setUserData] = useState<any>(initialCache?.user || null);
-  const [mockTests, setMockTests] = useState<any[]>(initialCache?.mockTests || []);
-  const [leaderboard, setLeaderboard] = useState<any[]>(initialCache?.leaderboard || []);
-  const [incorrectLog, setIncorrectLog] = useState<any[]>(initialCache?.incorrectLog || []);
+  const [mounted, setMounted] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [mockTests, setMockTests] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [incorrectLog, setIncorrectLog] = useState<any[]>([]);
   const [showLogModal, setShowLogModal] = useState(false);
   const [logSearch, setLogSearch] = useState('');
   const [isMistakeCardExpanded, setIsMistakeCardExpanded] = useState(false);
@@ -48,7 +48,7 @@ export default function StudentDashboardPage() {
   const [openQuestions, setOpenQuestions] = useState<Record<string, boolean>>({});
   const [activeLogTab, setActiveLogTab] = useState<'all' | 'mock' | 'practice'>('all');
   const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(!initialCache);
+  const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Class Promotion & Rollback State
@@ -81,6 +81,15 @@ export default function StudentDashboardPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<any>('dashboard_cache');
+    if (cached) {
+      if (cached.user) setUserData(cached.user);
+      if (Array.isArray(cached.mockTests)) setMockTests(cached.mockTests);
+      if (Array.isArray(cached.leaderboard)) setLeaderboard(cached.leaderboard);
+      if (Array.isArray(cached.incorrectLog)) setIncorrectLog(cached.incorrectLog);
+      setLoading(false);
+    }
     fetchPromoteInfo();
   }, []);
 
@@ -134,16 +143,16 @@ export default function StudentDashboardPage() {
 
         const newCache = {
           user: data.user || null,
-          mockTests: data.mockTests || [],
-          leaderboard: data.topLeaderboard || [],
-          incorrectLog: data.incorrectLog || [],
+          mockTests: Array.isArray(data.mockTests) ? data.mockTests : [],
+          leaderboard: Array.isArray(data.topLeaderboard) ? data.topLeaderboard : [],
+          incorrectLog: Array.isArray(data.incorrectLog) ? data.incorrectLog : [],
         };
         setSwrCache('dashboard_cache', newCache, data.user?.email);
 
         if (data.user) setUserData(data.user);
-        if (data.mockTests) setMockTests(data.mockTests);
-        if (data.topLeaderboard) setLeaderboard(data.topLeaderboard);
-        if (data.incorrectLog) setIncorrectLog(data.incorrectLog);
+        if (Array.isArray(data.mockTests)) setMockTests(data.mockTests);
+        if (Array.isArray(data.topLeaderboard)) setLeaderboard(data.topLeaderboard);
+        if (Array.isArray(data.incorrectLog)) setIncorrectLog(data.incorrectLog);
       })
       .catch((err) => {
         console.error('[Dashboard] Fetch error:', err);
@@ -157,7 +166,7 @@ export default function StudentDashboardPage() {
     };
   }, [router]);
 
-  if (loading) {
+  if (!mounted || (loading && !userData)) {
     return (
       <PageLoader
         title="Loading Student Dashboard"
@@ -168,11 +177,12 @@ export default function StudentDashboardPage() {
   }
 
   const courseName = userData?.lockedCourse?.name || 'Selected Course';
-  const xpTotal = userData?.xp_total || 0;
-  const studentRank = userData?.rank || 1;
+  const xpTotal = Number(userData?.xp_total) || 0;
+  const studentRank = Number(userData?.rank) || 1;
   const displayName = userData?.name || 'Student';
 
-  const filteredLogItems = incorrectLog.filter((item) => {
+  const filteredLogItems = (Array.isArray(incorrectLog) ? incorrectLog : []).filter((item) => {
+    if (!item) return false;
     if (!logSearch.trim()) return true;
     const q = logSearch.toLowerCase();
     return (
@@ -183,8 +193,8 @@ export default function StudentDashboardPage() {
     );
   });
 
-  const mockCount = filteredLogItems.filter((i) => (i.test_type === 'mock' || i.attemptType === 'mock')).length;
-  const practiceCount = filteredLogItems.filter((i) => (i.test_type === 'practice' || i.attemptType !== 'mock')).length;
+  const mockCount = filteredLogItems.filter((i) => i && (i.test_type === 'mock' || i.attemptType === 'mock')).length;
+  const practiceCount = filteredLogItems.filter((i) => i && (i.test_type === 'practice' || i.attemptType !== 'mock')).length;
 
   // Group incorrect items by Mock Test / Practice Set
   const groupedTestLogs = React.useMemo(() => {
@@ -199,6 +209,7 @@ export default function StudentDashboardPage() {
     const groupMap = new Map<string, typeof groups[0]>();
 
     filteredLogItems.forEach((item) => {
+      if (!item) return;
       const itemType = (item.test_type || (item.attemptType === 'mock' ? 'mock' : 'practice')) as 'mock' | 'practice';
       if (activeLogTab !== 'all' && itemType !== activeLogTab) {
         return;
@@ -250,9 +261,10 @@ export default function StudentDashboardPage() {
     const nextGroupState: Record<string, boolean> = {};
     const nextQuestionState: Record<string, boolean> = {};
     groupedTestLogs.forEach((g) => {
+      if (!g) return;
       nextGroupState[g.testId] = expand;
-      g.items.forEach((item, idx) => {
-        const qKey = item._id || `${g.testId}-q-${idx}`;
+      (g.items || []).forEach((item, idx) => {
+        const qKey = item?._id || `${g.testId}-q-${idx}`;
         nextQuestionState[qKey] = expand;
       });
     });
@@ -261,14 +273,17 @@ export default function StudentDashboardPage() {
   };
 
   const renderQuestionItem = (item: any, qIdx: number, testId: string) => {
+    if (!item) return null;
     const qKey = item._id || `${testId}-q-${qIdx}`;
     const isOpen = isQuestionOpen(qKey);
     const isDetailedOpen = Boolean(openDetailedExplanation[qKey]);
 
-    const correctOptIdx = Number(item.correctOption);
+    const rawCorrect = item.correctOption ?? item.correct_option ?? 0;
+    const correctOptIdx = !isNaN(Number(rawCorrect)) ? Number(rawCorrect) : 0;
+    const rawUser = item.userSelectedOption ?? item.selected_option;
     const userOptIdx =
-      item.userSelectedOption !== null && item.userSelectedOption !== undefined
-        ? Number(item.userSelectedOption)
+      rawUser !== null && rawUser !== undefined && !isNaN(Number(rawUser)) && Number(rawUser) >= 0
+        ? Number(rawUser)
         : null;
 
     const correctOptText =

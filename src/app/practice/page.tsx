@@ -76,15 +76,15 @@ const WeeklyCountdownBadge: React.FC = React.memo(() => {
 });
 
 export default function PracticeSetsPage() {
-  const initialCache = getSwrCache<any>('practice_cache');
-  const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
-  const [topicCounts, setTopicCounts] = useState<Record<string, number>>(initialCache?.topicCounts || {});
-  const [courseName, setCourseName] = useState<string>(initialCache?.courseName || '');
-  const [courseSubjects, setCourseSubjects] = useState<string[]>(initialCache?.courseSubjects || []);
-  const [completedTopics, setCompletedTopics] = useState<string[]>(initialCache?.completedTopics || []);
-  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(initialCache?.publishedWeeklyDpp || null);
-  const [userAttempts, setUserAttempts] = useState<any[]>(initialCache?.userAttempts || []);
-  const [loading, setLoading] = useState(!initialCache);
+  const [mounted, setMounted] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
+  const [courseName, setCourseName] = useState<string>('');
+  const [courseSubjects, setCourseSubjects] = useState<string[]>([]);
+  const [completedTopics, setCompletedTopics] = useState<string[]>([]);
+  const [publishedWeeklyDpp, setPublishedWeeklyDpp] = useState<any | null>(null);
+  const [userAttempts, setUserAttempts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Hierarchy Navigation State
   const [currentLevel, setCurrentLevel] = useState<'subjects' | 'topics' | 'questions'>('subjects');
@@ -135,9 +135,6 @@ export default function PracticeSetsPage() {
   }, []);
 
   const fetchQuestions = async () => {
-    if (!initialCache) {
-      setLoading(true);
-    }
     try {
       const [res, dppRes] = await Promise.all([
         fetch('/api/practice', { cache: 'no-store' }),
@@ -178,6 +175,18 @@ export default function PracticeSetsPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
+    const cached = getSwrCache<any>('practice_cache');
+    if (cached) {
+      if (Array.isArray(cached.questions)) setQuestions(deduplicateQuestions(cached.questions));
+      if (cached.topicCounts) setTopicCounts(cached.topicCounts);
+      if (cached.courseName) setCourseName(cached.courseName);
+      if (Array.isArray(cached.courseSubjects)) setCourseSubjects(cached.courseSubjects);
+      if (Array.isArray(cached.completedTopics)) setCompletedTopics(cached.completedTopics);
+      if (cached.publishedWeeklyDpp) setPublishedWeeklyDpp(cached.publishedWeeklyDpp);
+      if (Array.isArray(cached.userAttempts)) setUserAttempts(cached.userAttempts);
+      setLoading(false);
+    }
     fetchQuestions();
   }, []);
 
