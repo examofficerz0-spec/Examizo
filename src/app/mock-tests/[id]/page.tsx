@@ -789,10 +789,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     setSubmitting(true);
     try {
       const targetTestId = test?._id || test?.id || testId;
+      const qIdsList = (questions || []).map((q: any) => String(q._id || q.id || '')).filter(Boolean);
       const res = await fetch(`/api/mock-tests/${targetTestId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userAnswers: userState, submissionType }),
+        body: JSON.stringify({
+          userAnswers: userState,
+          questionIds: qIdsList,
+          submissionType,
+        }),
       });
 
       const data = await res.json();

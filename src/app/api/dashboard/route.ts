@@ -237,8 +237,35 @@ export async function GET() {
       category: 'Competitive Exams',
     };
 
-    const attempts = (db.attempts || []).filter((a) => String(a.student_id) === userId && String(a.course_id) === courseId);
+    const attempts = (db.attempts || []).filter((a) => (String(a.student_id) === userId || String(a.student_id) === String(auth.email || '')) && String(a.course_id) === courseId);
     const courseQs = (db.questions || []).filter((q) => String(q.course_id) === courseId && q.is_active !== false);
+
+    const incorrectLogMap = new Map<string, any>();
+    (attempts || []).forEach((a) => {
+      (a.responses || []).forEach((r: any) => {
+        const qId = String(r.question_id);
+        const q = (courseQs || []).find((item: any) => String(item._id || item.id) === qId);
+        if (q) {
+          const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option >= 0 && Number(r.selected_option) !== Number(q.correct_option));
+          if (isIncorrect && !incorrectLogMap.has(qId)) {
+            incorrectLogMap.set(qId, {
+              _id: q._id || q.id,
+              id: q._id || q.id,
+              question_text: q.question_text,
+              options: q.options || [],
+              userSelectedOption: r.selected_option,
+              correctOption: q.correct_option,
+              explanation: q.explanation || '',
+              detailed_explanation: q.detailed_explanation || '',
+              topic_tag: q.topic_tag || a.topic_tag || 'General',
+              attemptedAt: a.created_at || a.submitted_at || new Date().toISOString(),
+              attemptType: a.type || 'practice',
+            });
+          }
+        }
+      });
+    });
+    const fallbackIncorrectLog = Array.from(incorrectLogMap.values());
 
     return NextResponse.json({
       user: {
@@ -251,7 +278,7 @@ export async function GET() {
       },
       mockTests: [],
       topLeaderboard: [],
-      incorrectLog: [],
+      incorrectLog: fallbackIncorrectLog,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal dashboard error' }, { status: 500 });

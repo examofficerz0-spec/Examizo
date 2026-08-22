@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userAnswers, submissionType } = await req.json();
+    const { userAnswers, submissionType, questionIds } = await req.json();
 
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
@@ -41,17 +41,30 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         const marksPerCorrect = Number(course?.marks_per_correct || 4);
         const penaltyPerIncorrect = Number(course?.penalty_per_incorrect || 1);
 
+        // Resolve question IDs: from request body (exact questions student solved), or test JSON, or answer keys
         let qIds: string[] = [];
-        try {
-          qIds = typeof test.question_ids_json === 'string' ? JSON.parse(test.question_ids_json) : (test.question_ids_json || []);
-        } catch (e) {
-          qIds = [];
+        if (Array.isArray(questionIds) && questionIds.length > 0) {
+          qIds = questionIds.map((id: any) => String(id));
+        } else {
+          try {
+            qIds = typeof test.question_ids_json === 'string' ? JSON.parse(test.question_ids_json) : (test.question_ids_json || []);
+          } catch (e) {
+            qIds = [];
+          }
+          if (qIds.length === 0 && userAnswers && typeof userAnswers === 'object') {
+            qIds = Object.keys(userAnswers);
+          }
         }
 
         let d1Questions: any[] = [];
         if (qIds.length > 0) {
           const quoted = qIds.map((id) => `'${id}'`).join(',');
-          d1Questions = await queryD1(`SELECT id, correct_option FROM questions WHERE id IN (${quoted})`);
+          d1Questions = await queryD1(`SELECT id, correct_option, marks, topic_tag, subject FROM questions WHERE id IN (${quoted}) OR course_id = '${courseId}'`);
+        } else {
+          d1Questions = await queryD1(`SELECT id, correct_option, marks, topic_tag, subject FROM questions WHERE course_id = ?`, [courseId]);
+          if (d1Questions.length > 0 && qIds.length === 0) {
+            qIds = d1Questions.map((q) => String(q.id));
+          }
         }
 
         let correctCount = 0;
@@ -79,11 +92,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             }
             processedResponses.push({
               question_id: qId,
-              selected_option: uAns.selectedOption,
+              selected_option: Number(uAns.selectedOption),
               is_correct: isCorrect,
             });
           } else {
             unattemptedCount++;
+            processedResponses.push({
+              question_id: qId,
+              selected_option: null,
+              is_correct: null,
+            });
           }
         }
 
@@ -173,12 +191,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     let xpEarned = 0;
     const processedResponses: any[] = [];
 
-    const qList = (test.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
+    let qList: any[] = [];
+    if (Array.isArray(questionIds) && questionIds.length > 0) {
+      qList = questionIds.map((qId: string) => (db.questions || []).find((q) => String(q._id) === String(qId) || String(q.id) === String(qId))).filter(Boolean);
+    } else if (Array.isArray(test.question_ids) && test.question_ids.length > 0) {
+      qList = test.question_ids.map((qId: string) => (db.questions || []).find((q) => String(q._id) === String(qId) || String(q.id) === String(qId))).filter(Boolean);
+    } else {
+      qList = (db.questions || []).filter((q) => String(q.course_id) === String(courseId));
+    }
 
     for (const q of qList) {
+      const qId = String(q._id || q.id);
       const uAns = userAnswers
         ? (userAnswers[q._id] || userAnswers[q.id] || (q._id ? userAnswers[String(q._id)] : null) || (q.id ? userAnswers[String(q.id)] : null))
         : null;
+
       if (uAns && uAns.selectedOption !== null && uAns.selectedOption !== undefined && uAns.selectedOption >= 0) {
         const isCorrect = Number(uAns.selectedOption) === Number(q.correct_option);
         if (isCorrect) {
@@ -190,12 +217,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           totalScore -= penaltyPerIncorrect;
         }
         processedResponses.push({
-          question_id: q._id || q.id,
-          selected_option: uAns.selectedOption,
+          question_id: qId,
+          selected_option: Number(uAns.selectedOption),
           is_correct: isCorrect,
         });
       } else {
         unattemptedCount++;
+        processedResponses.push({
+          question_id: qId,
+          selected_option: null,
+          is_correct: null,
+        });
       }
     }
 
@@ -214,6 +246,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       course_id: user.locked_course_id,
       test_id: test._id || test.id,
       type: 'mock',
+      topic_tag: test.title || 'Mock Test',
       responses: processedResponses,
       score: Math.max(0, totalScore),
       accuracy: accuracyPercent,
