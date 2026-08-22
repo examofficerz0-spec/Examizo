@@ -1046,10 +1046,32 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     const maxPossibleMarks = test?.cutoff_marks || (totalQCount * 4);
     const isCutoffPassed = result.cutoffBonusAwarded || (test?.cutoff_marks && result.score >= test.cutoff_marks);
 
-    const filteredReviewQuestions = questions.filter((q) => {
-      const { subject } = getQuestionSubjectAndTopic(q);
-      if (reviewSubjectFilter !== 'all' && subject !== reviewSubjectFilter) return false;
+    const activeReviewSubject = (reviewSubjectFilter && reviewSubjectFilter !== 'all' && testSubjects.includes(reviewSubjectFilter))
+      ? reviewSubjectFilter
+      : (testSubjects[0] || '');
 
+    const currentSubjectQuestions = activeReviewSubject
+      ? questions.filter((q) => getQuestionSubjectAndTopic(q).subject === activeReviewSubject)
+      : questions;
+
+    const subjectTotalQCount = currentSubjectQuestions.length;
+    let subjectCorrectCount = 0;
+    let subjectIncorrectCount = 0;
+    let subjectSkippedCount = 0;
+
+    currentSubjectQuestions.forEach((q) => {
+      const uSt = userState[q._id] || userState[q.id];
+      const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
+      const isAttempted = userChoice !== null;
+      const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
+      const isIncorrect = isAttempted && !isCorrect;
+
+      if (isCorrect) subjectCorrectCount++;
+      else if (isIncorrect) subjectIncorrectCount++;
+      else subjectSkippedCount++;
+    });
+
+    const filteredReviewQuestions = currentSubjectQuestions.filter((q) => {
       const uSt = userState[q._id] || userState[q.id];
       const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
       const isAttempted = userChoice !== null;
@@ -1153,8 +1175,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1 block">
                   {totalAttempted} Attempted
                 </span>
-              </div>
-
               {/* Correct / Incorrect Tile */}
               <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-4 text-center transition-all hover:border-blue-300 dark:hover:border-purple-500">
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Correct / Wrong</span>
@@ -1287,6 +1307,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   </div>
                 );
               })}
+            </div>
           </div>
 
           {/* Question-by-Question Solution Review (Grouped by Topic) */}
@@ -1319,7 +1340,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       : 'bg-slate-100 dark:bg-[#181622] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  All ({totalQCount})
+                  All ({subjectTotalQCount})
                 </button>
                 <button
                   type="button"
@@ -1330,7 +1351,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 hover:bg-rose-100'
                   }`}
                 >
-                  Incorrect ({result.incorrectCount})
+                  Incorrect ({subjectIncorrectCount})
                 </button>
                 <button
                   type="button"
@@ -1341,7 +1362,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
                   }`}
                 >
-                  Correct ({result.correctCount})
+                  Correct ({subjectCorrectCount})
                 </button>
                 <button
                   type="button"
@@ -1352,7 +1373,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       : 'bg-slate-100 dark:bg-[#181622] text-slate-600 dark:text-slate-400'
                   }`}
                 >
-                  Skipped ({unattempted})
+                  Skipped ({subjectSkippedCount})
                 </button>
 
                 <div className="h-5 w-[1px] bg-slate-200 dark:bg-[#242033] mx-1 hidden sm:block"></div>
@@ -1388,34 +1409,42 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
             </div>
 
-            {/* Subject Tabs Filter (if multiple subjects exist) */}
-            {testSubjects.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <button
-                  type="button"
-                  onClick={() => setReviewSubjectFilter('all')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                    reviewSubjectFilter === 'all'
-                      ? 'bg-blue-600 text-white shadow-xs font-black'
-                      : 'bg-slate-100 dark:bg-[#181622] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-[#242033]'
-                  }`}
-                >
-                  All Subjects
-                </button>
-                {testSubjects.map((sub) => (
-                  <button
-                    key={sub}
-                    type="button"
-                    onClick={() => setReviewSubjectFilter(sub)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      reviewSubjectFilter === sub
-                        ? 'bg-blue-600 text-white shadow-xs font-black'
-                        : 'bg-slate-100 dark:bg-[#181622] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-[#242033]'
-                    }`}
+            {/* Individual Subject Dropdown Selector */}
+            {testSubjects.length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-[#181622] p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-[#242033]">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold border border-blue-200/60 dark:border-blue-900/40">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <label htmlFor="review-subject-select" className="text-xs font-black text-slate-900 dark:text-white block uppercase tracking-wide">
+                      Select Subject
+                    </label>
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Viewing topics &amp; solutions for <span className="text-blue-600 dark:text-blue-400 font-bold">{activeReviewSubject}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="relative w-full sm:w-72">
+                  <select
+                    id="review-subject-select"
+                    value={activeReviewSubject}
+                    onChange={(e) => setReviewSubjectFilter(e.target.value)}
+                    className="w-full py-2.5 pl-3.5 pr-9 text-xs font-black bg-white dark:bg-[#0D0D12] text-slate-900 dark:text-white border border-slate-200 dark:border-[#242033] rounded-xl shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none cursor-pointer hover:border-blue-500/50 transition-colors"
                   >
-                    {sub}
-                  </button>
-                ))}
+                    {testSubjects.map((sub) => {
+                      const subQuestions = questions.filter((q) => getQuestionSubjectAndTopic(q).subject === sub);
+                      const subTotal = subQuestions.length;
+                      return (
+                        <option key={sub} value={sub} className="py-1">
+                          {sub} ({subTotal} {subTotal === 1 ? 'Question' : 'Questions'})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             )}
 
