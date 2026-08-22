@@ -363,7 +363,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         <div className="w-full flex items-center justify-between h-16 relative">
           
           {/* Far Left: Brand Logo + Back Button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {onBack && (
               <button
                 type="button"
@@ -376,14 +376,14 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               </button>
             )}
 
-            <Link href="/dashboard" prefetch={true} className="flex items-center">
+            <Link href="/dashboard" prefetch={true} className="flex items-center shrink-0">
               <Logo size={36} />
             </Link>
           </div>
 
           {/* Center Navigation Bar */}
           {!hideNav && (
-            <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
+            <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-1 flex-1 mx-2 xl:mx-6 h-full min-w-0">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
@@ -393,7 +393,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     key={link.href}
                     href={link.href}
                     prefetch={true}
-                    className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 cursor-pointer ${
+                    className={`px-2.5 xl:px-4 h-full text-xs font-bold flex items-center gap-1.5 xl:gap-2 transition-all relative border-b-2 cursor-pointer shrink-0 whitespace-nowrap ${
                       isActive
                         ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
                         : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
@@ -408,9 +408,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           )}
 
           {/* Far Right Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Text Size Increaser */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+            <div className="hidden xl:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
               <button
                 type="button"
                 onClick={() => changeTextSize(-5)}
@@ -434,7 +434,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               </button>
             </div>
 
-            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden xl:block" />
 
             {/* Notification Bell Button & Dropdown */}
             <div className="relative">
