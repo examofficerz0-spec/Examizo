@@ -65,7 +65,7 @@ export async function GET() {
       const courseDbId = courseRow ? courseRow.id : courseId;
       const d1Qs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
       const d1Attempts = await queryD1('SELECT * FROM attempts WHERE (student_id = ? OR student_id = ?)', [userId, String(auth.email || '')]);
-      const d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0) LIMIT 2', [courseDbId]);
+      const d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
       const d1Leaderboard = await queryD1(
         "SELECT id, name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
         [courseDbId]
@@ -118,26 +118,52 @@ export async function GET() {
         (a.responses || []).forEach((r: any) => attemptedQIds.add(String(r.question_id)));
       });
 
+      const mockTestMap = new Map<string, any>();
+      (d1MockTests || []).forEach((mt: any) => {
+        mockTestMap.set(String(mt.id), mt);
+        if (mt._id) mockTestMap.set(String(mt._id), mt);
+      });
+
       const incorrectLogMap = new Map<string, any>();
       formattedAttempts.forEach((a) => {
+        const isMock = a.type === 'mock' || Boolean(a.test_id);
+        let testTitle = 'General Practice';
+        if (isMock) {
+          const matchedTest = a.test_id ? mockTestMap.get(String(a.test_id)) : null;
+          testTitle = matchedTest?.title || a.topic_tag || 'Mock Examination';
+        } else if (a.topic_tag) {
+          testTitle = `Practice - ${a.topic_tag}`;
+        } else {
+          testTitle = 'Practice Session';
+        }
+
+        const testId = a.test_id ? String(a.test_id) : (a.id ? `attempt-${a.id}` : `practice-${a.topic_tag || 'general'}`);
+
         (a.responses || []).forEach((r: any) => {
           const qId = String(r.question_id);
           const q = formattedQs.find((item: any) => String(item.id) === qId);
           if (q) {
-            const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option !== q.correct_option);
-            if (isIncorrect && !incorrectLogMap.has(qId)) {
-              incorrectLogMap.set(qId, {
-                _id: q.id,
-                question_text: q.question_text,
-                options: q.options || [],
-                userSelectedOption: r.selected_option,
-                correctOption: q.correct_option,
-                explanation: q.explanation || '',
-                detailed_explanation: q.detailed_explanation || '',
-                topic_tag: q.topic_tag || a.topic_tag || 'General',
-                attemptedAt: a.submitted_at || new Date().toISOString(),
-                attemptType: a.type || 'practice',
-              });
+            const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option >= 0 && Number(r.selected_option) !== Number(q.correct_option));
+            if (isIncorrect) {
+              const uniqueKey = `${testId}_${qId}`;
+              if (!incorrectLogMap.has(uniqueKey)) {
+                incorrectLogMap.set(uniqueKey, {
+                  _id: `${testId}_${q.id}`,
+                  question_id: q.id,
+                  test_id: testId,
+                  test_title: testTitle,
+                  test_type: isMock ? 'mock' : 'practice',
+                  question_text: q.question_text,
+                  options: q.options || [],
+                  userSelectedOption: r.selected_option,
+                  correctOption: q.correct_option,
+                  explanation: q.explanation || '',
+                  detailed_explanation: q.detailed_explanation || '',
+                  topic_tag: q.topic_tag || a.topic_tag || 'General',
+                  attemptedAt: a.submitted_at || new Date().toISOString(),
+                  attemptType: a.type || (isMock ? 'mock' : 'practice'),
+                });
+              }
             }
           }
         });
@@ -237,30 +263,57 @@ export async function GET() {
       category: 'Competitive Exams',
     };
 
+    const courseMockTests = (db.mockTests || (db as any).mock_tests || []).filter((mt: any) => String(mt.course_id) === courseId && mt.is_active !== false);
+    const mockTestMap = new Map<string, any>();
+    courseMockTests.forEach((mt: any) => {
+      mockTestMap.set(String(mt._id || mt.id), mt);
+    });
+
     const attempts = (db.attempts || []).filter((a) => (String(a.student_id) === userId || String(a.student_id) === String(auth.email || '')) && String(a.course_id) === courseId);
     const courseQs = (db.questions || []).filter((q) => String(q.course_id) === courseId && q.is_active !== false);
 
     const incorrectLogMap = new Map<string, any>();
     (attempts || []).forEach((a) => {
+      const isMock = a.type === 'mock' || Boolean(a.test_id || a.mock_test_id);
+      const testRefId = a.test_id || a.mock_test_id;
+      let testTitle = 'General Practice';
+      if (isMock) {
+        const matchedTest = testRefId ? mockTestMap.get(String(testRefId)) : null;
+        testTitle = matchedTest?.title || a.topic_tag || 'Mock Examination';
+      } else if (a.topic_tag) {
+        testTitle = `Practice - ${a.topic_tag}`;
+      } else {
+        testTitle = 'Practice Session';
+      }
+
+      const testId = testRefId ? String(testRefId) : (a._id || a.id ? `attempt-${a._id || a.id}` : `practice-${a.topic_tag || 'general'}`);
+
       (a.responses || []).forEach((r: any) => {
         const qId = String(r.question_id);
         const q = (courseQs || []).find((item: any) => String(item._id || item.id) === qId);
         if (q) {
           const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option >= 0 && Number(r.selected_option) !== Number(q.correct_option));
-          if (isIncorrect && !incorrectLogMap.has(qId)) {
-            incorrectLogMap.set(qId, {
-              _id: q._id || q.id,
-              id: q._id || q.id,
-              question_text: q.question_text,
-              options: q.options || [],
-              userSelectedOption: r.selected_option,
-              correctOption: q.correct_option,
-              explanation: q.explanation || '',
-              detailed_explanation: q.detailed_explanation || '',
-              topic_tag: q.topic_tag || a.topic_tag || 'General',
-              attemptedAt: a.created_at || a.submitted_at || new Date().toISOString(),
-              attemptType: a.type || 'practice',
-            });
+          if (isIncorrect) {
+            const uniqueKey = `${testId}_${qId}`;
+            if (!incorrectLogMap.has(uniqueKey)) {
+              incorrectLogMap.set(uniqueKey, {
+                _id: `${testId}_${q._id || q.id}`,
+                id: `${testId}_${q._id || q.id}`,
+                question_id: q._id || q.id,
+                test_id: testId,
+                test_title: testTitle,
+                test_type: isMock ? 'mock' : 'practice',
+                question_text: q.question_text,
+                options: q.options || [],
+                userSelectedOption: r.selected_option,
+                correctOption: q.correct_option,
+                explanation: q.explanation || '',
+                detailed_explanation: q.detailed_explanation || '',
+                topic_tag: q.topic_tag || a.topic_tag || 'General',
+                attemptedAt: a.created_at || a.submitted_at || new Date().toISOString(),
+                attemptType: a.type || (isMock ? 'mock' : 'practice'),
+              });
+            }
           }
         }
       });
@@ -276,7 +329,18 @@ export async function GET() {
         progressPercent: 0,
         rank: 1,
       },
-      mockTests: [],
+      mockTests: courseMockTests.slice(0, 2).map((mt: any) => ({
+        id: mt._id || mt.id,
+        _id: mt._id || mt.id,
+        title: mt.title,
+        type: mt.type || 'full',
+        duration: mt.duration_minutes || 180,
+        cutoffMarks: mt.cutoff_marks || 120,
+        totalQuestions: Array.isArray(mt.question_ids) ? mt.question_ids.length : 0,
+        attemptsCount: 0,
+        highestScore: 0,
+        isAttempted: false,
+      })),
       topLeaderboard: [],
       incorrectLog: fallbackIncorrectLog,
     });

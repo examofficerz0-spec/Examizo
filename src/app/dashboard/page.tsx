@@ -26,6 +26,9 @@ import {
   Lock,
   Zap,
   RotateCcw,
+  Check,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 import { clearAllClientUserCaches } from '@/lib/clientCache';
@@ -40,6 +43,9 @@ export default function StudentDashboardPage() {
   const [incorrectLog, setIncorrectLog] = useState<any[]>(initialCache?.incorrectLog || []);
   const [showLogModal, setShowLogModal] = useState(false);
   const [logSearch, setLogSearch] = useState('');
+  const [openTestGroups, setOpenTestGroups] = useState<Record<string, boolean>>({});
+  const [openQuestions, setOpenQuestions] = useState<Record<string, boolean>>({});
+  const [activeLogTab, setActiveLogTab] = useState<'all' | 'mock' | 'practice'>('all');
   const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(!initialCache);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -171,9 +177,388 @@ export default function StudentDashboardPage() {
     return (
       (item.question_text || '').toLowerCase().includes(q) ||
       (item.topic_tag || '').toLowerCase().includes(q) ||
+      (item.test_title || '').toLowerCase().includes(q) ||
       (item.explanation || '').toLowerCase().includes(q)
     );
   });
+
+  const mockCount = filteredLogItems.filter((i) => (i.test_type === 'mock' || i.attemptType === 'mock')).length;
+  const practiceCount = filteredLogItems.filter((i) => (i.test_type === 'practice' || i.attemptType !== 'mock')).length;
+
+  // Group incorrect items by Mock Test / Practice Set
+  const groupedTestLogs = React.useMemo(() => {
+    const groups: {
+      testId: string;
+      testTitle: string;
+      testType: 'mock' | 'practice';
+      attemptedAt?: string;
+      items: any[];
+    }[] = [];
+
+    const groupMap = new Map<string, typeof groups[0]>();
+
+    filteredLogItems.forEach((item) => {
+      const itemType = (item.test_type || (item.attemptType === 'mock' ? 'mock' : 'practice')) as 'mock' | 'practice';
+      if (activeLogTab !== 'all' && itemType !== activeLogTab) {
+        return;
+      }
+
+      const testTitle = item.test_title || (item.topic_tag ? `Practice - ${item.topic_tag}` : 'Practice Examination');
+      const testId = item.test_id || testTitle;
+
+      if (!groupMap.has(testId)) {
+        const newGroup = {
+          testId,
+          testTitle,
+          testType: itemType,
+          attemptedAt: item.attemptedAt,
+          items: [],
+        };
+        groupMap.set(testId, newGroup);
+        groups.push(newGroup);
+      }
+      groupMap.get(testId)!.items.push(item);
+    });
+
+    return groups;
+  }, [filteredLogItems, activeLogTab]);
+
+  const isTestGroupOpen = (testId: string, groupIndex: number) => {
+    if (openTestGroups[testId] !== undefined) {
+      return openTestGroups[testId];
+    }
+    return groupIndex === 0 || groupedTestLogs.length <= 2;
+  };
+
+  const toggleTestGroup = (testId: string, groupIndex: number) => {
+    setOpenTestGroups((prev) => ({
+      ...prev,
+      [testId]: !isTestGroupOpen(testId, groupIndex),
+    }));
+  };
+
+  const isQuestionOpen = (qKey: string) => {
+    return Boolean(openQuestions[qKey]);
+  };
+
+  const toggleQuestion = (qKey: string) => {
+    setOpenQuestions((prev) => ({
+      ...prev,
+      [qKey]: !prev[qKey],
+    }));
+  };
+
+  const setAllGroupsExpanded = (expand: boolean) => {
+    const nextGroupState: Record<string, boolean> = {};
+    const nextQuestionState: Record<string, boolean> = {};
+    groupedTestLogs.forEach((g) => {
+      nextGroupState[g.testId] = expand;
+      g.items.forEach((item, idx) => {
+        const qKey = item._id || `${g.testId}-q-${idx}`;
+        nextQuestionState[qKey] = expand;
+      });
+    });
+    setOpenTestGroups(nextGroupState);
+    setOpenQuestions(nextQuestionState);
+  };
+
+  const renderQuestionItem = (item: any, qIdx: number, testId: string) => {
+    const qKey = item._id || `${testId}-q-${qIdx}`;
+    const isOpen = isQuestionOpen(qKey);
+    const isDetailedOpen = Boolean(openDetailedExplanation[qKey]);
+
+    const correctOptIdx = Number(item.correctOption);
+    const userOptIdx =
+      item.userSelectedOption !== null && item.userSelectedOption !== undefined
+        ? Number(item.userSelectedOption)
+        : null;
+
+    const correctOptText =
+      Array.isArray(item.options) && item.options[correctOptIdx] !== undefined
+        ? item.options[correctOptIdx]
+        : `Option ${correctOptIdx + 1}`;
+
+    const selectedOptText =
+      userOptIdx !== null && Array.isArray(item.options) && item.options[userOptIdx] !== undefined
+        ? item.options[userOptIdx]
+        : (userOptIdx !== null ? `Option ${userOptIdx + 1}` : 'Unanswered');
+
+    return (
+      <div
+        key={qKey}
+        className="border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 transition-all duration-200 overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-slate-700"
+      >
+        {/* Level 2: Compact One-Row Question Header */}
+        <div
+          onClick={() => toggleQuestion(qKey)}
+          className={`px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3 cursor-pointer select-none transition-colors ${
+            isOpen
+              ? 'bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/70 dark:border-slate-800'
+              : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40'
+          }`}
+        >
+          {/* Left: Index + Topic Tag + Truncated Question Text */}
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-100/80 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-black text-[10px] sm:text-[11px] flex items-center justify-center shrink-0 border border-rose-200/60 dark:border-rose-900/50">
+              Q{qIdx + 1}
+            </span>
+            {item.topic_tag && (
+              <span className="px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-extrabold uppercase bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shrink-0 hidden md:inline-flex border border-blue-100 dark:border-blue-900/50 truncate max-w-[130px]">
+                {item.topic_tag}
+              </span>
+            )}
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-snug">
+              {item.question_text}
+            </span>
+          </div>
+
+          {/* Right: Quick answer badges & Dropdown toggle */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40 hidden lg:inline-flex items-center gap-1 max-w-[170px] truncate">
+              <XCircle className="w-3 h-3 shrink-0" />
+              <span className="truncate">Your: {selectedOptText}</span>
+            </span>
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-900/40 hidden lg:inline-flex items-center gap-1 max-w-[170px] truncate">
+              <CheckCircle2 className="w-3 h-3 shrink-0" />
+              <span className="truncate">Ans: {correctOptText}</span>
+            </span>
+
+            <span
+              className={`px-2.5 py-1 text-[10px] sm:text-[11px] font-extrabold rounded-lg flex items-center gap-1.5 transition-all ${
+                isOpen
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700'
+              }`}
+            >
+              <span>{isOpen ? 'Hide' : 'Solution'}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </span>
+          </div>
+        </div>
+
+        {/* Level 3: Nested Dropdown Body (Full Question, Options with Correct Answer Highlighted, & Explanation) */}
+        {isOpen && (
+          <div className="p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-slate-950/60 animate-in fade-in-50 duration-200">
+            {/* Full Question Statement */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Full Question</span>
+                {item.topic_tag && (
+                  <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    {item.topic_tag}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                {item.question_text}
+              </p>
+            </div>
+
+            {/* Options Comparison Grid */}
+            {Array.isArray(item.options) && item.options.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Options &amp; Breakdown</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium">
+                  {item.options.map((opt: string, optIdx: number) => {
+                    const isSelected = userOptIdx === optIdx;
+                    const isCorrect = correctOptIdx === optIdx;
+
+                    let cardStyle = 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
+                    if (isCorrect) {
+                      cardStyle = 'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-500/20 font-bold';
+                    } else if (isSelected) {
+                      cardStyle = 'bg-rose-50/90 dark:bg-rose-950/60 text-rose-900 dark:text-rose-100 border-rose-300 dark:border-rose-700 ring-1 ring-rose-500/20 font-bold';
+                    }
+
+                    const letterLabel = String.fromCharCode(65 + optIdx);
+
+                    return (
+                      <div
+                        key={optIdx}
+                        className={`p-3 rounded-xl border flex items-center justify-between gap-2 shadow-2xs transition-all ${cardStyle}`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
+                              isCorrect
+                                ? 'bg-emerald-600 text-white'
+                                : isSelected
+                                ? 'bg-rose-600 text-white'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            }`}
+                          >
+                            {letterLabel}
+                          </span>
+                          <span className="truncate leading-tight text-xs">{opt}</span>
+                        </div>
+
+                        {isCorrect && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 font-black uppercase shrink-0 flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" /> Correct Answer
+                          </span>
+                        )}
+                        {isSelected && !isCorrect && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-200 dark:bg-rose-800 text-rose-900 dark:text-rose-100 font-black uppercase shrink-0 flex items-center gap-1">
+                            <X className="w-3 h-3 stroke-[3]" /> Your Selection
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Answer Key Summary Banner */}
+            <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-slate-100/80 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-xs">
+              <div className="flex items-center gap-1.5 font-extrabold text-emerald-700 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>
+                  Correct Answer: <span className="underline decoration-emerald-500/50 underline-offset-2">Option {String.fromCharCode(65 + correctOptIdx)} ({correctOptText})</span>
+                </span>
+              </div>
+              {userOptIdx !== null && (
+                <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                  <XCircle className="w-4 h-4 shrink-0" />
+                  <span>Your Selection: Option {String.fromCharCode(65 + userOptIdx)} ({selectedOptText})</span>
+                </div>
+              )}
+            </div>
+
+            {/* Explanation Box */}
+            {item.explanation ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 space-y-2.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                  <div className="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
+                    💡
+                  </div>
+                  <span className="font-extrabold text-xs">Explanation:</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                  {item.explanation}
+                </p>
+
+                {/* Detailed Step-by-Step Explanation Accordion */}
+                {item.detailed_explanation && (
+                  <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDetailedExplanation((prev) => ({
+                          ...prev,
+                          [qKey]: !prev[qKey],
+                        }))
+                      }
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 cursor-pointer py-1 transition-colors"
+                    >
+                      <span>📘 View Step-by-Step Solution Breakdown</span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                          isDetailedOpen ? 'rotate-180' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`grid transition-all duration-300 ease-in-out ${
+                        isDetailedOpen
+                          ? 'grid-rows-[1fr] opacity-100 mt-2'
+                          : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-line leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80">
+                          {item.detailed_explanation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-400 italic">
+                No additional explanation provided for this question.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTestGroupAccordion = (group: typeof groupedTestLogs[0], gIdx: number) => {
+    const isOpen = isTestGroupOpen(group.testId, gIdx);
+    const isMock = group.testType === 'mock';
+
+    return (
+      <div
+        key={group.testId}
+        className="border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 transition-all duration-200 shadow-xs"
+      >
+        {/* Level 1: Mock Test Accordion Header */}
+        <button
+          type="button"
+          onClick={() => toggleTestGroup(group.testId, gIdx)}
+          className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
+            isOpen
+              ? 'bg-slate-100/80 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isMock
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300'
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+              }`}
+            >
+              {isMock ? <ClipboardList className="w-4 h-4 sm:w-4.5 sm:h-4.5" /> : <Target className="w-4 h-4 sm:w-4.5 sm:h-4.5" />}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                  {group.testTitle}
+                </h4>
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase ${
+                    isMock
+                      ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'
+                      : 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                  }`}
+                >
+                  {isMock ? 'Mock Test' : 'Practice Set'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                {group.items.length} incorrect question{group.items.length === 1 ? '' : 's'} to review
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+              {group.items.length} {group.items.length === 1 ? 'Question' : 'Questions'}
+            </span>
+            <div
+              className={`w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 transition-transform duration-300 ${
+                isOpen ? 'rotate-180 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white' : 'rotate-0'
+              }`}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </div>
+          </div>
+        </button>
+
+        {/* Level 1 Body: List of Compact Question Rows */}
+        {isOpen && (
+          <div className="p-3 sm:p-4 space-y-2.5 bg-slate-50/30 dark:bg-slate-950/30 animate-in fade-in-50 duration-200">
+            {group.items.map((item, qIdx) => renderQuestionItem(item, qIdx, group.testId))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const hasNoCourse = !userData?.lockedCourse?.id && !userData?.lockedCourse?.name && !userData?.locked_course_id;
 
@@ -377,25 +762,70 @@ export default function StudentDashboardPage() {
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Mistake Log & Incorrect Answers Audit</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Mistake Log &amp; Incorrect Answers Audit</h3>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
                     {incorrectLog.length} Question{incorrectLog.length === 1 ? '' : 's'}
                   </span>
+                  {groupedTestLogs.length > 0 && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      {groupedTestLogs.length} Test Set{groupedTestLogs.length === 1 ? '' : 's'}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Review questions answered incorrectly in practice sets to analyze mistakes and study explanations.
+                  Review questions answered incorrectly in mock tests &amp; practice sets with solution dropdowns.
                 </p>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowLogModal(true)}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
-            >
-              <Maximize2 className="w-4 h-4" /> Expand Log Window
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              {groupedTestLogs.length > 0 && (
+                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setActiveLogTab('all')}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                      activeLogTab === 'all'
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-extrabold'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLogTab('mock')}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                      activeLogTab === 'mock'
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-extrabold'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Mock Tests
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLogTab('practice')}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                      activeLogTab === 'practice'
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-extrabold'
+                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Practice
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowLogModal(true)}
+                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <Maximize2 className="w-3.5 h-3.5" /> Expand Log Window
+              </button>
+            </div>
           </div>
 
           {/* Quick Preview List inside the Dashboard Card */}
@@ -406,40 +836,16 @@ export default function StudentDashboardPage() {
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No incorrect questions logged yet!</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Great job! As you attempt practice sets, any incorrect answers will be logged here for revision.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Great job! As you attempt practice sets or mock tests, any incorrect answers will be logged here for revision.</p>
               </div>
             </div>
+          ) : groupedTestLogs.length === 0 ? (
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400">
+              No questions found for the selected filter tab.
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {incorrectLog.slice(0, 2).map((item, idx) => (
-                <div
-                  key={item._id || idx}
-                  onClick={() => setShowLogModal(true)}
-                  className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-rose-300 dark:hover:border-rose-800 transition-all cursor-pointer space-y-3 group"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-slate-200/80 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-                      {item.topic_tag || 'Practice Question'}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-semibold group-hover:text-rose-600 transition-colors">
-                      Click to view breakdown ↗
-                    </span>
-                  </div>
-
-                  <p className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-relaxed">
-                    {item.question_text}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold pt-1">
-                    <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5 shrink-0" /> Selected: {item.options?.[item.userSelectedOption] || `Option ${item.userSelectedOption + 1}`}
-                    </span>
-                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Correct: {item.options?.[item.correctOption] || `Option ${item.correctOption + 1}`}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {groupedTestLogs.map((group, gIdx) => renderTestGroupAccordion(group, gIdx))}
             </div>
           )}
         </div>
@@ -512,7 +918,7 @@ export default function StudentDashboardPage() {
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
           onClick={(e) => { if (e.target === e.currentTarget) setShowLogModal(false); }}
         >
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Window Header */}
             <div className="p-5 px-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900/80">
               <div className="flex items-center gap-3">
@@ -521,12 +927,12 @@ export default function StudentDashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    Mistake Log & Incorrect Answers Audit
+                    Mistake Log &amp; Incorrect Answers Audit
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-extrabold">
-                      {filteredLogItems.length} {filteredLogItems.length === 1 ? 'Item' : 'Items'}
+                      {filteredLogItems.length} {filteredLogItems.length === 1 ? 'Question' : 'Questions'}
                     </span>
                   </h2>
-                  <p className="text-xs text-slate-500 font-medium">Detailed explanation log window for reviewing your mistakes.</p>
+                  <p className="text-xs text-slate-500 font-medium">Mock test-wise hierarchical view with questions, answers, and step-by-step solutions.</p>
                 </div>
               </div>
 
@@ -542,131 +948,85 @@ export default function StudentDashboardPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={logSearch}
-                  onChange={(e) => setLogSearch(e.target.value)}
-                  placeholder="Search incorrect questions by keyword or topic..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
-                />
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              {/* Search Bar & Expand/Collapse All */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                    placeholder="Search incorrect questions by keyword, test title, topic, or explanation..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setAllGroupsExpanded(true)}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Expand All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllGroupsExpanded(false)}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Collapse All
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter Tabs Bar */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveLogTab('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeLogTab === 'all'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" /> All Tests ({filteredLogItems.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveLogTab('mock')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeLogTab === 'mock'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <ClipboardList className="w-3.5 h-3.5" /> Mock Tests ({mockCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveLogTab('practice')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeLogTab === 'practice'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Target className="w-3.5 h-3.5" /> Practice Sets ({practiceCount})
+                </button>
               </div>
 
               {/* Question Log Items List */}
-              {filteredLogItems.length === 0 ? (
+              {groupedTestLogs.length === 0 ? (
                 <div className="p-12 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
                   <FileText className="w-8 h-8 mx-auto text-slate-400" />
                   <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No matching incorrect questions found</p>
-                  <p className="text-[11px] text-slate-400">Try clearing your search query or attempting more practice sets.</p>
+                  <p className="text-[11px] text-slate-400">Try adjusting your search query or tab filters.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredLogItems.map((item: any, idx: number) => {
-                    const qId = item._id || `log-${idx}`;
-                    const isDetailedOpen = Boolean(openDetailedExplanation[qId]);
-                    return (
-                      <div
-                        key={qId}
-                        className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-4 shadow-xs"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            {item.topic_tag || 'Practice Question'}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-semibold">
-                            Logged Question #{idx + 1}
-                          </span>
-                        </div>
-
-                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
-                          {item.question_text}
-                        </h4>
-
-                        {/* Options Comparison */}
-                        {Array.isArray(item.options) && item.options.length > 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium">
-                            {item.options.map((opt: string, optIdx: number) => {
-                              const isSelected = item.userSelectedOption === optIdx;
-                              const isCorrect = item.correctOption === optIdx;
-
-                              let style = 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800';
-                              if (isCorrect) {
-                                style = 'bg-emerald-50 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800 font-bold';
-                              } else if (isSelected) {
-                                style = 'bg-rose-50 text-rose-900 border-rose-300 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-800 font-bold';
-                              }
-
-                              return (
-                                <div
-                                  key={optIdx}
-                                  className={`p-3 rounded-xl border flex items-center justify-between ${style}`}
-                                >
-                                  <span>{opt}</span>
-                                  {isCorrect && (
-                                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 font-black uppercase">
-                                      ✓ Correct Answer
-                                    </span>
-                                  )}
-                                  {isSelected && !isCorrect && (
-                                    <span className="text-[10px] px-2 py-0.5 rounded bg-rose-200 dark:bg-rose-800 text-rose-900 dark:text-rose-100 font-black uppercase">
-                                      ✗ Your Selection
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Normal Explanation */}
-                        {item.explanation && (
-                          <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 text-xs space-y-2">
-                            <span className="font-extrabold text-slate-800 dark:text-slate-200 block">Explanation:</span>
-                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{item.explanation}</p>
-
-                            {/* Detailed Step-by-Step Explanation Dropdown */}
-                            {item.detailed_explanation && (
-                              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setOpenDetailedExplanation((prev) => ({
-                                      ...prev,
-                                      [qId]: !prev[qId],
-                                    }))
-                                  }
-                                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 cursor-pointer py-1 transition-colors"
-                                >
-                                  <span>📘 View Detailed Step-by-Step Explanation</span>
-                                  <ChevronDown
-                                    className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                                      isDetailedOpen ? 'rotate-180' : 'rotate-0'
-                                    }`}
-                                  />
-                                </button>
-                                <div
-                                  className={`grid transition-all duration-300 ease-in-out ${
-                                    isDetailedOpen
-                                      ? 'grid-rows-[1fr] opacity-100 mt-2'
-                                      : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
-                                  }`}
-                                >
-                                  <div className="overflow-hidden">
-                                    <p className="text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-pre-line pt-1 leading-relaxed bg-slate-100/60 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
-                                      {item.detailed_explanation}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {groupedTestLogs.map((group, gIdx) => renderTestGroupAccordion(group, gIdx))}
                 </div>
               )}
             </div>
