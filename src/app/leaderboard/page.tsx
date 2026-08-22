@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
-import { getSwrCache, setSwrCache } from '@/lib/swrCache';
+import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
 } from 'lucide-react';
@@ -57,6 +57,15 @@ export default function LeaderboardPage() {
       setLoadingGlobal(false);
     }
 
+    // Live reactive subscription to leaderboard cache
+    const unsubscribe = subscribeSwrCache<any>('leaderboard_cache', (fresh) => {
+      if (fresh) {
+        if (Array.isArray(fresh.leaderboard)) setLeaderboard(fresh.leaderboard);
+        if (fresh.userRank) setUserRank(fresh.userRank);
+        setLoadingGlobal(false);
+      }
+    });
+
     fetch('/api/leaderboard', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
@@ -72,6 +81,8 @@ export default function LeaderboardPage() {
       })
       .catch(console.error)
       .finally(() => setLoadingGlobal(false));
+
+    return () => unsubscribe();
   }, []);
 
   // Fetch Friends Leaderboard & Pending Requests & Invite Code

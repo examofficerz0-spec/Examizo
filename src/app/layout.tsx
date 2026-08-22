@@ -5,6 +5,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { GlobalHeader } from '@/components/layout/GlobalHeader';
 import { HeaderProvider } from '@/context/HeaderContext';
 import { AuthWatcher } from '@/components/common/AuthWatcher';
+import { StudentDataSynchronizer } from '@/components/common/StudentDataSynchronizer';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-slate-50 text-slate-900 min-h-screen min-h-[100dvh] font-sans antialiased">
         <HeaderProvider>
           <AuthWatcher />
+          <StudentDataSynchronizer />
           <GlobalHeader />
           {children}
           <MobileBottomNav />

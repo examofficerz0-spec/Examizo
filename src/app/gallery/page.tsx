@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
 import { PublicFooter } from '@/components/layout/PublicFooter';
-import { getSwrCache, setSwrCache } from '@/lib/swrCache';
+import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import { 
   ArrowRight, 
   Search, 
@@ -49,6 +49,14 @@ export default function GalleryPage() {
       setLoading(false);
     }
 
+    // Live reactive subscription to gallery updates
+    const unsubscribe = subscribeSwrCache<GalleryPhoto[]>('student_gallery_cache', (fresh) => {
+      if (Array.isArray(fresh)) {
+        setPhotos(fresh);
+        setLoading(false);
+      }
+    });
+
     fetch('/api/gallery', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
@@ -59,6 +67,8 @@ export default function GalleryPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    return () => unsubscribe();
   }, []);
 
   // Keyboard navigation for lightbox

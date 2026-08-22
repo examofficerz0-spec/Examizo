@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import Link from 'next/link';
 import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight } from 'lucide-react';
-import { getSwrCache, setSwrCache } from '@/lib/swrCache';
+import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 
 export default function MockTestsListPage() {
   const router = useRouter();
@@ -27,6 +27,14 @@ export default function MockTestsListPage() {
       setLoading(false);
     }
 
+    // Live reactive subscription to mock tests cache
+    const unsubscribe = subscribeSwrCache<any[]>('mock_tests', (updatedTests) => {
+      if (Array.isArray(updatedTests)) {
+        setTests(updatedTests);
+        setLoading(false);
+      }
+    });
+
     fetch('/api/mock-tests', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
@@ -36,6 +44,8 @@ export default function MockTestsListPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    return () => unsubscribe();
   }, []);
 
   const filteredTests = tests.filter((t) => {

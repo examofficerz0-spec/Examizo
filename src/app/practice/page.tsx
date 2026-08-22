@@ -32,7 +32,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import { getSwrCache, setSwrCache } from '@/lib/swrCache';
+import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import {
   cleanQuestionText,
   normalizeQuestionSignature,
@@ -187,7 +187,24 @@ export default function PracticeSetsPage() {
       if (Array.isArray(cached.userAttempts)) setUserAttempts(cached.userAttempts);
       setLoading(false);
     }
+
+    // Live reactive subscription to practice sets & questions
+    const unsubscribe = subscribeSwrCache<any>('practice_cache', (fresh) => {
+      if (fresh) {
+        if (Array.isArray(fresh.questions)) setQuestions(deduplicateQuestions(fresh.questions));
+        if (fresh.topicCounts) setTopicCounts(fresh.topicCounts);
+        if (fresh.courseName) setCourseName(fresh.courseName);
+        if (Array.isArray(fresh.courseSubjects)) setCourseSubjects(fresh.courseSubjects);
+        if (Array.isArray(fresh.completedTopics)) setCompletedTopics(fresh.completedTopics);
+        if (fresh.publishedWeeklyDpp) setPublishedWeeklyDpp(fresh.publishedWeeklyDpp);
+        if (Array.isArray(fresh.userAttempts)) setUserAttempts(fresh.userAttempts);
+        setLoading(false);
+      }
+    });
+
     fetchQuestions();
+
+    return () => unsubscribe();
   }, []);
 
   // Timer Effect (Global Session Timer + Per-Question Timer for Practice Mode)

@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 
 import { clearAllClientUserCaches } from '@/lib/clientCache';
-import { getSwrCache, setSwrCache } from '@/lib/swrCache';
+import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
@@ -90,7 +90,21 @@ export default function StudentDashboardPage() {
       if (Array.isArray(cached.incorrectLog)) setIncorrectLog(cached.incorrectLog);
       setLoading(false);
     }
+
+    // Live reactive subscription to dashboard data
+    const unsubscribe = subscribeSwrCache<any>('dashboard_cache', (fresh) => {
+      if (fresh) {
+        if (fresh.user) setUserData(fresh.user);
+        if (Array.isArray(fresh.mockTests)) setMockTests(fresh.mockTests);
+        if (Array.isArray(fresh.leaderboard)) setLeaderboard(fresh.leaderboard);
+        if (Array.isArray(fresh.incorrectLog)) setIncorrectLog(fresh.incorrectLog);
+        setLoading(false);
+      }
+    });
+
     fetchPromoteInfo();
+
+    return () => unsubscribe();
   }, []);
 
   const handlePromoteAction = async (action: 'promote' | 'rollback') => {
