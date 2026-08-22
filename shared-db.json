@@ -8,7 +8,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:41:35.908Z"
+      "created_at": "2026-08-02T01:41:35.908Z",
+      "raw_password": "123456"
     },
     {
       "_id": "o9qpxf37vmsb4y3ds",
@@ -18,7 +19,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:42:32.608Z"
+      "created_at": "2026-08-02T01:42:32.608Z",
+      "raw_password": "123456"
     },
     {
       "_id": "qv0yzg7yrmsb4yhs9",
@@ -28,7 +30,8 @@
       "status": "Active",
       "xp_total": 81,
       "locked_course_id": "ynzp9kszdms7g1ytt",
-      "created_at": "2026-08-02T01:42:51.273Z"
+      "created_at": "2026-08-02T01:42:51.273Z",
+      "raw_password": "password123"
     },
     {
       "_id": "nakaymym3msd3w2qg",
@@ -38,7 +41,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
-      "created_at": "2026-08-03T10:48:31.192Z"
+      "created_at": "2026-08-03T10:48:31.192Z",
+      "raw_password": "123456"
     },
     {
       "_id": "t39s5yy8imsejvw8m",
@@ -49,7 +53,8 @@
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
       "created_at": "2026-08-04T11:04:02.806Z",
-      "account_email": "aranya@gmail.com"
+      "account_email": "aranya@gmail.com",
+      "raw_password": "123456"
     },
     {
       "_id": "shs0v0etrmsn5ncpy",
@@ -60,7 +65,8 @@
       "xp_total": 0,
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "created_at": "2026-08-10T11:35:25.222Z",
-      "account_email": "roy@gmail.com"
+      "account_email": "roy@gmail.com",
+      "raw_password": "123456"
     },
     {
       "_id": "bdq2qy6esmsn5pyf2",
@@ -71,7 +77,8 @@
       "locked_course_id": "ynzp9kszdms7g1ytt",
       "status": "Active",
       "xp_total": 54,
-      "created_at": "2026-08-10T11:37:26.654Z"
+      "created_at": "2026-08-10T11:37:26.654Z",
+      "raw_password": "123456"
     },
     {
       "_id": "wijw5853mmsn61d9f",
@@ -82,7 +89,8 @@
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "status": "Active",
       "xp_total": 81,
-      "created_at": "2026-08-10T11:46:19.107Z"
+      "created_at": "2026-08-10T11:46:19.107Z",
+      "raw_password": "123456"
     },
     {
       "_id": "auw3ct49omsop5el6",
@@ -92,7 +100,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-11T13:29:06.330Z"
+      "created_at": "2026-08-11T13:29:06.330Z",
+      "raw_password": "123456"
     },
     {
       "_id": "xy1jghu99mspyzonl",
@@ -102,7 +111,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-12T10:52:21.777Z"
+      "created_at": "2026-08-12T10:52:21.777Z",
+      "raw_password": "123456"
     },
     {
       "_id": "p82xngs9amsr1cksi",
@@ -112,7 +122,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-13T04:46:08.706Z"
+      "created_at": "2026-08-13T04:46:08.706Z",
+      "raw_password": "123456"
     },
     {
       "_id": "lbghyex2dmt04bnzq",
@@ -123,7 +134,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:21.822Z"
+      "created_at": "2026-08-19T13:19:21.822Z",
+      "raw_password": "123456"
     },
     {
       "_id": "6qo0pow7mmt04c076",
@@ -134,7 +146,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:37.227Z"
+      "created_at": "2026-08-19T13:19:37.227Z",
+      "raw_password": "123456"
     },
     {
       "_id": "ijcngxv5omt04habe",
@@ -145,7 +158,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:23:43.286Z"
+      "created_at": "2026-08-19T13:23:43.286Z",
+      "raw_password": "123456"
     },
     {
       "_id": "ymtpm8rsamt04j5y0",
@@ -156,7 +170,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:25:10.857Z"
+      "created_at": "2026-08-19T13:25:10.857Z",
+      "raw_password": "123456"
     },
     {
       "_id": "6d6rta7u1mt04vnnd",
@@ -167,7 +182,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-19T13:34:53.577Z"
+      "created_at": "2026-08-19T13:34:53.577Z",
+      "raw_password": "123456"
     }
   ],
   "courses": [
@@ -2336,6 +2352,22 @@
       "created_at": "2026-08-02T01:38:52.501Z"
     },
     {
+      "_id": "3zihdztn9msb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "Which of the following compounds shows optical isomerism?",
+      "options": [
+        "A compound with a plane of symmetry",
+        "A compound with a chiral carbon",
+        "Any symmetric alkane",
+        "Ethene"
+      ],
+      "correct_option": 1,
+      "explanation": "Optical isomerism (chirality) arises when a carbon atom is bonded to four different groups, creating non-superimposable mirror images (enantiomers).",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
       "_id": "2lmdrgnnlmsb4tdjp",
       "course_id": "ynzp9kszdms7g1ytt",
       "topic_tag": "Chemistry - Organic Chemistry",
@@ -2350,6 +2382,102 @@
       "explanation": "Acid-catalyzed hydration of alkenes using dilute sulfuric acid and water follows Markovnikov's rule to produce secondary or tertiary alcohols as major products.",
       "is_active": true,
       "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "00kt67w7jmsb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "What is the general formula for alkynes?",
+      "options": [
+        "CnH2n",
+        "CnH2n+2",
+        "CnH2n-2",
+        "CnH2n-6"
+      ],
+      "correct_option": 2,
+      "explanation": "Alkynes contain one triple bond (one sigma and two pi bonds), giving them the general molecular formula CnH2n-2.",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "ihanhadxlmsb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "Which type of isomerism is shown by butan-1-ol and butan-2-ol?",
+      "options": [
+        "Chain isomerism",
+        "Position isomerism",
+        "Functional isomerism",
+        "Geometrical isomerism"
+      ],
+      "correct_option": 1,
+      "explanation": "Both compounds have the same molecular formula (C4H10O) and functional group (-OH), but the hydroxyl group is attached to different carbon positions (C-1 vs C-2), which represents position isomerism.",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "4ml1b3qbemsb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "Which of the following is an example of a nucleophilic substitution reaction?",
+      "options": [
+        "Addition of HBr to ethene",
+        "Reaction of alkyl halide with NaOH",
+        "Combustion of methane",
+        "Polymerization of ethylene"
+      ],
+      "correct_option": 1,
+      "explanation": "Alkyl halides react with hydroxide ions (a nucleophile) to substitute the halogen atom, forming an alcohol. This is a classic example of nucleophilic substitution (SN1/SN2).",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "d9j6k97qimsb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "What is the IUPAC name of CH3-CH2-CH2-OH?",
+      "options": [
+        "Propan-1-ol",
+        "Propan-2-ol",
+        "Ethanol",
+        "Butan-1-ol"
+      ],
+      "correct_option": 0,
+      "explanation": "The three-carbon chain with -OH on the terminal carbon is named propan-1-ol.",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "guro20qnpmsb4tdjp",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "Which functional group is present in alcohols?",
+      "options": [
+        "-COOH",
+        "-OH",
+        "-CHO",
+        "-NH2"
+      ],
+      "correct_option": 1,
+      "explanation": "Alcohols are characterized by the hydroxyl (-OH) functional group attached to a saturated carbon atom.",
+      "is_active": true,
+      "created_at": "2026-08-02T01:38:52.501Z"
+    },
+    {
+      "_id": "tutkprpajmsb4ndps",
+      "course_id": "ynzp9kszdms7g1ytt",
+      "topic_tag": "Chemistry - Organic Chemistry",
+      "question_text": "Which functional group is present in alcohols?",
+      "options": [
+        "-COOH",
+        "-OH",
+        "-CHO",
+        "-NH2"
+      ],
+      "correct_option": 0,
+      "explanation": "Option A (-COOH) is the correct answer based on standard principles.",
+      "is_active": true,
+      "created_at": "2026-08-02T01:34:12.784Z"
     },
     {
       "_id": "ke3pdswxhms7g2oj0",
@@ -3748,7 +3876,8 @@
       "allowed_courses": [
         "all"
       ],
-      "created_at": "2026-07-30T09:05:12.289Z"
+      "created_at": "2026-07-30T09:05:12.289Z",
+      "raw_password": "Admin@123456"
     },
     {
       "_id": "iubv9rtb2ms7acron",
@@ -3763,7 +3892,8 @@
       "allowed_courses": [
         "course_jee_2027"
       ],
-      "created_at": "2026-07-30T09:02:50.663Z"
+      "created_at": "2026-07-30T09:02:50.663Z",
+      "raw_password": "Admin@123456"
     },
     {
       "_id": "admin_master_1",
@@ -3777,7 +3907,8 @@
       ],
       "allowed_courses": [
         "all"
-      ]
+      ],
+      "raw_password": "Admin@123456"
     }
   ],
   "auditLogs": [

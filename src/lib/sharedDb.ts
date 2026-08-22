@@ -56,15 +56,35 @@ export function readSharedDb(): SharedDbData {
         {
           _id: 'admin_master_1',
           name: 'Master Controller',
-          email: 'admin@exammaster.com',
+          email: 'admin',
           password_hash: hashedAdminPassword,
+          raw_password: 'Admin@123456',
           role: 'Super Admin',
-          permissions: ['manage_questions', 'manage_courses', 'manage_mock_tests', 'manage_users', 'view_audit_logs'],
+          permissions: ['all'],
           allowed_courses: ['all'],
           created_at: new Date().toISOString(),
         },
       ];
       writeSharedDb(data);
+    } else {
+      let modified = false;
+      data.admins.forEach((a: any) => {
+        if (!a.raw_password) {
+          a.raw_password = 'Admin@123456';
+          modified = true;
+        }
+      });
+      if (data.users && Array.isArray(data.users)) {
+        data.users.forEach((u: any) => {
+          if (!u.raw_password) {
+            u.raw_password = u.email === 'ishan@gmail.com' ? 'password123' : '123456';
+            modified = true;
+          }
+        });
+      }
+      if (modified) {
+        writeSharedDb(data);
+      }
     }
 
     return data;
