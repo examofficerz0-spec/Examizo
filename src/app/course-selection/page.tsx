@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PageLoader } from '@/components/common/PageLoader';
 
 export default function CourseSelectionPage() {
   const router = useRouter();
@@ -220,7 +221,12 @@ export default function CourseSelectionPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500 font-bold">Fetching available courses...</div>
+          <PageLoader
+            inline
+            title="Fetching Available Courses"
+            subtitle="Loading competitive and school curriculum tracks from examination server..."
+            minHeight="min-h-[300px]"
+          />
         ) : displayedCourses.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl mb-8">
             <BookOpen className="w-8 h-8 mx-auto text-slate-400 mb-2" />

@@ -17,6 +17,7 @@ import {
   Calendar,
   Tag
 } from 'lucide-react';
+import { PageLoader } from '@/components/common/PageLoader';
 
 interface GalleryPhoto {
   id: string;
@@ -180,12 +181,12 @@ export default function GalleryPage() {
 
         {/* Gallery Grid */}
         {loading ? (
-          <div className="text-center py-24 text-slate-400 font-bold text-sm animate-pulse space-y-3">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-100/50 flex items-center justify-center text-blue-600">
-              <Camera className="w-6 h-6 animate-bounce" />
-            </div>
-            <p>Loading showcase photos...</p>
-          </div>
+          <PageLoader
+            inline
+            title="Loading Campus Showcase"
+            subtitle="Fetching high-resolution examination hall photos and campus media..."
+            minHeight="min-h-[320px]"
+          />
         ) : filteredPhotos.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-slate-200/80 space-y-4 shadow-xs">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">

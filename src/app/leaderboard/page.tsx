@@ -8,6 +8,7 @@ import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
 import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
 } from 'lucide-react';
+import { PageLoader } from '@/components/common/PageLoader';
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -414,7 +415,12 @@ export default function LeaderboardPage() {
             {activeTab === 'global' && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
                 {loadingGlobal ? (
-                  <div className="py-20 text-center text-xs font-bold text-slate-400">Loading standings...</div>
+                  <PageLoader
+                    inline
+                    title="Loading Standings"
+                    subtitle="Calculating real-time student XP scores and rankings..."
+                    minHeight="min-h-[260px]"
+                  />
                 ) : (
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-500 uppercase tracking-wider text-[10px]">

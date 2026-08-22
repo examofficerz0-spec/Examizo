@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
+import { PageLoader } from '@/components/common/PageLoader';
 import {
   Star,
   ClipboardList,
@@ -150,21 +151,11 @@ export default function StudentDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-black text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-        <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-pulse">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-2">
-              <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl" />
-              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-            </div>
-            <div className="h-16 w-56 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 h-80 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-            <div className="lg:col-span-4 h-80 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-          </div>
-        </main>
-      </div>
+      <PageLoader
+        title="Loading Student Dashboard"
+        subtitle="Syncing curriculum progress, performance metrics, and live analytics..."
+        badgeText="Examizo Edge Engine"
+      />
     );
   }
 

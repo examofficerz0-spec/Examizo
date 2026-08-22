@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2 } from 'lucide-react';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { DigiLockerModal, isAbove10thClass, getDigiLockerStatus } from '@/components/ui/DigiLockerModal';
+import { PageLoader } from '@/components/common/PageLoader';
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
@@ -122,9 +123,11 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs font-bold text-slate-400">
-        Loading student profile...
-      </div>
+      <PageLoader
+        title="Loading Student Profile"
+        subtitle="Retrieving account settings, credentials, and curriculum track..."
+        badgeText="Student Identity Center"
+      />
     );
   }
 
