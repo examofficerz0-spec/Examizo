@@ -230,6 +230,7 @@ export async function POST(req: Request) {
         name: cleanName,
         email: lowerEmail,
         password_hash: dummyPasswordHash,
+        auth_provider: 'google',
         status: 'Active',
         xp_total: 0,
         locked_course_id: null,
