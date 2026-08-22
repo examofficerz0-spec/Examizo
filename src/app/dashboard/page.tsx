@@ -166,16 +166,6 @@ export default function StudentDashboardPage() {
     };
   }, [router]);
 
-  if (!mounted || (loading && !userData)) {
-    return (
-      <PageLoader
-        title="Loading Student Dashboard"
-        subtitle="Syncing curriculum progress, performance metrics, and live analytics..."
-        badgeText="Examizo Edge Engine"
-      />
-    );
-  }
-
   const courseName = userData?.lockedCourse?.name || 'Selected Course';
   const xpTotal = Number(userData?.xp_total) || 0;
   const studentRank = Number(userData?.rank) || 1;
@@ -234,6 +224,16 @@ export default function StudentDashboardPage() {
 
     return groups;
   }, [filteredLogItems, activeLogTab]);
+
+  if (!mounted || (loading && !userData)) {
+    return (
+      <PageLoader
+        title="Loading Student Dashboard"
+        subtitle="Syncing curriculum progress, performance metrics, and live analytics..."
+        badgeText="Examizo Edge Engine"
+      />
+    );
+  }
 
   const isTestGroupOpen = (testId: string) => {
     return Boolean(openTestGroups[testId]);

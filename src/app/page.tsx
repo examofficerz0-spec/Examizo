@@ -47,6 +47,8 @@ export default function LandingPage() {
 
   // Background Hero Image Carousel State
   const [heroImgIndex, setHeroImgIndex] = useState(0);
+  // Scroll position state for dynamic navbar color transition
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const heroTimer = setInterval(() => {
@@ -123,8 +125,7 @@ export default function LandingPage() {
       badge: badges[idx % badges.length],
     }));
   }, [courses]);
-  // Scroll position state for dynamic navbar color transition
-  const [isScrolled, setIsScrolled] = useState(false);
+
 
   useEffect(() => {
     const handleScroll = () => {
