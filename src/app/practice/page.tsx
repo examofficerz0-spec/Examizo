@@ -357,20 +357,6 @@ export default function PracticeSetsPage() {
     return questions;
   }, [publishedWeeklyDpp, questions]);
 
-  const hasCourseWeeklyDpp = useMemo(() => {
-    const rawWeeklyQs = getWeeklyQuestions();
-    return rawWeeklyQs.length > 0;
-  }, [getWeeklyQuestions]);
-
-  const weeklySmartSet = useMemo(() => {
-    const rawWeeklyQs = getWeeklyQuestions();
-    if (!rawWeeklyQs || rawWeeklyQs.length === 0) return [];
-    const seed = getWeekNumber() + new Date().getFullYear() * 100;
-    return getCourseWeeklyDPPSet(rawWeeklyQs, seed);
-  }, [getWeeklyQuestions, userAttempts, questions]);
-
-  // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
-  // 1. Shuffles from questions belonging to the enrolled course.
   // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
   // 1. Shuffles from questions belonging to the enrolled course.
   // 2. Priority Order:
@@ -460,6 +446,18 @@ export default function PracticeSetsPage() {
 
     return deduplicateQuestions(orderedPool).slice(0, 10);
   };
+
+  const hasCourseWeeklyDpp = useMemo(() => {
+    const rawWeeklyQs = getWeeklyQuestions();
+    return rawWeeklyQs.length > 0;
+  }, [getWeeklyQuestions]);
+
+  const weeklySmartSet = useMemo(() => {
+    const rawWeeklyQs = getWeeklyQuestions();
+    if (!rawWeeklyQs || rawWeeklyQs.length === 0) return [];
+    const seed = getWeekNumber() + new Date().getFullYear() * 100;
+    return getCourseWeeklyDPPSet(rawWeeklyQs, seed);
+  }, [getWeeklyQuestions, userAttempts, questions]);
 
   // Smart 10-Question Selection Algorithm for Daily Practice Sets
   // Rules:
