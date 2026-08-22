@@ -327,6 +327,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [showLockWarning, setShowLockWarning] = useState(false);
   const [fullscreenViolationCount, setFullscreenViolationCount] = useState(0);
   const fullscreenViolationRef = useRef(0);
+  const lastViolationTimeRef = useRef(0);
 
   const enterFullscreen = async () => {
     try {
@@ -443,13 +444,19 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     if (!test || result || !isExamStarted) return;
 
     // ─── Shared violation trigger ───────────────────────────────────
-    const triggerViolation = () => {
+    const triggerViolation = (reason?: string) => {
       if (fullscreenViolationRef.current >= 3) return; // already submitted
+
+      const now = Date.now();
+      if (now - lastViolationTimeRef.current < 1200) return; // debounce multi-event bursts
+      lastViolationTimeRef.current = now;
+
       fullscreenViolationRef.current += 1;
       const vCount = fullscreenViolationRef.current;
       setFullscreenViolationCount(vCount);
       setIsFullscreen(false);
       setShowLockWarning(true);
+
       if (vCount >= 3) {
         handleFinalSubmit('auto');
       }
@@ -459,32 +466,28 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     const handleFullscreenChange = () => {
       const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
       if (!fsEl) {
-        triggerViolation();
+        setIsFullscreen(false);
+        triggerViolation('Fullscreen exited');
       } else {
         setIsFullscreen(true);
-        setShowLockWarning(false);
       }
     };
 
     // ─── Tab switch / window minimize (visibilitychange) ─────────────
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        triggerViolation();
+      if (document.hidden || document.visibilityState === 'hidden') {
+        setIsFullscreen(false);
+        triggerViolation('Tab switched / window minimized');
       }
     };
 
     // ─── Windows key / Alt-Tab / app switch (window blur) ────────────
-    // Use a short timeout so we don't double-count when visibilitychange
-    // also fires for the same user action.
     let blurTimer: ReturnType<typeof setTimeout> | null = null;
     const handleWindowBlur = () => {
       blurTimer = setTimeout(() => {
-        // Only count if the page is still visible (e.g., Windows key pressed
-        // without switching away — visibility stays "visible" but focus is lost)
-        if (!document.hidden) {
-          triggerViolation();
-        }
-      }, 150);
+        setIsFullscreen(false);
+        triggerViolation('Window blur / OS app switch');
+      }, 100);
     };
     const handleWindowFocus = () => {
       if (blurTimer) clearTimeout(blurTimer);
@@ -492,19 +495,28 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
     // ─── Keyboard shortcut interception (best-effort) ─────────────────
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Block common OS shortcuts that could escape the exam
+      // Block common OS shortcuts that escape the exam
       const blocked =
         e.key === 'Meta' || // Windows/Command key
-        (e.altKey && e.key === 'Tab') || // Alt+Tab
-        (e.altKey && e.key === 'F4') || // Alt+F4
-        (e.ctrlKey && e.key === 'w') || // Close tab
-        (e.ctrlKey && e.key === 'W') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'Escape') || // Task manager shortcut
-        e.key === 'F11'; // Fullscreen toggle
+        e.key === 'Alt' ||
+        (e.altKey && (e.key === 'Tab' || e.key === 'F4' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) ||
+        (e.ctrlKey && (e.key === 'w' || e.key === 'W' || e.key === 't' || e.key === 'T' || e.key === 'n' || e.key === 'N' || e.key === 'r' || e.key === 'R')) ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c' || e.key === 'Escape')) ||
+        e.key === 'F11' ||
+        e.key === 'F12' ||
+        e.key === 'Escape';
+
       if (blocked) {
+        if (e.key === 'Escape' || e.key === 'F11' || e.key === 'Meta') {
+          triggerViolation('Restricted key pressed');
+        }
         e.preventDefault();
         e.stopPropagation();
       }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
     };
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -515,6 +527,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
     window.addEventListener('keydown', handleKeyDown, true); // capture phase
@@ -524,6 +537,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('blur', handleWindowBlur);
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('keydown', handleKeyDown, true);
@@ -531,7 +545,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       if (blurTimer) clearTimeout(blurTimer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [test, result]);
+  }, [test, result, isExamStarted]);
 
   // Live Timer Countdown Effect
   useEffect(() => {
@@ -2103,7 +2117,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       )}
 
       {/* ─── SCREEN LOCK VIOLATION MODAL — fully blocking, no escape ─── */}
-      {!result && !isFullscreen && showLockWarning && (
+      {!result && isExamStarted && showLockWarning && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           style={{
@@ -2150,8 +2164,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                 {fullscreenViolationCount >= 3
-                  ? 'You exited fullscreen 3 times. Your test has been automatically submitted.'
-                  : `You exited Full Screen Mode. You have ${3 - fullscreenViolationCount} warning${3 - fullscreenViolationCount !== 1 ? 's' : ''} remaining before your test is automatically submitted.`
+                  ? 'You had 3 security violations (exiting full screen, tab switching, or app switching). Your test has been automatically submitted.'
+                  : `Security Alert: Exiting full screen, switching tabs, or opening other apps is strictly prohibited. You have ${3 - fullscreenViolationCount} warning${3 - fullscreenViolationCount !== 1 ? 's' : ''} remaining before automatic submission.`
                 }
               </p>
             </div>
@@ -2160,11 +2174,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
             {fullscreenViolationCount < 3 && (
               <button
                 type="button"
-                onClick={() => {
-                  enterFullscreen();
+                onClick={async () => {
+                  await enterFullscreen();
+                  setIsFullscreen(true);
                   setShowLockWarning(false);
                 }}
-                className="w-full py-3 bg-brand-800 hover:bg-brand-900 text-white text-xs font-black rounded-xl shadow-lg transition-all"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-lg transition-all cursor-pointer"
               >
                 Re-enter Full Screen Examination
               </button>
