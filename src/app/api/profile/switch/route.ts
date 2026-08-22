@@ -32,6 +32,9 @@ export async function POST(req: Request) {
         if (targetProfile.status === 'Deleted' || targetProfile.name === 'Deleted User') {
           return NextResponse.json({ error: 'Profile not found or deleted' }, { status: 404 });
         }
+        if (targetProfile.status === 'Suspended' || targetProfile.status === 'suspended' || targetProfile.status === 'SUSPENDED') {
+          return NextResponse.json({ error: 'This sub-profile has been suspended by an administrator. Please select an active profile.' }, { status: 403 });
+        }
 
         const token = signUserToken({
           userId: targetProfile.id,
@@ -69,6 +72,9 @@ export async function POST(req: Request) {
     const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId) || String(u.id) === String(profileId));
     if (!targetProfile || targetProfile.status === 'Deleted') {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+    if (targetProfile.status === 'Suspended' || targetProfile.status === 'suspended' || targetProfile.status === 'SUSPENDED') {
+      return NextResponse.json({ error: 'This sub-profile has been suspended by an administrator. Please select an active profile.' }, { status: 403 });
     }
 
     const token = signUserToken({

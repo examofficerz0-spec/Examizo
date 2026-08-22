@@ -19,11 +19,51 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR LOWER(email) = ? LIMIT 1', [userIdStr, emailLower]);
     if (d1Users && d1Users.length > 0) {
       const u = d1Users[0];
+      const isSubProfile = u.email && (u.email.includes('+') || u.email.includes('@exammaster.internal'));
+      const parentEmail = (u.account_email || (isSubProfile ? `${u.email.split('+')[0]}@${u.email.split('@')[1] || 'examizo.com'}` : u.email)).toLowerCase().trim();
+
+      if (isSubProfile && parentEmail && parentEmail !== u.email.toLowerCase()) {
+        // Check parent main account status first
+        const parentD1 = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [parentEmail]);
+        if (parentD1 && parentD1.length > 0) {
+          const p = parentD1[0];
+          const isParentSuspended = p.status === 'Suspended' || p.status === 'suspended' || p.status === 'SUSPENDED';
+          const isParentDeleted = p.status === 'Deleted' || p.name === 'Deleted User' || (p.email && p.email.startsWith('deleted_'));
+          if (isParentDeleted || isParentSuspended) {
+            return null; // Main account suspended/deleted blocks all sub-profiles
+          }
+
+          // Parent is Active: check if sub-profile itself is suspended/deleted
+          const isSubSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
+          const isSubDeleted = u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'));
+          if (isSubDeleted || isSubSuspended) {
+            // Sub-profile suspended/deleted: Fallback seamlessly to the active main profile
+            return {
+              user: {
+                _id: p.id,
+                id: p.id,
+                name: p.name,
+                email: p.email,
+                password_hash: p.password_hash,
+                account_email: p.email,
+                locked_course_id: p.locked_course_id || null,
+                status: p.status || 'Active',
+                xp_total: p.xp_total || 0,
+              },
+              isMemoryMode: false,
+              isD1: true,
+            };
+          }
+        }
+      }
+
+      // Standard user check
       const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
       const isDeleted = u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'));
       if (isDeleted || isSuspended) {
         return null;
       }
+
       return {
         user: {
           _id: u.id,
@@ -61,6 +101,27 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
       }
 
       if (memUser) {
+        const isSubProfile = memUser.email && (memUser.email.includes('+') || memUser.email.includes('@exammaster.internal'));
+        const parentEmail = (memUser.account_email || (isSubProfile ? `${memUser.email.split('+')[0]}@${memUser.email.split('@')[1] || 'examizo.com'}` : memUser.email)).toLowerCase().trim();
+
+        if (isSubProfile && parentEmail && parentEmail !== memUser.email.toLowerCase()) {
+          const parentMem = (db.users || []).find((u: any) => (u.email && u.email.toLowerCase() === parentEmail));
+          if (parentMem) {
+            const isParentSuspended = parentMem.status === 'Suspended' || parentMem.status === 'suspended' || parentMem.status === 'SUSPENDED';
+            const isParentDeleted = parentMem.status === 'Deleted' || parentMem.name === 'Deleted User' || (parentMem.email && parentMem.email.startsWith('deleted_'));
+            if (isParentDeleted || isParentSuspended) {
+              return null; // Parent account suspended blocks all subprofiles
+            }
+
+            const isSubSuspended = memUser.status === 'Suspended' || memUser.status === 'suspended' || memUser.status === 'SUSPENDED';
+            const isSubDeleted = memUser.status === 'Deleted' || memUser.name === 'Deleted User' || (memUser.email && memUser.email.startsWith('deleted_'));
+            if (isSubDeleted || isSubSuspended) {
+              // Sub-profile suspended: Fallback to active parent user
+              return { user: parentMem, isMemoryMode: true };
+            }
+          }
+        }
+
         const isSuspended = memUser.status === 'Suspended' || memUser.status === 'suspended' || memUser.status === 'SUSPENDED';
         const isDeleted = memUser.status === 'Deleted' || memUser.name === 'Deleted User' || (memUser.email && memUser.email.startsWith('deleted_'));
         if (isDeleted || isSuspended) {
@@ -73,8 +134,6 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     console.warn('[getUserFromAuth] Memory DB lookup warning:', e);
   }
 
-  // 3. If user record was not found in either D1 or Memory DB (or marked deleted),
-  // return null so that the deleted account session immediately terminates and logs out.
   return null;
 }
 
