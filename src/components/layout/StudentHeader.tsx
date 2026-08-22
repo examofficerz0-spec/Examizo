@@ -383,27 +383,47 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
           {/* Center Navigation Bar */}
           {!hideNav && (
-            <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 h-full">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-                
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    prefetch={true}
-                    className={`px-4 h-full text-xs font-bold flex items-center gap-2 transition-all relative border-b-2 ${
-                      isActive
-                        ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
-                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300'
-                    }`}
+            <nav className="hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 h-full">
+              <div className="relative grid grid-cols-5 items-center h-10 w-[550px] bg-slate-100/70 dark:bg-slate-800/50 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
+                {/* Fluid Sliding Active Background Pill & Underline */}
+                {navLinks.findIndex((link) => pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))) !== -1 && (
+                  <div
+                    className="absolute top-1 bottom-1 rounded-xl bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-blue-800/80 shadow-xs transition-all duration-300 pointer-events-none"
+                    style={{
+                      width: '20%',
+                      left: `${navLinks.findIndex((link) => pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))) * 20}%`,
+                      transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                    <span>{link.label}</span>
-                  </Link>
-                );
-              })}
+                    <div className="absolute -bottom-1 left-2.5 right-2.5 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                  </div>
+                )}
+
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+                  
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      prefetch={true}
+                      className={`relative z-10 flex items-center justify-center gap-1.5 h-full text-xs transition-all duration-200 cursor-pointer select-none rounded-xl ${
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400 font-black'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-bold'
+                      }`}
+                    >
+                      <Icon
+                        className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                          isActive ? 'text-blue-600 dark:text-blue-400 scale-110' : 'text-slate-400 dark:text-slate-500'
+                        }`}
+                      />
+                      <span className="whitespace-nowrap">{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </nav>
           )}
 
