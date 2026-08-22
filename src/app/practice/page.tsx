@@ -31,8 +31,14 @@ import {
 
 import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
+const sigCache = new Map<string, string>();
+const cleanTextCache = new Map<string, string>();
+
 const cleanQuestionText = (text: any): string => {
   if (!text || typeof text !== 'string') return '';
+  const cached = cleanTextCache.get(text);
+  if (cached !== undefined) return cached;
+
   let cleaned = text.trim();
 
   // 1. Remove trailing prefixes/suffixes like (Set 2, item 18), [Set 1, item 5], (Item 12), (Set 2), [Set A, Question 4]
@@ -48,30 +54,40 @@ const cleanQuestionText = (text: any): string => {
     .replace(/^[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
     .replace(/^(?:q(?:uestion)?\s*\d+[\s\.\:\-]+|\d+[\s\.\:\-]+)/gi, '');
 
-  return cleaned.trim();
+  const result = cleaned.trim();
+  cleanTextCache.set(text, result);
+  return result;
 };
 
 const normalizeQuestionSignature = (qText: string): string => {
   if (!qText || typeof qText !== 'string') return '';
-  return qText
+  const cached = sigCache.get(qText);
+  if (cached !== undefined) return cached;
+
+  const result = qText
     .toLowerCase()
     .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
     .replace(/[^\w\s]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  sigCache.set(qText, result);
+  return result;
 };
 
 const deduplicateQuestions = (list: any[]): any[] => {
+  if (!list || list.length === 0) return [];
   const seenIds = new Set<string>();
   const seenSigs = new Set<string>();
   const uniqueList: any[] = [];
 
-  for (const q of (list || [])) {
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i];
     if (!q) continue;
     const qId = String(q._id || q.id || '');
-    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
-
     if (qId && seenIds.has(qId)) continue;
+
+    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
     if (sig && seenSigs.has(sig)) continue;
 
     if (qId) seenIds.add(qId);
@@ -80,6 +96,42 @@ const deduplicateQuestions = (list: any[]): any[] => {
   }
   return uniqueList;
 };
+
+const calculateWeeklyCountdown = () => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+
+  const nextMonday = new Date(now);
+  nextMonday.setDate(now.getDate() + daysUntilMonday);
+  nextMonday.setHours(0, 0, 0, 0);
+
+  const diff = Math.max(0, nextMonday.getTime() - now.getTime());
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  return { days, hours, minutes, seconds };
+};
+
+const WeeklyCountdownBadge: React.FC = React.memo(() => {
+  const [countdown, setCountdown] = useState(calculateWeeklyCountdown);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown(calculateWeeklyCountdown());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800 flex items-center gap-1">
+      <Clock className="w-3 h-3 text-amber-600" />
+      Next Reshuffle: {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+    </span>
+  );
+});
 
 export default function PracticeSetsPage() {
   const initialCache = getSwrCache<any>('practice_cache');
@@ -239,31 +291,6 @@ export default function PracticeSetsPage() {
       setOnBack(undefined);
     };
   }, [activeSession, currentLevel, submittedResult]);
-  const [weeklyCountdown, setWeeklyCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
-      const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-
-      const nextMonday = new Date(now);
-      nextMonday.setDate(now.getDate() + daysUntilMonday);
-      nextMonday.setHours(0, 0, 0, 0);
-
-      const diff = Math.max(0, nextMonday.getTime() - now.getTime());
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      setWeeklyCountdown({ days, hours, minutes, seconds });
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Weekly Shuffling Helpers
   const getWeekNumber = () => {
@@ -311,7 +338,7 @@ export default function PracticeSetsPage() {
     return arr;
   };
 
-  const getWeeklyQuestions = () => {
+  const getWeeklyQuestions = useCallback(() => {
     if (publishedWeeklyDpp) {
       if (Array.isArray(publishedWeeklyDpp.questions) && publishedWeeklyDpp.questions.length > 0) {
         const validObjects = publishedWeeklyDpp.questions.filter(
@@ -328,12 +355,19 @@ export default function PracticeSetsPage() {
     }
     // Dynamic Weekly DPP from Course Question Bank
     return questions;
-  };
+  }, [publishedWeeklyDpp, questions]);
 
   const hasCourseWeeklyDpp = useMemo(() => {
     const rawWeeklyQs = getWeeklyQuestions();
     return rawWeeklyQs.length > 0;
-  }, [publishedWeeklyDpp, questions]);
+  }, [getWeeklyQuestions]);
+
+  const weeklySmartSet = useMemo(() => {
+    const rawWeeklyQs = getWeeklyQuestions();
+    if (!rawWeeklyQs || rawWeeklyQs.length === 0) return [];
+    const seed = getWeekNumber() + new Date().getFullYear() * 100;
+    return getCourseWeeklyDPPSet(rawWeeklyQs, seed);
+  }, [getWeeklyQuestions, userAttempts, questions]);
 
   // Weekly DPP Smart Shuffling Algorithm (Weekly Monday Reshuffle)
   // 1. Shuffles from questions belonging to the enrolled course.
@@ -1498,9 +1532,6 @@ export default function PracticeSetsPage() {
 
                   {/* WEEKLY MEGA DPP CHALLENGE SECTION (Clean Light Theme with Indigo Accent) */}
                   {(() => {
-                    const rawWeeklyQs = getWeeklyQuestions();
-                    const seed = getWeekNumber() + new Date().getFullYear() * 100;
-                    const weeklySmartSet = getCourseWeeklyDPPSet(rawWeeklyQs, seed);
                     const hasDppForCourse = hasCourseWeeklyDpp && weeklySmartSet.length > 0;
                     const totalWeeklyCount = weeklySmartSet.length;
 
@@ -1520,10 +1551,7 @@ export default function PracticeSetsPage() {
                                   Course Weekly DPP Paper
                                 </span>
                                 {hasDppForCourse ? (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800 flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-amber-600" />
-                                    Next Reshuffle: {weeklyCountdown.days}d {weeklyCountdown.hours}h {weeklyCountdown.minutes}m {weeklyCountdown.seconds}s
-                                  </span>
+                                  <WeeklyCountdownBadge />
                                 ) : (
                                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
                                     ⏳ Coming Soon
