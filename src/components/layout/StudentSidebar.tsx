@@ -118,8 +118,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   isActive
                     ? 'bg-[#044B3B] text-white dark:bg-[#10B981] dark:text-slate-950 font-black shadow-xs'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80'

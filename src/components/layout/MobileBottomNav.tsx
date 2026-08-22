@@ -84,7 +84,8 @@ export const MobileBottomNav: React.FC = () => {
               <div key={href} className="relative flex justify-center items-center h-full">
                 <Link
                   href={href}
-                  className="absolute -top-5 flex flex-col items-center group"
+                  prefetch={true}
+                  className="absolute -top-5 flex flex-col items-center group cursor-pointer"
                 >
                   {/* Completely Round Floating Action Button */}
                   <span
@@ -120,7 +121,8 @@ export const MobileBottomNav: React.FC = () => {
             <Link
               key={href}
               href={href}
-              className="relative z-10 flex flex-col items-center justify-center h-full py-1 transition-all duration-200 active:scale-95 select-none"
+              prefetch={true}
+              className="relative z-10 flex flex-col items-center justify-center h-full py-1 transition-all duration-200 active:scale-95 select-none cursor-pointer"
             >
               <Icon
                 className={`w-5 h-5 transition-all duration-300 ${

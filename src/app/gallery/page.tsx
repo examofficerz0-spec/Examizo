@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
 import { PublicFooter } from '@/components/layout/PublicFooter';
+import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 import { 
   ArrowRight, 
   Search, 
@@ -31,8 +32,9 @@ interface GalleryPhoto {
 }
 
 export default function GalleryPage() {
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialCache = getSwrCache<GalleryPhoto[]>('student_gallery_cache');
+  const [photos, setPhotos] = useState<GalleryPhoto[]>(initialCache || []);
+  const [loading, setLoading] = useState(!initialCache);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -40,11 +42,12 @@ export default function GalleryPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch('/api/gallery')
+    fetch('/api/gallery', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.gallery)) {
           setPhotos(data.gallery);
+          setSwrCache('student_gallery_cache', data.gallery);
         }
       })
       .catch(console.error)
