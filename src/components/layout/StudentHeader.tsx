@@ -132,28 +132,25 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     try {
       const res = await fetch('/api/profile/list', { cache: 'no-store' });
       if (res.status === 401 || res.status === 403) {
-        redirectToLogin();
         return;
       }
       const data = await res.json();
       if (data.profiles && Array.isArray(data.profiles)) {
         const validProfiles = data.profiles.filter((p: any) => p.name !== 'Deleted User');
-        if (validProfiles.length === 0) {
-          redirectToLogin();
-          return;
-        }
-        setProfiles(validProfiles);
-        const active = validProfiles.find((p: ProfileItem) => p.isActive);
-        if (active) {
-          if (active.name === 'Deleted User') {
-            redirectToLogin();
-            return;
-          }
-          setUserName(active.name);
-          setCurrentUserEmail(active.accountEmail || active.email);
-          setCurrentCourseName(active.lockedCourseName || null);
-          if (active.lockedCourseName && typeof window !== 'undefined') {
-            sessionStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
+        if (validProfiles.length > 0) {
+          setProfiles(validProfiles);
+          const active = validProfiles.find((p: ProfileItem) => p.isActive) || validProfiles[0];
+          if (active) {
+            if (active.name === 'Deleted User') {
+              redirectToLogin();
+              return;
+            }
+            setUserName(active.name);
+            setCurrentUserEmail(active.accountEmail || active.email);
+            setCurrentCourseName(active.lockedCourseName || null);
+            if (active.lockedCourseName && typeof window !== 'undefined') {
+              sessionStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
+            }
           }
         }
       }
@@ -166,22 +163,27 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     try {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       if (res.status === 401 || res.status === 403) {
-        redirectToLogin();
+        const errData = await res.json().catch(() => null);
+        if (errData && (errData.authenticated === false || errData.error?.includes('suspended'))) {
+          redirectToLogin(errData.error?.includes('suspended') ? 'Your account has been suspended by administration' : undefined);
+        }
         return null;
       }
       if (res.ok) {
         const data = await res.json();
         const status = String(data?.user?.status || '').toLowerCase();
-        if (!data?.authenticated || !data?.user || status === 'suspended' || status === 'deleted' || data?.user?.name === 'Deleted User') {
+        if (status === 'suspended' || status === 'deleted' || data?.user?.name === 'Deleted User') {
           redirectToLogin(status === 'suspended' ? 'Your account has been suspended by administration' : undefined);
           return null;
         }
-        setUserName(data.user.name);
-        setCurrentUserEmail(data.user.email);
-        if (data.user.lockedCourse?.name) {
-          setCurrentCourseName(data.user.lockedCourse.name);
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('examizo_cached_course_name', data.user.lockedCourse.name);
+        if (data?.user) {
+          setUserName(data.user.name);
+          setCurrentUserEmail(data.user.email);
+          if (data.user.lockedCourse?.name) {
+            setCurrentCourseName(data.user.lockedCourse.name);
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('examizo_cached_course_name', data.user.lockedCourse.name);
+            }
           }
         }
         return data;
@@ -212,21 +214,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     }
 
     checkAuthStatus();
-    const interval = setInterval(checkAuthStatus, 10000);
-
-    const onFocus = () => checkAuthStatus();
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') checkAuthStatus();
-    };
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
   }, [propsUserName]);
 
   const changeTextSize = (delta: number) => {

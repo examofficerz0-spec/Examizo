@@ -10,9 +10,7 @@ export const revalidate = 0;
 export async function GET() {
   const auth = getAuthenticatedUser();
   if (!auth) {
-    const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
-    return res;
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -26,9 +24,7 @@ export async function GET() {
       authResult.user.status === 'suspended' ||
       authResult.user.status === 'SUSPENDED'
     ) {
-      const res = NextResponse.json({ error: 'User deleted or suspended' }, { status: 401 });
-      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
-      return res;
+      return NextResponse.json({ error: 'User deleted or suspended' }, { status: 401 });
     }
 
     const { user: currentUser } = authResult;
@@ -112,6 +108,21 @@ export async function GET() {
         xp_total: u.xp_total || 0,
       };
     });
+
+    if (!profiles || profiles.length === 0) {
+      const defaultProfile = {
+        id: String(currentUser._id || currentUser.id || auth.userId),
+        name: currentUser.name || auth.name || 'Student',
+        email: currentUser.email || auth.email,
+        accountEmail: accountEmail || currentEmail,
+        lockedCourseId: currentUser.locked_course_id || auth.lockedCourseId || null,
+        lockedCourseName: null,
+        isActive: true,
+        isPrimary: true,
+        xp_total: currentUser.xp_total || 0,
+      };
+      return NextResponse.json({ success: true, profiles: [defaultProfile] });
+    }
 
     return NextResponse.json({ success: true, profiles });
   } catch (error: any) {

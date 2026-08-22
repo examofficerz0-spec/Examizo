@@ -50,14 +50,14 @@ export default function CourseSelectionPage() {
     // 2. Verify Auth State and redirect if course is already locked
     fetch('/api/auth/me', { cache: 'no-store' })
       .then((res) => {
-        if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
           router.push('/login');
           return null;
         }
         return res.json();
       })
       .then((meData) => {
-        if (!meData || !meData.authenticated) {
+        if (meData && meData.authenticated === false) {
           router.push('/login');
           return;
         }

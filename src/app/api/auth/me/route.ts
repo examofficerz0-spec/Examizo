@@ -7,9 +7,7 @@ import { queryD1 } from '@/lib/d1';
 export async function GET() {
   const auth = getAuthenticatedUser();
   if (!auth) {
-    const res = NextResponse.json({ authenticated: false, error: 'Unauthorized' }, { status: 401 });
-    res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
-    return res;
+    return NextResponse.json({ authenticated: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -22,31 +20,23 @@ export async function GET() {
       authResult.user.status === 'suspended' ||
       authResult.user.status === 'SUSPENDED')
     ) {
-      const res = NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
-      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
-      return res;
+      return NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
     }
 
     if (!authResult || !authResult.user) {
-      if (auth && !auth.lockedCourseId) {
-        // Pending onboarding student who has not chosen a course yet
-        return NextResponse.json({
-          authenticated: true,
-          user: {
-            id: auth.userId,
-            name: auth.name || auth.email?.split('@')[0] || 'Student',
-            email: auth.email,
-            lockedCourse: null,
-            lockedCourseId: null,
-            xp_total: 0,
-            status: 'Pending',
-          },
-        });
-      }
-
-      const res = NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
-      res.cookies.set('student_token', '', { httpOnly: true, maxAge: 0, path: '/' });
-      return res;
+      // Pending onboarding student who has not chosen a course yet
+      return NextResponse.json({
+        authenticated: true,
+        user: {
+          id: auth.userId,
+          name: auth.name || auth.email?.split('@')[0] || 'Student',
+          email: auth.email,
+          lockedCourse: null,
+          lockedCourseId: null,
+          xp_total: 0,
+          status: 'Active',
+        },
+      });
     }
 
     const { user } = authResult;

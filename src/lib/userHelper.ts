@@ -73,5 +73,25 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     console.warn('[getUserFromAuth] Memory DB lookup warning:', e);
   }
 
+  // 3. Resilient JWT Payload Fallback
+  // If the JWT token was cryptographically verified, safely construct user from token claims
+  // so temporary DB delays/sync gaps do not falsely destroy user authentication sessions.
+  if (auth && (auth.userId || auth.email)) {
+    return {
+      user: {
+        _id: auth.userId || 'student_authenticated',
+        id: auth.userId || 'student_authenticated',
+        name: auth.name || (auth.email ? auth.email.split('@')[0] : 'Student'),
+        email: auth.email || '',
+        account_email: auth.email || '',
+        locked_course_id: auth.lockedCourseId || null,
+        status: 'Active',
+        xp_total: 0,
+      },
+      isMemoryMode: true,
+    };
+  }
+
   return null;
 }
+

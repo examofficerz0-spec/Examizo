@@ -106,16 +106,16 @@ export default function StudentDashboardPage() {
       .then((res) => {
         if (res.status === 401 || res.status === 403) {
           clearAllClientUserCaches();
-          window.location.href = '/login?error=account_deleted';
+          window.location.href = '/login';
           return null;
         }
         return res.json();
       })
       .then((data) => {
         if (!data || !isMounted) return;
-        if (data.error === 'Unauthorized' || data.error?.includes('deleted') || data.error?.includes('not found')) {
+        if (data.error === 'Unauthorized' || data.error?.includes('suspended') || data.error?.includes('deleted')) {
           clearAllClientUserCaches();
-          window.location.href = '/login?error=account_deleted';
+          window.location.href = '/login';
           return;
         }
         if (data.needsCourseSelection) {
@@ -136,8 +136,8 @@ export default function StudentDashboardPage() {
         if (data.topLeaderboard) setLeaderboard(data.topLeaderboard);
         if (data.incorrectLog) setIncorrectLog(data.incorrectLog);
       })
-      .catch(() => {
-        if (!initialCache) router.push('/login');
+      .catch((err) => {
+        console.error('[Dashboard] Fetch error:', err);
       })
       .finally(() => {
         if (isMounted) setLoading(false);
