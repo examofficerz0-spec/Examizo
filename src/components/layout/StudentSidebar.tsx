@@ -78,17 +78,19 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     window.location.href = '/login';
   };
 
-  const SidebarContent = () => (
+  const renderSidebarBody = (isMobile: boolean) => (
     <div className="flex flex-col justify-between h-full">
       <div className="p-5">
         <div className="flex justify-between items-center mb-6">
           <Logo />
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {isMobile && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Locked Course Widget */}
@@ -149,7 +151,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
         <button
           onClick={handleLogout}
           type="button"
-          className="flex items-center gap-2.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors w-full px-3.5 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40"
+          className="flex items-center gap-2.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors w-full px-3.5 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           Logout
@@ -162,7 +164,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     <>
       {/* Desktop Static Sidebar */}
       <aside className="hidden lg:flex w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-col justify-between h-screen sticky top-0 shrink-0 select-none">
-        <SidebarContent />
+        {renderSidebarBody(false)}
       </aside>
 
       {/* Mobile Slide-Over Backdrop & Drawer */}
@@ -173,7 +175,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
             onClick={() => setMobileOpen(false)}
           />
           <aside className="relative w-64 max-w-[80vw] bg-white dark:bg-slate-900 h-full shadow-2xl z-50 flex flex-col justify-between select-none animate-in slide-in-from-left duration-200">
-            <SidebarContent />
+            {renderSidebarBody(true)}
           </aside>
         </div>
       )}
