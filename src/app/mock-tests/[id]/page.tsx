@@ -199,6 +199,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [result, setResult] = useState<any>(null);
   const [reviewFilter, setReviewFilter] = useState<'all' | 'incorrect' | 'correct' | 'unattempted'>('all');
   const [reviewSubjectFilter, setReviewSubjectFilter] = useState<string>('all');
+  const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
   const [openReviewQuestions, setOpenReviewQuestions] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
 
@@ -1286,56 +1287,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                   </div>
                 );
               })}
-            </div>
-
-            {/* Clean Topic Modules List */}
-            {topicPerformance.length > 0 && (
-              <div className="space-y-2.5 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider block">
-                    Topic Mastery &amp; Question Coverage ({topicPerformance.length} Topics):
-                  </span>
-                  {topicPerformance.length > 6 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllTopics(!showAllTopics)}
-                      className="text-xs font-bold text-blue-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {showAllTopics ? 'Show Less Topics' : `View All ${topicPerformance.length} Topics`}
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllTopics ? 'rotate-180' : 'rotate-0'}`} />
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {(showAllTopics ? topicPerformance : topicPerformance.slice(0, 6)).map((topItem, tIdx) => {
-                    return (
-                      <div
-                        key={tIdx}
-                        className="p-3 bg-slate-50/80 dark:bg-[#181622]/70 border border-slate-200/70 dark:border-[#242033] rounded-xl flex items-center justify-between gap-3 text-xs"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[10px] font-extrabold text-blue-600 dark:text-purple-400 uppercase tracking-wider block">
-                            {topItem.subject}
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                            {topItem.topic}
-                          </span>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-[#0D0D12] border border-slate-200 dark:border-[#242033] text-slate-700 dark:text-slate-300">
-                            {topItem.total} Qs
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
           </div>
 
-          {/* Question-by-Question Solution Review Section */}
+          {/* Question-by-Question Solution Review (Grouped by Topic) */}
           <div className="bg-white dark:bg-[#0D0D12] border border-slate-200/90 dark:border-[#242033] rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl space-y-6">
             
             {/* Header & Filter Controls */}
@@ -1346,10 +1300,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
-                    Question-by-Question Solution Review
+                    Topic-Wise Question &amp; Solution Review
                   </h3>
                   <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Compact question log with expandable step-by-step solutions &amp; answer keys.
+                    Click any Topic to view its questions, then click Solution to view full steps &amp; answer keys.
                   </p>
                 </div>
               </div>
@@ -1406,11 +1360,16 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <button
                   type="button"
                   onClick={() => {
-                    const nextState: Record<string, boolean> = {};
+                    const nextTopicState: Record<string, boolean> = {};
+                    const nextQState: Record<string, boolean> = {};
                     filteredReviewQuestions.forEach((q) => {
-                      nextState[q._id] = true;
+                      const { subject, topic } = getQuestionSubjectAndTopic(q);
+                      const key = `${subject}__${topic || 'General'}`;
+                      nextTopicState[key] = true;
+                      nextQState[q._id] = true;
                     });
-                    setOpenReviewQuestions(nextState);
+                    setOpenTopics(nextTopicState);
+                    setOpenReviewQuestions(nextQState);
                   }}
                   className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] cursor-pointer transition-colors"
                 >
@@ -1418,7 +1377,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpenReviewQuestions({})}
+                  onClick={() => {
+                    setOpenTopics({});
+                    setOpenReviewQuestions({});
+                  }}
                   className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] cursor-pointer transition-colors"
                 >
                   Collapse All
@@ -1457,210 +1419,331 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
             )}
 
-            {/* Question Review Cards List */}
-            {filteredReviewQuestions.length === 0 ? (
-              <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-[#242033] rounded-2xl space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">No Questions In This Filter</h4>
-                <p className="text-xs text-slate-500">Try changing your filter above to view questions.</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {filteredReviewQuestions.map((q) => {
-                  const originalIdx = questions.findIndex((item) => item._id === q._id);
-                  const { subject, topic } = getQuestionSubjectAndTopic(q);
-                  const uSt = userState[q._id] || userState[q.id];
-                  const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
-                  const isAttempted = userChoice !== null;
-                  const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
-                  const isIncorrect = isAttempted && !isCorrect;
-                  const isOpen = Boolean(openReviewQuestions[q._id]);
+            {/* Grouped Topics -> Questions -> Solutions */}
+            {(() => {
+              const topicMap = new Map<string, {
+                topicKey: string;
+                subject: string;
+                topic: string;
+                questions: any[];
+                correctCount: number;
+                incorrectCount: number;
+                skippedCount: number;
+              }>();
 
-                  const userChoiceLetter = userChoice !== null && userChoice !== undefined && q.options?.[userChoice]
-                    ? `${String.fromCharCode(65 + userChoice)}`
-                    : 'Skipped';
-                  const correctChoiceLetter = q.correct_option !== undefined && q.options?.[q.correct_option]
-                    ? `${String.fromCharCode(65 + q.correct_option)}`
-                    : '-';
+              filteredReviewQuestions.forEach((q) => {
+                const { subject, topic } = getQuestionSubjectAndTopic(q);
+                const resolvedTopic = topic || 'General';
+                const topicKey = `${subject}__${resolvedTopic}`;
 
-                  return (
-                    <div
-                      key={q._id}
-                      className="border border-slate-200/90 dark:border-[#242033] rounded-2xl overflow-hidden bg-white dark:bg-[#0D0D12] transition-all shadow-xs"
-                    >
-                      {/* Compact 1-Row Bar */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOpenReviewQuestions((prev) => ({
-                            ...prev,
-                            [q._id]: !prev[q._id],
-                          }));
-                        }}
-                        className={`w-full px-3.5 sm:px-5 py-3 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
-                          isOpen
-                            ? 'bg-slate-50 dark:bg-[#181622]/80 border-b border-slate-200/80 dark:border-[#242033]'
-                            : 'hover:bg-slate-50/80 dark:hover:bg-[#181622]/50'
-                        }`}
+                const uSt = userState[q._id] || userState[q.id];
+                const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
+                const isAttempted = userChoice !== null;
+                const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
+                const isIncorrect = isAttempted && !isCorrect;
+
+                if (!topicMap.has(topicKey)) {
+                  topicMap.set(topicKey, {
+                    topicKey,
+                    subject,
+                    topic: resolvedTopic,
+                    questions: [],
+                    correctCount: 0,
+                    incorrectCount: 0,
+                    skippedCount: 0,
+                  });
+                }
+
+                const grp = topicMap.get(topicKey)!;
+                grp.questions.push(q);
+                if (isCorrect) grp.correctCount++;
+                else if (isIncorrect) grp.incorrectCount++;
+                else grp.skippedCount++;
+              });
+
+              const groupedTopicList = Array.from(topicMap.values());
+
+              if (groupedTopicList.length === 0) {
+                return (
+                  <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-[#242033] rounded-2xl space-y-2">
+                    <CheckCircle2 className="w-8 h-8 text-slate-400 mx-auto" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">No Questions In This Filter</h4>
+                    <p className="text-xs text-slate-500">Try changing your filter above to view questions.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-3.5">
+                  {groupedTopicList.map((grp) => {
+                    const isTopicOpen = Boolean(openTopics[grp.topicKey]);
+
+                    return (
+                      <div
+                        key={grp.topicKey}
+                        className="border border-slate-200/90 dark:border-[#242033] rounded-2xl overflow-hidden bg-white dark:bg-[#0D0D12] transition-all shadow-xs"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#0B192C] dark:bg-blue-600 text-white text-[11px] font-black shrink-0 shadow-2xs">
-                            Q{originalIdx + 1}
-                          </span>
+                        {/* Level 1: Topic Dropdown Header */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOpenTopics((prev) => ({
+                              ...prev,
+                              [grp.topicKey]: !prev[grp.topicKey],
+                            }));
+                          }}
+                          className={`w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
+                            isTopicOpen
+                              ? 'bg-slate-50/90 dark:bg-[#181622] border-b border-slate-200/80 dark:border-[#242033]'
+                              : 'hover:bg-slate-50/60 dark:hover:bg-[#181622]/40'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-100 dark:bg-purple-950/80 text-blue-700 dark:text-purple-300 flex items-center justify-center shrink-0">
+                              <BookOpen className="w-4 h-4" />
+                            </div>
 
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#181622] text-slate-700 dark:text-slate-300 text-[10px] font-extrabold border border-slate-200 dark:border-[#242033] shrink-0 hidden sm:inline-block">
-                            {subject}
-                          </span>
-
-                          {topic && (
-                            <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-900/50 shrink-0 hidden md:inline-block">
-                              {topic}
-                            </span>
-                          )}
-
-                          <p className="text-xs sm:text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
-                            {cleanQuestionText(q.question_text)}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                          {/* Choice comparison tag */}
-                          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold">
-                            <span className={`px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isIncorrect ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-                              You: {userChoiceLetter}
-                            </span>
-                            <span className="text-slate-300 dark:text-slate-700">|</span>
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                              Key: {correctChoiceLetter}
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase bg-blue-50 dark:bg-purple-950 text-blue-600 dark:text-purple-300 border border-blue-200/60 dark:border-purple-800/40">
+                                  {grp.subject}
+                                </span>
+                                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                                  {grp.topic}
+                                </h4>
+                              </div>
+                              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                                {grp.questions.length} Question{grp.questions.length === 1 ? '' : 's'} in this topic module
+                              </p>
+                            </div>
                           </div>
 
-                          {/* Status Pill */}
-                          {isCorrect && (
-                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black flex items-center gap-1 shrink-0">
-                              <CheckCircle2 className="w-3 h-3" /> <span className="hidden sm:inline">Correct</span> (+4)
-                            </span>
-                          )}
-                          {isIncorrect && (
-                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800 text-[10px] font-black flex items-center gap-1 shrink-0">
-                              <XCircle className="w-3 h-3" /> <span className="hidden sm:inline">Incorrect</span> (-1)
-                            </span>
-                          )}
-                          {!isAttempted && (
-                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-bold flex items-center gap-1 shrink-0">
-                              <MinusCircle className="w-3 h-3" /> <span className="hidden sm:inline">Skipped</span> (0)
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                            {/* Topic performance pills */}
+                            <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold">
+                              {grp.correctCount > 0 && (
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                                  {grp.correctCount} Correct
+                                </span>
+                              )}
+                              {grp.incorrectCount > 0 && (
+                                <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300">
+                                  {grp.incorrectCount} Wrong
+                                </span>
+                              )}
+                              {grp.skippedCount > 0 && (
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                  {grp.skippedCount} Skipped
+                                </span>
+                              )}
+                            </div>
 
-                          {/* Dropdown Chevron Button */}
-                          <div className={`px-2 py-1 rounded-lg text-[11px] font-black flex items-center gap-1 transition-all ${
-                            isOpen
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] text-slate-700 dark:text-slate-300'
-                          }`}>
-                            <span className="hidden sm:inline">{isOpen ? 'Hide' : 'Solution'}</span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
+                            <span className="px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black bg-blue-100 dark:bg-purple-950 text-blue-700 dark:text-purple-300">
+                              {grp.questions.length} Qs
+                            </span>
+
+                            <div className={`w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 transition-transform duration-300 ${
+                              isTopicOpen ? 'rotate-180 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white' : 'rotate-0'
+                            }`}>
+                              <ChevronDown className="w-4 h-4" />
+                            </div>
                           </div>
-                        </div>
-                      </button>
+                        </button>
 
-                      {/* Dropdown Details (Full Question, Options, Answer Key & Solution) */}
-                      {isOpen && (
-                        <div className="p-4 sm:p-6 space-y-4 bg-slate-50/50 dark:bg-[#181622]/40 animate-in fade-in-50 duration-200 border-t border-slate-100 dark:border-[#242033]">
-                          {/* Full Question Text */}
-                          <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-relaxed">
-                            {cleanQuestionText(q.question_text)}
-                          </div>
+                        {/* Level 2: List of Questions under this Topic */}
+                        {isTopicOpen && (
+                          <div className="p-3 sm:p-4 space-y-2 bg-slate-50/50 dark:bg-slate-950/30 animate-in fade-in-50 duration-200">
+                            {grp.questions.map((q) => {
+                              const originalIdx = questions.findIndex((item) => item._id === q._id);
+                              const uSt = userState[q._id] || userState[q.id];
+                              const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
+                              const isAttempted = userChoice !== null;
+                              const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
+                              const isIncorrect = isAttempted && !isCorrect;
+                              const isQOpen = Boolean(openReviewQuestions[q._id]);
 
-                          {/* Question Diagram if present */}
-                          <QuestionDiagram src={q.image_url || q.image || q.question_image} />
-
-                          {/* Options Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                            {(q.options || []).map((opt: string, optIdx: number) => {
-                              const isCorrectKey = optIdx === q.correct_option;
-                              const isUserSelection = userChoice === optIdx;
-
-                              let cardStyle = 'bg-white dark:bg-[#0D0D12] border-slate-200/90 dark:border-[#242033] text-slate-700 dark:text-slate-300';
-                              if (isCorrectKey && isUserSelection) {
-                                cardStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-950 dark:text-emerald-200 font-bold shadow-xs';
-                              } else if (isCorrectKey) {
-                                cardStyle = 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 font-bold';
-                              } else if (isUserSelection && !isCorrectKey) {
-                                cardStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 text-rose-950 dark:text-rose-200 font-bold';
-                              }
+                              const userChoiceLetter = userChoice !== null && userChoice !== undefined && q.options?.[userChoice]
+                                ? `${String.fromCharCode(65 + userChoice)}`
+                                : 'Skipped';
+                              const correctChoiceLetter = q.correct_option !== undefined && q.options?.[q.correct_option]
+                                ? `${String.fromCharCode(65 + q.correct_option)}`
+                                : '-';
 
                               return (
                                 <div
-                                  key={optIdx}
-                                  className={`p-3.5 rounded-2xl border-2 text-xs flex justify-between items-center transition-all ${cardStyle}`}
+                                  key={q._id}
+                                  className="border border-slate-200 dark:border-[#242033] rounded-xl overflow-hidden bg-white dark:bg-[#0D0D12] transition-all shadow-2xs"
                                 >
-                                  <div className="flex items-center gap-2.5 pr-2">
-                                    <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0 ${
-                                      isCorrectKey
-                                        ? 'bg-emerald-600 text-white'
-                                        : isUserSelection
-                                        ? 'bg-rose-600 text-white'
-                                        : 'bg-slate-100 dark:bg-[#181622] text-slate-700 dark:text-slate-300'
-                                    }`}>
-                                      {String.fromCharCode(65 + optIdx)}
-                                    </span>
-                                    <span>{opt}</span>
-                                  </div>
+                                  {/* Level 2: Compact 1-Row Question Bar */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenReviewQuestions((prev) => ({
+                                        ...prev,
+                                        [q._id]: !prev[q._id],
+                                      }));
+                                    }}
+                                    className={`w-full px-3.5 sm:px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
+                                      isQOpen
+                                        ? 'bg-slate-50 dark:bg-[#181622]/80 border-b border-slate-200/80 dark:border-[#242033]'
+                                        : 'hover:bg-slate-50/80 dark:hover:bg-[#181622]/50'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <span className="px-2 py-0.5 rounded-md bg-[#0B192C] dark:bg-blue-600 text-white text-[10px] font-black shrink-0 shadow-2xs">
+                                        Q{originalIdx + 1}
+                                      </span>
 
-                                  <div className="shrink-0 flex items-center gap-1.5">
-                                    {isCorrectKey && (
-                                      <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> Correct
-                                      </span>
-                                    )}
-                                    {isUserSelection && !isCorrectKey && (
-                                      <span className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/60 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                        <XCircle className="w-3 h-3" /> Your Choice
-                                      </span>
-                                    )}
-                                  </div>
+                                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
+                                        {cleanQuestionText(q.question_text)}
+                                      </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      {/* Choice comparison */}
+                                      <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold">
+                                        <span className={`px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isIncorrect ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                          You: {userChoiceLetter}
+                                        </span>
+                                        <span className="text-slate-300 dark:text-slate-700">|</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                          Key: {correctChoiceLetter}
+                                        </span>
+                                      </div>
+
+                                      {/* Status Pill */}
+                                      {isCorrect && (
+                                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" /> <span className="hidden sm:inline">Correct</span> (+4)
+                                        </span>
+                                      )}
+                                      {isIncorrect && (
+                                        <span className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800 text-[10px] font-black flex items-center gap-1">
+                                          <XCircle className="w-3 h-3" /> <span className="hidden sm:inline">Incorrect</span> (-1)
+                                        </span>
+                                      )}
+                                      {!isAttempted && (
+                                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-bold flex items-center gap-1">
+                                          <MinusCircle className="w-3 h-3" /> <span className="hidden sm:inline">Skipped</span> (0)
+                                        </span>
+                                      )}
+
+                                      {/* Solution Dropdown Button */}
+                                      <div className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${
+                                        isQOpen
+                                          ? 'bg-blue-600 text-white'
+                                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] text-slate-700 dark:text-slate-300'
+                                      }`}>
+                                        <span>{isQOpen ? 'Hide' : 'Solution'}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isQOpen ? 'rotate-180' : 'rotate-0'}`} />
+                                      </div>
+                                    </div>
+                                  </button>
+
+                                  {/* Level 3: Solution & Explanation Dropdown */}
+                                  {isQOpen && (
+                                    <div className="p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-[#181622]/40 animate-in fade-in-50 duration-200 border-t border-slate-100 dark:border-[#242033]">
+                                      {/* Full Question Text */}
+                                      <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                                        {cleanQuestionText(q.question_text)}
+                                      </div>
+
+                                      <QuestionDiagram src={q.image_url || q.image || q.question_image} />
+
+                                      {/* Options Grid */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                        {(q.options || []).map((opt: string, optIdx: number) => {
+                                          const isCorrectKey = optIdx === q.correct_option;
+                                          const isUserSelection = userChoice === optIdx;
+
+                                          let cardStyle = 'bg-white dark:bg-[#0D0D12] border-slate-200/90 dark:border-[#242033] text-slate-700 dark:text-slate-300';
+                                          if (isCorrectKey && isUserSelection) {
+                                            cardStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-950 dark:text-emerald-200 font-bold shadow-xs';
+                                          } else if (isCorrectKey) {
+                                            cardStyle = 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 font-bold';
+                                          } else if (isUserSelection && !isCorrectKey) {
+                                            cardStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 text-rose-950 dark:text-rose-200 font-bold';
+                                          }
+
+                                          return (
+                                            <div
+                                              key={optIdx}
+                                              className={`p-3 rounded-xl border-2 text-xs flex justify-between items-center transition-all ${cardStyle}`}
+                                            >
+                                              <div className="flex items-center gap-2 pr-2">
+                                                <span className={`w-5 h-5 rounded text-[10px] font-black flex items-center justify-center shrink-0 ${
+                                                  isCorrectKey
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : isUserSelection
+                                                    ? 'bg-rose-600 text-white'
+                                                    : 'bg-slate-100 dark:bg-[#181622] text-slate-700 dark:text-slate-300'
+                                                }`}>
+                                                  {String.fromCharCode(65 + optIdx)}
+                                                </span>
+                                                <span>{opt}</span>
+                                              </div>
+
+                                              <div className="shrink-0 flex items-center gap-1">
+                                                {isCorrectKey && (
+                                                  <span className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                                    <CheckCircle2 className="w-2.5 h-2.5" /> Correct
+                                                  </span>
+                                                )}
+                                                {isUserSelection && !isCorrectKey && (
+                                                  <span className="text-[9px] font-black uppercase text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                                    <XCircle className="w-2.5 h-2.5" /> Your Choice
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+
+                                      {/* Answer Key Callout Banner */}
+                                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                                        <span className="flex items-center gap-1.5">
+                                          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                                          Official Key: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
+                                        </span>
+                                        {isAttempted ? (
+                                          <span className={`text-[10px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
+                                            {isCorrect ? 'Your answer matched (+4)' : `You selected Option ${userChoiceLetter} (-1)`}
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                            Skipped (0)
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Explanation Section */}
+                                      {q.explanation && (
+                                        <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-1">
+                                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                            <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                            Explanation &amp; Solution Key
+                                          </span>
+                                          <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                                            {q.explanation}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
                           </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
-                          {/* Answer Key Callout Banner */}
-                          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                            <span className="flex items-center gap-1.5">
-                              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                              Official Answer Key: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
-                            </span>
-                            {isAttempted ? (
-                              <span className={`text-[11px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
-                                {isCorrect ? 'Your answer matched (+4)' : `You selected Option ${userChoiceLetter} (-1)`}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                Question was skipped (0)
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Explanation Section */}
-                          {q.explanation && (
-                            <div className="p-4 rounded-2xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-1.5">
-                              <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                Detailed Explanation &amp; Solution Key
-                              </span>
-                              <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                                {q.explanation}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          </div>
 
           </div>
 
