@@ -228,6 +228,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
   // Active Language preference ('en' | 'hi') initialized from query param
   const [activeLanguage, setActiveLanguage] = useState<'en' | 'hi'>(initialLangParam === 'hi' ? 'hi' : 'en');
+  const [hasAcceptedRules, setHasAcceptedRules] = useState(false);
 
   // Question Response State
   const [userState, setUserState] = useState<Record<string, { selectedOption: number | null; isMFR: boolean; isVisited: boolean }>>({});
@@ -816,22 +817,22 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     const testMarks = test.cutoff_marks || (totalQuestions * 4);
 
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-hidden font-sans">
-        {/* Background glow & accents */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-blue-600/15 blur-[120px] pointer-events-none rounded-full" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-600/15 blur-[100px] pointer-events-none rounded-full" />
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-black text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-hidden font-sans">
+        {/* Ambient Glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-blue-600/10 dark:bg-purple-600/15 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-600/10 dark:bg-purple-600/15 blur-[100px] pointer-events-none rounded-full" />
 
-        <div className="max-w-2xl w-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative z-10 animate-fade-in">
+        <div className="max-w-2xl w-full bg-white dark:bg-[#0D0D12] border border-slate-200/90 dark:border-[#242033] rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl space-y-6 relative z-10 animate-fade-in">
           
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-5">
-            <div className="flex items-center gap-3">
-              <Logo size={36} showText={false} />
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#242033] pb-5">
+            <div className="flex items-center gap-3.5">
+              <Logo size={38} showText={false} />
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 bg-blue-950/80 px-2.5 py-0.5 rounded-full border border-blue-800/60 inline-flex items-center gap-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-purple-400 bg-blue-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-purple-800/60 inline-flex items-center gap-1.5 shadow-2xs">
                   <Lock className="w-3 h-3" /> Secure Proctored Examination
                 </span>
-                <h1 className="text-xl sm:text-2xl font-black text-white mt-1 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
                   {test.title}
                 </h1>
               </div>
@@ -840,38 +841,38 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
           {/* Test Overview Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Course</span>
-              <span className="text-xs font-black text-white truncate block mt-0.5">{test.course_id?.name || 'Curriculum Track'}</span>
+            <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-3.5 text-center transition-all">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Course</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate block mt-0.5">{test.course_id?.name || 'Curriculum Track'}</span>
             </div>
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Duration</span>
-              <span className="text-xs font-black text-white block mt-0.5">{durationMinutes} Minutes</span>
+            <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-3.5 text-center transition-all">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Duration</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block mt-0.5">{durationMinutes} Minutes</span>
             </div>
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Questions</span>
-              <span className="text-xs font-black text-white block mt-0.5">{totalQuestions} Questions</span>
+            <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-3.5 text-center transition-all">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Questions</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block mt-0.5">{totalQuestions} Questions</span>
             </div>
-            <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3.5 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Cutoff / Max</span>
-              <span className="text-xs font-black text-white block mt-0.5">{testMarks} Marks</span>
+            <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-3.5 text-center transition-all">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Cutoff / Max</span>
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block mt-0.5">{testMarks} Marks</span>
             </div>
           </div>
 
           {/* Subject Breakdown Pills */}
           {testSubjects.length > 0 && (
-            <div className="bg-slate-800/40 border border-slate-800 rounded-2xl p-4 space-y-2">
-              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+            <div className="bg-slate-50/80 dark:bg-[#181622]/60 border border-slate-200/80 dark:border-[#242033] rounded-2xl p-4 space-y-2.5">
+              <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Included Sections &amp; Breakdown:
               </span>
               <div className="flex flex-wrap gap-2">
                 {testSubjects.map((sub) => (
                   <span
                     key={sub}
-                    className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 flex items-center gap-1.5"
+                    className="px-3 py-1.5 bg-white dark:bg-[#0D0D12] border border-slate-200 dark:border-[#242033] rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 shadow-2xs"
                   >
                     <span>{sub}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-blue-900/60 text-blue-300 font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-mono font-black border border-blue-200/60 dark:border-blue-800/40">
                       {subjectGroupedQuestions[sub]?.questions?.length || 0} Qs
                     </span>
                   </span>
@@ -881,40 +882,40 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           )}
 
           {/* Security & Screen Lock Rules */}
-          <div className="bg-rose-950/20 border border-rose-900/40 rounded-2xl p-4 sm:p-5 space-y-3">
-            <div className="flex items-center gap-2 text-rose-400">
+          <div className="bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl p-4 sm:p-5 space-y-3">
+            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
               <ShieldAlert className="w-5 h-5 shrink-0" />
-              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
                 Exam Lockdown &amp; Proctoring Rules
               </h3>
             </div>
-            <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
+            <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-2.5 leading-relaxed">
               <li className="flex items-start gap-2">
-                <span className="text-blue-400 font-black shrink-0">•</span>
-                <span><strong className="text-white">Full-Screen Lock:</strong> Clicking the button below will immediately lock your screen into fullscreen mode.</span>
+                <span className="text-blue-600 dark:text-blue-400 font-black shrink-0">•</span>
+                <span><strong className="text-slate-900 dark:text-white">Full-Screen Lock:</strong> Clicking the button below will immediately lock your screen into fullscreen mode.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-400 font-black shrink-0">•</span>
-                <span><strong className="text-white">Anti-Switching Guard:</strong> Pressing Esc, switching tabs, minimizing the window, or pressing Windows/Alt-Tab will record a violation.</span>
+                <span className="text-amber-600 dark:text-amber-400 font-black shrink-0">•</span>
+                <span><strong className="text-slate-900 dark:text-white">Anti-Switching Guard:</strong> Pressing Esc, switching tabs, minimizing the window, or pressing Windows/Alt-Tab will record a violation.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-rose-400 font-black shrink-0">•</span>
-                <span><strong className="text-white">3 Strike Limit:</strong> After 3 violations, the test will be immediately and irreversibly auto-submitted.</span>
+                <span className="text-rose-600 dark:text-rose-400 font-black shrink-0">•</span>
+                <span><strong className="text-slate-900 dark:text-white">3 Strike Limit:</strong> After 3 violations, the test will be immediately and irreversibly auto-submitted.</span>
               </li>
             </ul>
           </div>
 
           {/* Language Preference selection */}
-          <div className="flex items-center justify-between bg-slate-800/50 border border-slate-700/50 rounded-2xl p-3 px-4">
-            <span className="text-xs font-bold text-slate-300">Question Language:</span>
+          <div className="flex items-center justify-between bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-3 px-4">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Question Language:</span>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setActiveLanguage('en')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                   activeLanguage === 'en'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-xs font-black'
+                    : 'bg-white dark:bg-[#0D0D12] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#242033]'
                 }`}
               >
                 English
@@ -924,8 +925,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 onClick={() => setActiveLanguage('hi')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                   activeLanguage === 'hi'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-xs font-black'
+                    : 'bg-white dark:bg-[#0D0D12] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#242033]'
                 }`}
               >
                 Hindi (हिंदी)
@@ -933,20 +934,62 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
             </div>
           </div>
 
+          {/* Agreement Checkbox to Unlock Exam */}
+          <label
+            htmlFor="rules-consent-checkbox"
+            className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${
+              hasAcceptedRules
+                ? 'bg-blue-50/90 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 shadow-xs'
+                : 'bg-slate-50 dark:bg-[#181622]/80 border-slate-200 dark:border-[#242033] hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="pt-0.5 shrink-0">
+              <input
+                id="rules-consent-checkbox"
+                type="checkbox"
+                checked={hasAcceptedRules}
+                onChange={(e) => setHasAcceptedRules(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
+              />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-xs font-black text-slate-900 dark:text-white block">
+                I agree to the Examination Guidelines &amp; Proctoring Conditions
+              </span>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                I confirm that I will not switch tabs, minimize the window, or exit fullscreen. I understand that violations will be logged and 3 strikes will result in automatic submission.
+              </p>
+            </div>
+          </label>
+
           {/* Action Buttons */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2 pt-1">
             <button
               type="button"
+              disabled={!hasAcceptedRules}
               onClick={handleStartExamLock}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] text-white text-xs sm:text-sm font-black uppercase tracking-wider rounded-2xl shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+              className={`w-full py-4 px-6 text-xs sm:text-sm font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 transition-all ${
+                hasAcceptedRules
+                  ? 'bg-[#0B192C] hover:bg-[#060E18] dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-[0.99] text-white shadow-xl shadow-slate-900/20 dark:shadow-blue-600/30 cursor-pointer'
+                  : 'bg-slate-200 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 border border-slate-300/40 dark:border-slate-700/40'
+              }`}
             >
-              <ShieldCheck className="w-5 h-5" />
-              Lock Screen &amp; Start Examination
+              {hasAcceptedRules ? (
+                <>
+                  <ShieldCheck className="w-5 h-5" />
+                  Lock Screen &amp; Start Examination
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5" />
+                  Check the box above to unlock examination
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={() => router.push('/mock-tests')}
-              className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors"
+              className="w-full py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
             >
               Cancel &amp; Return to Mock Tests
             </button>
@@ -956,6 +999,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       </div>
     );
   }
+
 
   return (
     <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
