@@ -1175,6 +1175,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1 block">
                   {totalAttempted} Attempted
                 </span>
+              </div>
+
               {/* Correct / Incorrect Tile */}
               <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-4 text-center transition-all hover:border-blue-300 dark:hover:border-purple-500">
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Correct / Wrong</span>
@@ -1771,8 +1773,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </div>
               );
             })()}
-
-          </div>
 
           </div>
 
