@@ -50,7 +50,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const errorParam = urlParams.get('error');
-      if (errorParam) {
+      const sessionExpired = urlParams.get('session_expired') || urlParams.get('removed') || urlParams.get('deleted');
+      if (sessionExpired) {
+        setError('Your session has ended or the account was removed by administrator.');
+      } else if (errorParam) {
         if (errorParam === 'suspended' || errorParam.toLowerCase().includes('suspended')) {
           setError('Your account is suspended. Please contact support to restore access.');
         } else {

@@ -16,7 +16,10 @@ export async function GET() {
 
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
-      return NextResponse.json({ error: 'User deleted or not found' }, { status: 401 });
+      const res = NextResponse.json({ error: 'User deleted or not found', deleted: true }, { status: 401 });
+      res.cookies.set('student_token', '', { maxAge: 0, path: '/', expires: new Date(0) });
+      res.cookies.delete('student_token');
+      return res;
     }
 
     const { user } = authResult;

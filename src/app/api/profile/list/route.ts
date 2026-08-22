@@ -24,7 +24,10 @@ export async function GET() {
       authResult.user.status === 'suspended' ||
       authResult.user.status === 'SUSPENDED'
     ) {
-      return NextResponse.json({ error: 'User deleted or suspended' }, { status: 401 });
+      const res = NextResponse.json({ error: 'User deleted or suspended', deleted: true }, { status: 401 });
+      res.cookies.set('student_token', '', { maxAge: 0, path: '/', expires: new Date(0) });
+      res.cookies.delete('student_token');
+      return res;
     }
 
     const { user: currentUser } = authResult;

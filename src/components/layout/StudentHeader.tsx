@@ -79,7 +79,17 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications');
+      if (res.status === 401 || res.status === 403) {
+        clearAllClientUserCaches();
+        window.location.replace('/login?session_expired=1');
+        return;
+      }
       const data = await res.json();
+      if (data && data.deleted) {
+        clearAllClientUserCaches();
+        window.location.replace('/login?session_expired=1');
+        return;
+      }
       if (data && Array.isArray(data.notifications)) {
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount || 0);

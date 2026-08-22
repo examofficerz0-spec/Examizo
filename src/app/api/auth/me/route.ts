@@ -13,30 +13,25 @@ export async function GET() {
   try {
     const authResult = await getUserFromAuth(auth);
     if (
-      authResult?.user &&
-      (authResult.user.status === 'Deleted' ||
+      !authResult ||
+      !authResult.user ||
+      authResult.user.status === 'Deleted' ||
       authResult.user.name === 'Deleted User' ||
       authResult.user.status === 'Suspended' ||
       authResult.user.status === 'suspended' ||
-      authResult.user.status === 'SUSPENDED')
+      authResult.user.status === 'SUSPENDED'
     ) {
-      return NextResponse.json({ authenticated: false, error: 'User deleted or suspended' }, { status: 401 });
-    }
-
-    if (!authResult || !authResult.user) {
-      // Pending onboarding student who has not chosen a course yet
-      return NextResponse.json({
-        authenticated: true,
-        user: {
-          id: auth.userId,
-          name: auth.name || auth.email?.split('@')[0] || 'Student',
-          email: auth.email,
-          lockedCourse: null,
-          lockedCourseId: null,
-          xp_total: 0,
-          status: 'Active',
-        },
+      const res = NextResponse.json({ authenticated: false, deleted: true, error: 'User account not found or deleted' }, { status: 401 });
+      res.cookies.set('student_token', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/',
+        expires: new Date(0),
       });
+      res.cookies.delete('student_token');
+      return res;
     }
 
     const { user } = authResult;
