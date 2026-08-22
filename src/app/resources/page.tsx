@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
-import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
+import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 import {
   FolderDown,
   FileText,
@@ -34,67 +33,46 @@ interface ResourceItem {
   created_at?: string;
 }
 
-export default function StudentResourcesPage() {
-  const initialCache = getClientUserCache('__RESOURCES_CACHE__');
-  const [resources, setResources] = useState<ResourceItem[]>(initialCache?.resources || []);
-  const [courseName, setCourseName] = useState<string>(initialCache?.courseName || 'Selected Course');
+export default function ResourcesListPage() {
+  const initialCache = getSwrCache<any[]>('resources_cache');
+  const [resources, setResources] = useState<any[]>(initialCache || []);
   const [loading, setLoading] = useState(!initialCache);
-
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('All');
-  const [selectedType, setSelectedType] = useState('All');
-
-  // Preview Modal State
-  const [previewResource, setPreviewResource] = useState<ResourceItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [previewResource, setPreviewResource] = useState<any | null>(null);
+  const [courseName, setCourseName] = useState<string>('');
 
   useEffect(() => {
-    fetchResources();
+    fetch('/api/resources', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data.resources) ? data.resources : [];
+        setSwrCache('resources_cache', list);
+        setResources(list);
+        if (data.courseName) setCourseName(data.courseName);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchResources = async () => {
-    try {
-      const res = await fetch('/api/resources');
-      const data = await res.json();
-      if (data.resources) {
-        setResources(data.resources);
-      }
-      if (data.course?.name) {
-        setCourseName(data.course.name);
-      }
-      setClientUserCache('__RESOURCES_CACHE__', {
-        resources: data.resources || [],
-        courseName: data.course?.name || 'Selected Course',
-      });
-    } catch (err) {
-      console.error('Failed to load resources:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const subjects = ['all', ...Array.from(new Set(resources.map((r) => r.subject).filter(Boolean)))];
+  const resourceTypes = ['all', 'PDF Book', 'Study Notes', 'Formula Sheet', 'Reference Manual'];
 
-  // Derive available subject tags
-  const subjects = ['All', ...Array.from(new Set(resources.map((r) => r.subject || 'General')))];
-  const resourceTypes = ['All', 'PDF Book', 'Study Notes', 'Formula Sheet', 'Reference Manual'];
-
-  // Filtered resources
-  const filtered = resources.filter((item) => {
+  const filteredResources = resources.filter((r) => {
     const matchesSearch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.subject || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesSubject = selectedSubject === 'All' || item.subject === selectedSubject;
-    const matchesType = selectedType === 'All' || item.resource_type === selectedType;
-
+      r.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.topic?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSubject = selectedSubject === 'all' || r.subject === selectedSubject;
+    const matchesType = selectedType === 'all' || r.resource_type === selectedType;
     return matchesSearch && matchesSubject && matchesType;
   });
 
   const isComingSoon = !loading && resources.length === 0;
 
   return (
-    <DigiLockerGuard courseName={courseName}>
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0 relative">
         
         {/* Main Content Area — Blurred when 0 resources exist */}
@@ -134,8 +112,8 @@ export default function StudentResourcesPage() {
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search PDF books, formula sheets, topics, or subjects..."
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
@@ -193,7 +171,7 @@ export default function StudentResourcesPage() {
                   <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-xl pt-2" />
                 </div>
               ))
-            ) : filtered.length === 0 ? (
+            ) : filteredResources.length === 0 ? (
               <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs min-h-[300px]">
                 <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-500 flex items-center justify-center">
                   <FolderDown className="w-6 h-6 stroke-[1.5]" />
@@ -204,7 +182,7 @@ export default function StudentResourcesPage() {
                 </p>
               </div>
             ) : (
-              filtered.map((item) => (
+              filteredResources.map((item) => (
                 <div
                   key={item._id}
                   className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-blue-300 dark:hover:border-blue-800 transition-all space-y-4 group"
@@ -351,6 +329,5 @@ export default function StudentResourcesPage() {
         </div>
       )}
     </div>
-    </DigiLockerGuard>
   );
 }

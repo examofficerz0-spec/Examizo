@@ -12,43 +12,13 @@ interface DigiLockerModalProps {
 }
 
 export function isAbove10thClass(courseName?: string | null): boolean {
-  let name = courseName;
-  if (!name && typeof window !== 'undefined') {
-    name = sessionStorage.getItem('examizo_cached_course_name') || '';
-  }
-  if (!name) return false; // Default: do not lock if course is not yet confirmed
-
-  const lower = name.toLowerCase().trim();
-
-  // Class 3 to 10 are school classes <= 10th -> EXEMPT (return false)
-  const isSchoolBelow10 =
-    /\bclass\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
-    /\bclass\s*(3rd|4th|5th|6th|7th|8th|9th|10th)\b/.test(lower) ||
-    /\b(3rd|4th|5th|6th|7th|8th|9th|10th)\s*(class|grade|standard|std|exam|cbse|icse|state)?\b/.test(lower) ||
-    /\b(classs?\s*7th|classs?\s*8th|classs?\s*9th|classs?\s*10th)\b/.test(lower) ||
-    /\bgrade\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
-    /\bstd\s*(3|4|5|6|7|8|9|10)\b/.test(lower) ||
-    /\bprimary\b/.test(lower) ||
-    /\bmiddle\s*school\b/.test(lower) ||
-    /\bsecondary\b/.test(lower) ||
-    /\bfoundation\b/.test(lower);
-
-  if (isSchoolBelow10) {
-    return false; // Not mandatory for Class 3-10
-  }
-
-  // Only Class 11, Class 12, and Competitive Exams (JEE, NEET, GATE, UPSC, SSC, Banking, RRB, etc.) are > 10th
-  const isHigherOrCompetitive =
-    /\bclass\s*(11|12|11th|12th)\b/.test(lower) ||
-    /\b(11th|12th)\s*(class|grade|standard|std)?\b/.test(lower) ||
-    /\b(jee|neet|gate|upsc|ssc|banking|rrb|railway|cat|nda|cds|cuet|clat|ias|ips)\b/.test(lower);
-
-  return isHigherOrCompetitive;
+  // DigiLocker restriction temporarily removed
+  return false;
 }
 
 export function getDigiLockerStatus(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem('examizo_digilocker_verified') === 'true';
+  // DigiLocker restriction temporarily removed - all features unlocked
+  return true;
 }
 
 export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
@@ -278,150 +248,7 @@ const getCachedIsSubProfile = (): boolean => {
 
 export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   children,
-  courseName,
-  studentName,
 }) => {
-  const [isVerified, setIsVerified] = useState<boolean>(getDigiLockerStatus());
-  const [isSubProfileUser, setIsSubProfileUser] = useState<boolean>(getCachedIsSubProfile());
-  const [showModal, setShowModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  const checkStatus = () => {
-    setIsVerified(getDigiLockerStatus());
-  };
-
-  useEffect(() => {
-    setMounted(true);
-    checkStatus();
-
-    // Check if current active profile is a sub-profile (sub-profiles do NOT require DigiLocker)
-    fetch('/api/profile/list')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.profiles && Array.isArray(data.profiles)) {
-          const activeProf = data.profiles.find((p: any) => p.isActive);
-          const isSub = activeProf && activeProf.isPrimary === false;
-          setIsSubProfileUser(Boolean(isSub));
-          if (activeProf?.lockedCourseName) {
-            sessionStorage.setItem('examizo_cached_course_name', activeProf.lockedCourseName);
-          }
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('examizo_is_sub_profile', isSub ? 'true' : 'false');
-          }
-        }
-      })
-      .catch(console.error);
-
-    const handleStorage = () => checkStatus();
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('digilocker_status_change', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('digilocker_status_change', handleStorage);
-    };
-  }, []);
-
-  // Sub-profiles and Class 3-10 students are EXEMPT from DigiLocker verification requirements
-  const isMandatory = isAbove10thClass(courseName) && !isSubProfileUser;
-
-  // Immediate synchronous render if verified or exempt (0 delay, no popup flashing)
-  if (!isMandatory || isVerified) return <>{children}</>;
-
-  if (!mounted) return <>{children}</>;
-
-  // Handle 1-Click Instant Verification Unlock
-  const handleInstantUnlock = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('examizo_digilocker_verified', 'true');
-      window.dispatchEvent(new Event('digilocker_status_change'));
-    }
-    setIsVerified(true);
-  };
-
-  // If DigiLocker is mandatory (> 10th Class) and NOT verified, render lock screen below the top header navbar
-  if (isMandatory && !isVerified) {
-    return (
-      <div className="relative w-full min-h-screen">
-        {/* Background Page Content */}
-        <div className="filter blur-sm opacity-30 pointer-events-none select-none overflow-hidden max-h-[85vh]">
-          {children}
-        </div>
-
-        {/* Centered Glass Lock Screen Overlay (Positioned top-20 below fixed navbar with z-30 so header & profile dropdown remain 100% crisp & clickable) */}
-        <div className="fixed top-20 inset-x-0 bottom-0 z-30 flex items-center justify-center p-4 bg-slate-950/30 backdrop-blur-sm animate-fade-in">
-          <div className="max-w-xl w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-center space-y-5 relative overflow-hidden">
-            
-            <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-md">
-              <Lock className="w-8 h-8" />
-            </div>
-
-            <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-black uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-amber-700 dark:text-amber-400" />
-                <span>DigiLocker Verification Mandatory</span>
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Unlock Full Access with DigiLocker
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-md mx-auto">
-                As per academic compliance guidelines for <strong className="text-slate-900 dark:text-white">Class 11, Class 12, and Competitive Exam Aspirants</strong>, DigiLocker identity verification unlocks your full practice portal.
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-left text-xs space-y-2 text-slate-600 dark:text-slate-300 font-medium">
-              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-center border-b border-slate-200 dark:border-slate-700 pb-1.5">
-                🔒 Feature Access Status
-              </p>
-              <div className="flex items-center justify-between text-[11px]">
-                <span>Student Dashboard:</span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Unlocked ✅</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span>Practice Sets &amp; DPPs:</span>
-                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span>Full Mock Exams:</span>
-                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span>Leaderboards &amp; Resources:</span>
-                <span className="font-extrabold text-rose-600 dark:text-rose-400">Locked 🔒 (Requires DigiLocker)</span>
-              </div>
-            </div>
-
-            <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowModal(true)}
-                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Verify with DigiLocker Gateway</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleInstantUnlock}
-                className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Quick 1-Click Instant Unlock</span>
-              </button>
-            </div>
-
-            <DigiLockerModal
-              isOpen={showModal}
-              onClose={() => setShowModal(false)}
-              onSuccess={() => setIsVerified(true)}
-              studentName={studentName}
-              courseName={courseName}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // DigiLocker restriction temporarily removed
   return <>{children}</>;
 };

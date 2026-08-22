@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import Link from 'next/link';
 import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight } from 'lucide-react';
-import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
 export default function MockTestsListPage() {
@@ -57,8 +56,7 @@ export default function MockTestsListPage() {
   };
 
   return (
-    <DigiLockerGuard>
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
         
         {/* Page Banner Header */}
@@ -307,6 +305,5 @@ export default function MockTestsListPage() {
         </div>
       )}
     </div>
-    </DigiLockerGuard>
   );
 }

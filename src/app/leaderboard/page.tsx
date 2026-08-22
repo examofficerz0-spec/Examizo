@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
-import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
-import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
+import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
 } from 'lucide-react';
@@ -12,7 +11,7 @@ import { PageLoader } from '@/components/common/PageLoader';
 
 export default function LeaderboardPage() {
   const router = useRouter();
-  const initialCache = getClientUserCache('__LEADERBOARD_CACHE__');
+  const initialCache = getSwrCache<any>('leaderboard_cache');
   const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
   const [selectedStudentStatsId, setSelectedStudentStatsId] = useState<string | null>(null);
   
@@ -50,7 +49,7 @@ export default function LeaderboardPage() {
 
   // Fetch Global Leaderboard
   useEffect(() => {
-    fetch('/api/leaderboard')
+    fetch('/api/leaderboard', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data) {
@@ -58,7 +57,7 @@ export default function LeaderboardPage() {
             leaderboard: data.leaderboard || [],
             userRank: data.userRank || null,
           };
-          setClientUserCache('__LEADERBOARD_CACHE__', cacheObj);
+          setSwrCache('leaderboard_cache', cacheObj);
           setLeaderboard(data.leaderboard || []);
           setUserRank(data.userRank || null);
         }
@@ -276,8 +275,7 @@ export default function LeaderboardPage() {
   const isLocked = !loadingGlobal && userRank !== null && (userRank.xp_total === 0 || !userRank.xp_total);
 
   return (
-    <DigiLockerGuard>
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -936,6 +934,5 @@ export default function LeaderboardPage() {
         />
       )}
     </div>
-    </DigiLockerGuard>
   );
 }
