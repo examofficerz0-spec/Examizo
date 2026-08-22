@@ -6,13 +6,13 @@ import { StudentHeader } from '@/components/layout/StudentHeader';
 import Link from 'next/link';
 import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight } from 'lucide-react';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
-import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
+import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
 export default function MockTestsListPage() {
   const router = useRouter();
-  const initialCache = getClientUserCache('__MOCK_TESTS_CACHE__');
+  const initialCache = getSwrCache<any[]>('mock_tests');
   const hasValidCache = Boolean(initialCache && Array.isArray(initialCache) && initialCache.length > 0);
-  const [tests, setTests] = useState<any[]>(hasValidCache ? initialCache : []);
+  const [tests, setTests] = useState<any[]>(hasValidCache ? (initialCache as any[]) : []);
   const [loading, setLoading] = useState<boolean>(!hasValidCache);
   const [filterType, setFilterType] = useState<'all' | 'full' | 'sectional'>('all');
 
@@ -26,9 +26,7 @@ export default function MockTestsListPage() {
       .then((res) => res.json())
       .then((data) => {
         const list = Array.isArray(data.tests) ? data.tests : [];
-        if (list.length > 0) {
-          setClientUserCache('__MOCK_TESTS_CACHE__', list);
-        }
+        setSwrCache('mock_tests', list);
         setTests(list);
       })
       .catch(console.error)

@@ -30,7 +30,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-import { getClientUserCache, setClientUserCache } from '@/lib/clientCache';
+import { getSwrCache, setSwrCache } from '@/lib/swrCache';
 
 const cleanQuestionText = (text: any): string => {
   if (!text || typeof text !== 'string') return '';
@@ -83,7 +83,7 @@ const deduplicateQuestions = (list: any[]): any[] => {
 };
 
 export default function PracticeSetsPage() {
-  const initialCache = getClientUserCache('__PRACTICE_CACHE__');
+  const initialCache = getSwrCache<any>('practice_cache');
   const [questions, setQuestions] = useState<any[]>(initialCache?.questions || []);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>(initialCache?.topicCounts || {});
   const [courseName, setCourseName] = useState<string>(initialCache?.courseName || '');
@@ -139,13 +139,13 @@ export default function PracticeSetsPage() {
   }, []);
 
   const fetchQuestions = async () => {
-    if (!initialCache && typeof window !== 'undefined' && !(window as any).__PRACTICE_CACHE__) {
+    if (!initialCache) {
       setLoading(true);
     }
     try {
       const [res, dppRes] = await Promise.all([
-        fetch('/api/practice'),
-        fetch('/api/weekly-dpp'),
+        fetch('/api/practice', { cache: 'no-store' }),
+        fetch('/api/weekly-dpp', { cache: 'no-store' }),
       ]);
       const data = await res.json();
       const dppData = await dppRes.json();
@@ -162,7 +162,7 @@ export default function PracticeSetsPage() {
         publishedWeeklyDpp: newWeeklyDpp,
       };
 
-      setClientUserCache('__PRACTICE_CACHE__', cacheObj);
+      setSwrCache('practice_cache', cacheObj);
 
       const dedupedQuestions = deduplicateQuestions(data.questions || []);
       setQuestions(dedupedQuestions);
