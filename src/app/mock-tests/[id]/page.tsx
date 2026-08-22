@@ -11,6 +11,11 @@ import {
   Lock, XCircle, MinusCircle, Trophy, Target, Zap, TrendingUp, BookOpen, Filter, Sparkles, ArrowRight, ArrowLeft, RefreshCw, Layers
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
+import {
+  cleanQuestionText,
+  normalizeQuestionSignature,
+  deduplicateQuestions,
+} from '@/lib/questionDeduplicator';
 
 function shuffleArray<T>(arr: T[]): T[] {
   const shuffled = [...arr];
@@ -51,56 +56,6 @@ const GK_GS_CANONICAL_MODULES: { match: RegExp; name: string }[] = [
   { match: /^(?:indian\s*history|ancient\s*india|medieval\s*india|modern\s*india|freedom\s*movement|history)/i, name: 'Indian History' },
   { match: /^(?:indian\s*polity|polity|constitution|civics)/i, name: 'Indian Polity' },
 ];
-
-const cleanQuestionText = (text: any): string => {
-  if (!text || typeof text !== 'string') return '';
-  let cleaned = text.trim();
-
-  // 1. Remove trailing prefixes/suffixes like (Set 2, item 18), [Set 1, item 5], (Item 12), (Set 2), [Set A, Question 4]
-  cleaned = cleaned
-    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*(?:item|iteam)\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '');
-
-  // 2. Remove leading prefixes like (Set 2, item 18), [Set 1, item 5], Q1., Question 1:, etc.
-  cleaned = cleaned
-    .replace(/^[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
-    .replace(/^[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
-    .replace(/^(?:q(?:uestion)?\s*\d+[\s\.\:\-]+|\d+[\s\.\:\-]+)/gi, '');
-
-  return cleaned.trim();
-};
-
-const normalizeQuestionSignature = (qText: string): string => {
-  if (!qText || typeof qText !== 'string') return '';
-  return qText
-    .toLowerCase()
-    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-
-const deduplicateQuestions = (list: any[]): any[] => {
-  const seenIds = new Set<string>();
-  const seenSigs = new Set<string>();
-  const uniqueList: any[] = [];
-
-  for (const q of (list || [])) {
-    if (!q) continue;
-    const qId = String(q._id || q.id || '');
-    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
-
-    if (qId && seenIds.has(qId)) continue;
-    if (sig && seenSigs.has(sig)) continue;
-
-    if (qId) seenIds.add(qId);
-    if (sig) seenSigs.add(sig);
-    uniqueList.push(q);
-  }
-  return uniqueList;
-};
 
 function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
   if (!q) return { subject: 'General', topic: 'General Topics' };

@@ -30,72 +30,11 @@ import {
 } from 'lucide-react';
 
 import { getSwrCache, setSwrCache } from '@/lib/swrCache';
-
-const sigCache = new Map<string, string>();
-const cleanTextCache = new Map<string, string>();
-
-const cleanQuestionText = (text: any): string => {
-  if (!text || typeof text !== 'string') return '';
-  const cached = cleanTextCache.get(text);
-  if (cached !== undefined) return cached;
-
-  let cleaned = text.trim();
-
-  // 1. Remove trailing prefixes/suffixes like (Set 2, item 18), [Set 1, item 5], (Item 12), (Set 2), [Set A, Question 4]
-  cleaned = cleaned
-    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*set\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '')
-    .replace(/\s*[\(\[\{]\s*(?:item|iteam)\s*[\w\d]+\s*[\)\]\}]\s*$/gi, '');
-
-  // 2. Remove leading prefixes like (Set 2, item 18), [Set 1, item 5], Q1., Question 1:, etc.
-  cleaned = cleaned
-    .replace(/^[\(\[\{]\s*set\s*[\w\d]+(?:\s*[,;:\-_]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
-    .replace(/^[\(\[\{]\s*(?:item|iteam|q|ques|question|no|sr|s\.no)\s*[\w\d]+(?:\s*[,;:\-_]\s*set\s*[\w\d]+)?\s*[\)\]\}]\s*[:\.\-_]?\s*/gi, '')
-    .replace(/^(?:q(?:uestion)?\s*\d+[\s\.\:\-]+|\d+[\s\.\:\-]+)/gi, '');
-
-  const result = cleaned.trim();
-  cleanTextCache.set(text, result);
-  return result;
-};
-
-const normalizeQuestionSignature = (qText: string): string => {
-  if (!qText || typeof qText !== 'string') return '';
-  const cached = sigCache.get(qText);
-  if (cached !== undefined) return cached;
-
-  const result = qText
-    .toLowerCase()
-    .replace(/^(?:q(?:uestion)?[\s\.\:\-]*\d*[\s\.\:\-]+|\d+[\s\.\:\-]+)/i, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  sigCache.set(qText, result);
-  return result;
-};
-
-const deduplicateQuestions = (list: any[]): any[] => {
-  if (!list || list.length === 0) return [];
-  const seenIds = new Set<string>();
-  const seenSigs = new Set<string>();
-  const uniqueList: any[] = [];
-
-  for (let i = 0; i < list.length; i++) {
-    const q = list[i];
-    if (!q) continue;
-    const qId = String(q._id || q.id || '');
-    if (qId && seenIds.has(qId)) continue;
-
-    const sig = normalizeQuestionSignature(cleanQuestionText(q.question_text || ''));
-    if (sig && seenSigs.has(sig)) continue;
-
-    if (qId) seenIds.add(qId);
-    if (sig) seenSigs.add(sig);
-    uniqueList.push(q);
-  }
-  return uniqueList;
-};
+import {
+  cleanQuestionText,
+  normalizeQuestionSignature,
+  deduplicateQuestions,
+} from '@/lib/questionDeduplicator';
 
 const calculateWeeklyCountdown = () => {
   const now = new Date();
@@ -885,17 +824,20 @@ export default function PracticeSetsPage() {
     return map;
   }, [activeSubjectQuestions, selectedSubject]);
 
-  const filteredQuestions = activeSession && sessionQuestions.length > 0
-    ? sessionQuestions
-    : isWeeklySession
-    ? getWeeklyQuestions()
-    : selectedTopic && topicModulesMap[selectedTopic]
-    ? topicModulesMap[selectedTopic]
-    : selectedTopic
-    ? activeSubjectQuestions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()))
-    : selectedSubject
-    ? activeSubjectQuestions
-    : questions;
+  const filteredQuestions = useMemo(() => {
+    const list = activeSession && sessionQuestions.length > 0
+      ? sessionQuestions
+      : isWeeklySession
+      ? getWeeklyQuestions()
+      : selectedTopic && topicModulesMap[selectedTopic]
+      ? topicModulesMap[selectedTopic]
+      : selectedTopic
+      ? activeSubjectQuestions.filter((q) => (q.topic_tag || '').toLowerCase().includes(selectedTopic.toLowerCase()))
+      : selectedSubject
+      ? activeSubjectQuestions
+      : questions;
+    return deduplicateQuestions(list);
+  }, [activeSession, sessionQuestions, isWeeklySession, getWeeklyQuestions, selectedTopic, topicModulesMap, activeSubjectQuestions, questions]);
 
   const currentQ = filteredQuestions[currentIdx];
 
