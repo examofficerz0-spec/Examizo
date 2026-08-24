@@ -238,15 +238,20 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
   if (typeof courseOrName === 'string') {
     name = courseOrName.toLowerCase().trim();
   } else if (typeof courseOrName === 'object') {
-    name = (courseOrName.name || '').toLowerCase().trim();
+    name = (courseOrName.name || courseOrName.title || '').toLowerCase().trim();
     category = (courseOrName.category || '').toLowerCase().trim();
   }
 
-  if (category.includes('competitive') || category.includes('entrance') || category.includes('govt') || category.includes('olympiad')) {
+  if (
+    category.includes('competitive') ||
+    category.includes('entrance') ||
+    category.includes('govt') ||
+    category.includes('olympiad')
+  ) {
     return true;
   }
 
-  if (category.includes('school') || category.includes('class') || category.includes('cbse') || category.includes('icse')) {
+  if (category === 'school' || category.includes('school')) {
     const juniorSchoolRegex = /class\s*(3|4|5|6|7|8|9|10)\b|grade\s*(3|4|5|6|7|8|9|10)\b/i;
     if (juniorSchoolRegex.test(name) || juniorSchoolRegex.test(category)) {
       return false;
@@ -287,11 +292,31 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   courseName,
   studentName,
 }) => {
-  const [isVerified, setIsVerified] = useState<boolean>(true);
-  const [isComp, setIsComp] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return getDigiLockerStatus();
+    }
+    return true;
+  });
+
+  const [isComp, setIsComp] = useState<boolean>(() => {
+    if (courseName) return isCompetitiveCourse(courseName);
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedUser = sessionStorage.getItem('examizo_user');
+        if (cachedUser) {
+          const parsed = JSON.parse(cachedUser);
+          return isCompetitiveCourse(parsed?.lockedCourse || parsed?.lockedCourseName);
+        }
+      } catch (_) {}
+    }
+    return true;
+  });
+
   const [resolvedCourseName, setResolvedCourseName] = useState<string>(courseName || '');
   const [resolvedStudentName, setResolvedStudentName] = useState<string>(studentName || '');
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [checking, setChecking] = useState<boolean>(true);
 
   useEffect(() => {
     const checkStatus = () => {
@@ -309,9 +334,18 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
             setResolvedStudentName(data.user.name || studentName || 'Student');
             const comp = isCompetitiveCourse(courseObj || cName);
             setIsComp(comp);
+
+            try {
+              sessionStorage.setItem('examizo_user', JSON.stringify({
+                name: data.user.name,
+                lockedCourse: courseObj,
+                lockedCourseName: cName,
+              }));
+            } catch (_) {}
           }
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setChecking(false));
     };
 
     checkStatus();
@@ -330,7 +364,7 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   }, [courseName, studentName]);
 
   // If verified OR course is not competitive, grant full access
-  if (isVerified || !isComp) {
+  if (isVerified || (!checking && !isComp)) {
     return <>{children}</>;
   }
 

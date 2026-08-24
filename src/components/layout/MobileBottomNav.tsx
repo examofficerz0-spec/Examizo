@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, HelpCircle, FileText, Trophy, Folder } from 'lucide-react';
+import { Home, HelpCircle, FileText, Trophy, Folder, Lock } from 'lucide-react';
+import { DigiLockerModal, getDigiLockerStatus, isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
 
 const tabs = [
   { label: 'Home',      href: '/dashboard',  icon: Home },
@@ -16,6 +17,15 @@ const tabs = [
 export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
   const [inSession, setInSession] = useState(false);
+  const [currentCourseName, setCurrentCourseName] = useState<string>('');
+  const [studentName, setStudentName] = useState<string>('Student');
+  const [isDigiLockerVerified, setIsDigiLockerVerified] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return getDigiLockerStatus();
+    }
+    return true;
+  });
+  const [showModal, setShowModal] = useState(false);
 
   // Watch for data-in-session attribute set by practice/DPP pages during active sessions
   useEffect(() => {
@@ -25,6 +35,31 @@ export const MobileBottomNav: React.FC = () => {
     const observer = new MutationObserver(check);
     observer.observe(document.body, { attributes: true, attributeFilter: ['data-in-session'] });
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const checkDigiStatus = () => {
+      setIsDigiLockerVerified(getDigiLockerStatus());
+    };
+    checkDigiStatus();
+
+    // Fetch user course
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user) {
+          setCurrentCourseName(data.user.lockedCourse?.name || '');
+          setStudentName(data.user.name || 'Student');
+        }
+      })
+      .catch(console.error);
+
+    window.addEventListener('storage', checkDigiStatus);
+    window.addEventListener('digilocker_status_change', checkDigiStatus);
+    return () => {
+      window.removeEventListener('storage', checkDigiStatus);
+      window.removeEventListener('digilocker_status_change', checkDigiStatus);
+    };
   }, []);
 
   // Hide on auth / course-selection / landing / gallery / privacy / terms pages
@@ -78,6 +113,7 @@ export const MobileBottomNav: React.FC = () => {
 
         {tabs.map(({ label, href, icon: Icon, isFab }, index) => {
           const isActive = activeIndex === index;
+          const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && (href === '/mock-tests' || href === '/practice' || href === '/resources');
 
           if (isFab) {
             return (
@@ -85,13 +121,19 @@ export const MobileBottomNav: React.FC = () => {
                 <Link
                   href={href}
                   prefetch={true}
+                  onClick={(e) => {
+                    if (isBlocked) {
+                      e.preventDefault();
+                      setShowModal(true);
+                    }
+                  }}
                   className="absolute -top-5 flex flex-col items-center group cursor-pointer"
                 >
                   {/* Completely Round Floating Action Button */}
                   <span
                     className={`w-14 h-14 rounded-full flex items-center justify-center
                       shadow-lg shadow-blue-500/35 border-4 border-slate-50 dark:border-slate-950
-                      transition-all duration-300 ease-out active:scale-90 group-hover:scale-105
+                      transition-all duration-300 ease-out active:scale-90 group-hover:scale-105 relative
                       ${
                         isActive
                           ? 'bg-blue-600 scale-105 shadow-blue-600/50 ring-4 ring-blue-500/20'
@@ -104,6 +146,11 @@ export const MobileBottomNav: React.FC = () => {
                       }`}
                       strokeWidth={2.2}
                     />
+                    {isBlocked && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[9px] shadow-sm">
+                        <Lock className="w-2.5 h-2.5" />
+                      </span>
+                    )}
                   </span>
                   <span
                     className={`text-[10px] font-extrabold mt-1 transition-colors duration-200 ${
@@ -122,16 +169,29 @@ export const MobileBottomNav: React.FC = () => {
               key={href}
               href={href}
               prefetch={true}
+              onClick={(e) => {
+                if (isBlocked) {
+                  e.preventDefault();
+                  setShowModal(true);
+                }
+              }}
               className="relative z-10 flex flex-col items-center justify-center h-full py-1 transition-all duration-200 active:scale-95 select-none cursor-pointer"
             >
-              <Icon
-                className={`w-5 h-5 transition-all duration-300 ${
-                  isActive
-                    ? 'text-blue-600 dark:text-blue-400 scale-110'
-                    : 'text-slate-400 dark:text-slate-500'
-                }`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              <div className="relative">
+                <Icon
+                  className={`w-5 h-5 transition-all duration-300 ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-400 scale-110'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                {isBlocked && (
+                  <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[8px] shadow-xs">
+                    <Lock className="w-2 h-2" />
+                  </span>
+                )}
+              </div>
               <span
                 className={`text-[10px] font-bold mt-0.5 transition-colors duration-200 ${
                   isActive
@@ -145,6 +205,17 @@ export const MobileBottomNav: React.FC = () => {
           );
         })}
       </div>
+
+      <DigiLockerModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={() => {
+          setIsDigiLockerVerified(true);
+          setShowModal(false);
+        }}
+        courseName={currentCourseName || undefined}
+        studentName={studentName}
+      />
     </nav>
   );
 };
