@@ -113,7 +113,7 @@ export const MobileBottomNav: React.FC = () => {
 
         {tabs.map(({ label, href, icon: Icon, isFab }, index) => {
           const isActive = activeIndex === index;
-          const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && href !== '/dashboard';
+          const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && (href === '/mock-tests' || href === '/practice' || href === '/resources');
 
           if (isFab) {
             return (
