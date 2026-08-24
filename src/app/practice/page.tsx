@@ -1088,7 +1088,14 @@ export default function PracticeSetsPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            setOpenPracticeTopics({});
+                            const nextTopicState: Record<string, boolean> = {};
+                            filteredQuestions.forEach((q: any) => {
+                              const resolvedTopic = q.topic || selectedTopic || 'Practice Questions';
+                              const resolvedSub = q.subject || selectedSubject || 'General';
+                              const key = `${resolvedSub}__${resolvedTopic}`;
+                              nextTopicState[key] = false;
+                            });
+                            setOpenPracticeTopics(nextTopicState);
                             setOpenPracticeQuestions({});
                           }}
                           className="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 cursor-pointer transition-colors"
@@ -1164,18 +1171,19 @@ export default function PracticeSetsPage() {
                       return (
                         <div className="space-y-3.5">
                           {practiceTopics.map((grp) => {
-                            const isTopicOpen = Boolean(openPracticeTopics[grp.topicKey]);
+                            const isTopicOpen = openPracticeTopics[grp.topicKey] !== undefined ? Boolean(openPracticeTopics[grp.topicKey]) : true;
 
                             return (
                               <div
                                 key={grp.topicKey}
                                 className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 transition-all shadow-xs"
                               >
-                                {/* Level 1: Topic Dropdown H                                <button
+                                {/* Level 1: Topic Dropdown Header */}
+                                <button
                                   type="button"
                                   onClick={() =>
                                     setOpenPracticeTopics((prev) => {
-                                      const isCurrentlyOpen = Boolean(prev[grp.topicKey]);
+                                      const isCurrentlyOpen = prev[grp.topicKey] !== undefined ? Boolean(prev[grp.topicKey]) : true;
                                       if (isCurrentlyOpen) {
                                         return { ...prev, [grp.topicKey]: false };
                                       }
