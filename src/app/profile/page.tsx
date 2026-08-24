@@ -303,33 +303,58 @@ export default function ProfilePage() {
         </div>
 
         {/* DigiLocker Identity Verification Card (Available for all courses) */}
-        <div className="bg-gradient-to-br from-[#0c4a6e] via-[#075985] to-[#1e3a8a] rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden border border-white/15">
-          {/* Background Security Grid & Guilloche Geometric Patterns */}
+        <div className="bg-gradient-to-br from-[#072448] via-[#0b3c68] to-[#144272] rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden border border-white/20">
+          {/* Background Security Hexagon Vault & Guilloche Security Waves */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {/* Tech Grid Pattern */}
-            <svg className="absolute inset-0 w-full h-full text-white/12" xmlns="http://www.w3.org/2000/svg">
+            {/* Hexagonal Vault Honeycomb Mesh */}
+            <svg className="absolute inset-0 w-full h-full text-white/10" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <pattern id="digilocker-grid" width="28" height="28" patternUnits="userSpaceOnUse">
-                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="currentColor" strokeWidth="1" />
-                  <circle cx="0" cy="0" r="1.5" fill="currentColor" fillOpacity="0.8" />
+                <pattern id="digilocker-hex" width="36" height="62.35" patternUnits="userSpaceOnUse">
+                  <path
+                    d="M 18,0 L 36,10.39 L 36,31.18 L 18,41.57 L 0,31.18 L 0,10.39 Z M 18,62.35 L 36,51.96 L 36,31.18 L 18,41.57 L 0,31.18 L 0,51.96 Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  />
+                  <circle cx="18" cy="10.39" r="1.5" fill="currentColor" fillOpacity="0.8" />
+                  <circle cx="18" cy="51.96" r="1.5" fill="currentColor" fillOpacity="0.8" />
                 </pattern>
-                <linearGradient id="digilocker-beam" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="white" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="transparent" />
+                <linearGradient id="guilloche-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.05" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.25" />
+                  <stop offset="80%" stopColor="#818cf8" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.02" />
                 </linearGradient>
               </defs>
-              <rect width="100%" height="100%" fill="url(#digilocker-grid)" />
-              {/* Geometric Security Concentric Rings */}
-              <circle cx="88%" cy="50%" r="80" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
-              <circle cx="88%" cy="50%" r="130" fill="none" stroke="currentColor" strokeWidth="1.2" />
-              <circle cx="88%" cy="50%" r="180" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="6 6" />
+              <rect width="100%" height="100%" fill="url(#digilocker-hex)" />
+              {/* Guilloche Ribbon Security Waves */}
+              <path
+                d="M-40,90 C160,20 340,160 560,70 C780,-20 960,130 1180,40"
+                fill="none"
+                stroke="url(#guilloche-grad)"
+                strokeWidth="2.5"
+              />
+              <path
+                d="M-40,110 C180,40 360,180 580,90 C800,0 980,150 1200,60"
+                fill="none"
+                stroke="url(#guilloche-grad)"
+                strokeWidth="1.5"
+                strokeDasharray="5 3"
+              />
+              <path
+                d="M-40,70 C140,0 320,140 540,50 C760,-40 940,110 1160,20"
+                fill="none"
+                stroke="url(#guilloche-grad)"
+                strokeWidth="1"
+                strokeOpacity="0.6"
+              />
             </svg>
 
-            {/* Ambient Corner Glow & Giant Shield Watermark */}
-            <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-sky-400/20 rounded-full blur-3xl" />
-            <div className="absolute left-1/3 -top-12 w-52 h-52 bg-blue-500/20 rounded-full blur-2xl" />
-            <ShieldCheck className="absolute -right-6 -bottom-6 w-48 h-48 text-white/[0.06] rotate-12 select-none" />
-            <Building2 className="absolute right-52 -top-8 w-36 h-36 text-white/[0.04] select-none" />
+            {/* Ambient Lighting & Security Watermarks */}
+            <div className="absolute -right-16 -bottom-16 w-72 h-72 bg-sky-500/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute left-1/4 -top-16 w-60 h-60 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+            <Lock className="absolute -right-4 -bottom-6 w-44 h-44 text-white/[0.05] rotate-12 select-none" />
+            <ShieldCheck className="absolute right-60 -top-6 w-36 h-36 text-white/[0.04] select-none" />
           </div>
 
           <div className="relative z-10 flex items-center gap-4">
