@@ -1518,14 +1518,18 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                         <button
                           type="button"
                           onClick={() => {
-                            setOpenTopics((prev) => ({
-                              ...prev,
-                              [grp.topicKey]: !prev[grp.topicKey],
-                            }));
+                            setOpenTopics((prev) => {
+                              const isCurrentlyOpen = Boolean(prev[grp.topicKey]);
+                              if (isCurrentlyOpen) {
+                                return { ...prev, [grp.topicKey]: false };
+                              } else {
+                                return { [grp.topicKey]: true };
+                              }
+                            });
                           }}
                           className={`w-full px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
                             isTopicOpen
-                              ? 'bg-slate-50/90 dark:bg-[#181622] border-b border-slate-200/80 dark:border-[#242033]'
+                              ? 'bg-slate-50/90 dark:bg-[#181622]'
                               : 'hover:bg-slate-50/60 dark:hover:bg-[#181622]/40'
                           }`}
                         >
@@ -1581,192 +1585,204 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                           </div>
                         </button>
 
-                        {/* Level 2: List of Questions under this Topic */}
-                        {isTopicOpen && (
-                          <div className="p-3 sm:p-4 space-y-2 bg-slate-50/50 dark:bg-slate-950/30 animate-in fade-in-50 duration-200">
-                            {grp.questions.map((q) => {
-                              const originalIdx = questions.findIndex((item) => item._id === q._id);
-                              const uSt = userState[q._id] || userState[q.id];
-                              const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
-                              const isAttempted = userChoice !== null;
-                              const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
-                              const isIncorrect = isAttempted && !isCorrect;
-                              const isQOpen = Boolean(openReviewQuestions[q._id]);
+                        {/* Level 2: List of Questions under this Topic with Smooth Animation */}
+                        <div
+                          className={`grid transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                            isTopicOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                          }`}
+                        >
+                          <div className="overflow-hidden">
+                            <div className="p-3 sm:p-4 space-y-2 bg-slate-50/50 dark:bg-slate-950/30 border-t border-slate-200/80 dark:border-[#242033]">
+                              {grp.questions.map((q) => {
+                                const originalIdx = questions.findIndex((item) => item._id === q._id);
+                                const uSt = userState[q._id] || userState[q.id];
+                                const userChoice = (uSt?.selectedOption !== null && uSt?.selectedOption !== undefined && uSt?.selectedOption >= 0) ? uSt.selectedOption : null;
+                                const isAttempted = userChoice !== null;
+                                const isCorrect = isAttempted && Number(userChoice) === Number(q.correct_option);
+                                const isIncorrect = isAttempted && !isCorrect;
+                                const isQOpen = Boolean(openReviewQuestions[q._id]);
 
-                              const userChoiceLetter = userChoice !== null && userChoice !== undefined && q.options?.[userChoice]
-                                ? `${String.fromCharCode(65 + userChoice)}`
-                                : 'Skipped';
-                              const correctChoiceLetter = q.correct_option !== undefined && q.options?.[q.correct_option]
-                                ? `${String.fromCharCode(65 + q.correct_option)}`
-                                : '-';
+                                const userChoiceLetter = userChoice !== null && userChoice !== undefined && q.options?.[userChoice]
+                                  ? `${String.fromCharCode(65 + userChoice)}`
+                                  : 'Skipped';
+                                const correctChoiceLetter = q.correct_option !== undefined && q.options?.[q.correct_option]
+                                  ? `${String.fromCharCode(65 + q.correct_option)}`
+                                  : '-';
 
-                              return (
-                                <div
-                                  key={q._id}
-                                  className="border border-slate-200 dark:border-[#242033] rounded-xl overflow-hidden bg-white dark:bg-[#0D0D12] transition-all shadow-2xs"
-                                >
-                                  {/* Level 2: Compact 1-Row Question Bar */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setOpenReviewQuestions((prev) => ({
-                                        ...prev,
-                                        [q._id]: !prev[q._id],
-                                      }));
-                                    }}
-                                    className={`w-full px-3.5 sm:px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
-                                      isQOpen
-                                        ? 'bg-slate-50 dark:bg-[#181622]/80 border-b border-slate-200/80 dark:border-[#242033]'
-                                        : 'hover:bg-slate-50/80 dark:hover:bg-[#181622]/50'
-                                    }`}
+                                return (
+                                  <div
+                                    key={q._id}
+                                    className="border border-slate-200 dark:border-[#242033] rounded-xl overflow-hidden bg-white dark:bg-[#0D0D12] transition-all shadow-2xs"
                                   >
-                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                      <span className="px-2 py-0.5 rounded-md bg-[#0B192C] dark:bg-blue-600 text-white text-[10px] font-black shrink-0 shadow-2xs">
-                                        Q{originalIdx + 1}
-                                      </span>
-
-                                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
-                                        {cleanQuestionText(q.question_text)}
-                                      </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 shrink-0">
-                                      {/* Choice comparison */}
-                                      <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold">
-                                        <span className={`px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isIncorrect ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-                                          You: {userChoiceLetter}
-                                        </span>
-                                        <span className="text-slate-300 dark:text-slate-700">|</span>
-                                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                                          Key: {correctChoiceLetter}
-                                        </span>
-                                      </div>
-
-                                      {/* Status Pill */}
-                                      {isCorrect && (
-                                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black flex items-center gap-1">
-                                          <CheckCircle2 className="w-3 h-3" /> <span className="hidden sm:inline">Correct</span> (+4)
-                                        </span>
-                                      )}
-                                      {isIncorrect && (
-                                        <span className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800 text-[10px] font-black flex items-center gap-1">
-                                          <XCircle className="w-3 h-3" /> <span className="hidden sm:inline">Incorrect</span> (-1)
-                                        </span>
-                                      )}
-                                      {!isAttempted && (
-                                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-bold flex items-center gap-1">
-                                          <MinusCircle className="w-3 h-3" /> <span className="hidden sm:inline">Skipped</span> (0)
-                                        </span>
-                                      )}
-
-                                      {/* Solution Dropdown Button */}
-                                      <div className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${
+                                    {/* Level 2: Compact 1-Row Question Bar */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenReviewQuestions((prev) => ({
+                                          ...prev,
+                                          [q._id]: !prev[q._id],
+                                        }));
+                                      }}
+                                      className={`w-full px-3.5 sm:px-4 py-2.5 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer select-none ${
                                         isQOpen
-                                          ? 'bg-blue-600 text-white'
-                                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] text-slate-700 dark:text-slate-300'
-                                      }`}>
-                                        <span>{isQOpen ? 'Hide' : 'Solution'}</span>
-                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isQOpen ? 'rotate-180' : 'rotate-0'}`} />
-                                      </div>
-                                    </div>
-                                  </button>
-
-                                  {/* Level 3: Solution & Explanation Dropdown */}
-                                  {isQOpen && (
-                                    <div className="p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-[#181622]/40 animate-in fade-in-50 duration-200 border-t border-slate-100 dark:border-[#242033]">
-                                      {/* Full Question Text */}
-                                      <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
-                                        {cleanQuestionText(q.question_text)}
-                                      </div>
-
-                                      <QuestionDiagram src={q.image_url || q.image || q.question_image} />
-
-                                      {/* Options Grid */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                                        {(q.options || []).map((opt: string, optIdx: number) => {
-                                          const isCorrectKey = optIdx === q.correct_option;
-                                          const isUserSelection = userChoice === optIdx;
-
-                                          let cardStyle = 'bg-white dark:bg-[#0D0D12] border-slate-200/90 dark:border-[#242033] text-slate-700 dark:text-slate-300';
-                                          if (isCorrectKey && isUserSelection) {
-                                            cardStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-950 dark:text-emerald-200 font-bold shadow-xs';
-                                          } else if (isCorrectKey) {
-                                            cardStyle = 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 font-bold';
-                                          } else if (isUserSelection && !isCorrectKey) {
-                                            cardStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 text-rose-950 dark:text-rose-200 font-bold';
-                                          }
-
-                                          return (
-                                            <div
-                                              key={optIdx}
-                                              className={`p-3 rounded-xl border-2 text-xs flex justify-between items-center transition-all ${cardStyle}`}
-                                            >
-                                              <div className="flex items-center gap-2 pr-2">
-                                                <span className={`w-5 h-5 rounded text-[10px] font-black flex items-center justify-center shrink-0 ${
-                                                  isCorrectKey
-                                                    ? 'bg-emerald-600 text-white'
-                                                    : isUserSelection
-                                                    ? 'bg-rose-600 text-white'
-                                                    : 'bg-slate-100 dark:bg-[#181622] text-slate-700 dark:text-slate-300'
-                                                }`}>
-                                                  {String.fromCharCode(65 + optIdx)}
-                                                </span>
-                                                <span>{opt}</span>
-                                              </div>
-
-                                              <div className="shrink-0 flex items-center gap-1">
-                                                {isCorrectKey && (
-                                                  <span className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                                                    <CheckCircle2 className="w-2.5 h-2.5" /> Correct
-                                                  </span>
-                                                )}
-                                                {isUserSelection && !isCorrectKey && (
-                                                  <span className="text-[9px] font-black uppercase text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                                                    <XCircle className="w-2.5 h-2.5" /> Your Choice
-                                                  </span>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-
-                                      {/* Answer Key Callout Banner */}
-                                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                                        <span className="flex items-center gap-1.5">
-                                          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                                          Official Key: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
+                                          ? 'bg-slate-50 dark:bg-[#181622]/80'
+                                          : 'hover:bg-slate-50/80 dark:hover:bg-[#181622]/50'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                        <span className="px-2 py-0.5 rounded-md bg-[#0B192C] dark:bg-blue-600 text-white text-[10px] font-black shrink-0 shadow-2xs">
+                                          Q{originalIdx + 1}
                                         </span>
-                                        {isAttempted ? (
-                                          <span className={`text-[10px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
-                                            {isCorrect ? 'Your answer matched (+4)' : `You selected Option ${userChoiceLetter} (-1)`}
+
+                                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
+                                          {cleanQuestionText(q.question_text)}
+                                        </p>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        {/* Choice comparison */}
+                                        <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono font-bold">
+                                          <span className={`px-1.5 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : isIncorrect ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                            You: {userChoiceLetter}
                                           </span>
-                                        ) : (
-                                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                            Skipped (0)
+                                          <span className="text-slate-300 dark:text-slate-700">|</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                            Key: {correctChoiceLetter}
+                                          </span>
+                                        </div>
+
+                                        {/* Status Pill */}
+                                        {isCorrect && (
+                                          <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black flex items-center gap-1">
+                                            <CheckCircle2 className="w-3 h-3" /> <span className="hidden sm:inline">Correct</span> (+4)
                                           </span>
                                         )}
-                                      </div>
-
-                                      {/* Explanation Section */}
-                                      {q.explanation && (
-                                        <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-1">
-                                          <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                                            <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                                            Explanation &amp; Solution Key
+                                        {isIncorrect && (
+                                          <span className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800 text-[10px] font-black flex items-center gap-1">
+                                            <XCircle className="w-3 h-3" /> <span className="hidden sm:inline">Incorrect</span> (-1)
                                           </span>
-                                          <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                                            {q.explanation}
-                                          </p>
+                                        )}
+                                        {!isAttempted && (
+                                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-bold flex items-center gap-1">
+                                            <MinusCircle className="w-3 h-3" /> <span className="hidden sm:inline">Skipped</span> (0)
+                                          </span>
+                                        )}
+
+                                        {/* Solution Dropdown Button */}
+                                        <div className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${
+                                          isQOpen
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] text-slate-700 dark:text-slate-300'
+                                        }`}>
+                                          <span>{isQOpen ? 'Hide' : 'Solution'}</span>
+                                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isQOpen ? 'rotate-180' : 'rotate-0'}`} />
                                         </div>
-                                      )}
+                                      </div>
+                                    </button>
+
+                                    {/* Level 3: Solution & Explanation Dropdown with Smooth Animation */}
+                                    <div
+                                      className={`grid transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                        isQOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                                      }`}
+                                    >
+                                      <div className="overflow-hidden">
+                                        <div className="p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-[#181622]/40 border-t border-slate-100 dark:border-[#242033]">
+                                          {/* Full Question Text */}
+                                          <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                                            {cleanQuestionText(q.question_text)}
+                                          </div>
+
+                                          <QuestionDiagram src={q.image_url || q.image || q.question_image} />
+
+                                          {/* Options Grid */}
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                            {(q.options || []).map((opt: string, optIdx: number) => {
+                                              const isCorrectKey = optIdx === q.correct_option;
+                                              const isUserSelection = userChoice === optIdx;
+
+                                              let cardStyle = 'bg-white dark:bg-[#0D0D12] border-slate-200/90 dark:border-[#242033] text-slate-700 dark:text-slate-300';
+                                              if (isCorrectKey && isUserSelection) {
+                                                cardStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-950 dark:text-emerald-200 font-bold shadow-xs';
+                                              } else if (isCorrectKey) {
+                                                cardStyle = 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-300 font-bold';
+                                              } else if (isUserSelection && !isCorrectKey) {
+                                                cardStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 text-rose-950 dark:text-rose-200 font-bold';
+                                              }
+
+                                              return (
+                                                <div
+                                                  key={optIdx}
+                                                  className={`p-3 rounded-xl border-2 text-xs flex justify-between items-center transition-all ${cardStyle}`}
+                                                >
+                                                  <div className="flex items-center gap-2 pr-2">
+                                                    <span className={`w-5 h-5 rounded text-[10px] font-black flex items-center justify-center shrink-0 ${
+                                                      isCorrectKey
+                                                        ? 'bg-emerald-600 text-white'
+                                                        : isUserSelection
+                                                        ? 'bg-rose-600 text-white'
+                                                        : 'bg-slate-100 dark:bg-[#181622] text-slate-700 dark:text-slate-300'
+                                                    }`}>
+                                                      {String.fromCharCode(65 + optIdx)}
+                                                    </span>
+                                                    <span>{opt}</span>
+                                                  </div>
+
+                                                  <div className="shrink-0 flex items-center gap-1">
+                                                    {isCorrectKey && (
+                                                      <span className="text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                                        <CheckCircle2 className="w-2.5 h-2.5" /> Correct
+                                                      </span>
+                                                    )}
+                                                    {isUserSelection && !isCorrectKey && (
+                                                      <span className="text-[9px] font-black uppercase text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                                        <XCircle className="w-2.5 h-2.5" /> Your Choice
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+
+                                          {/* Answer Key Callout Banner */}
+                                          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                                            <span className="flex items-center gap-1.5">
+                                              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                                              Official Key: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
+                                            </span>
+                                            {isAttempted ? (
+                                              <span className={`text-[10px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
+                                                {isCorrect ? 'Your answer matched (+4)' : `You selected Option ${userChoiceLetter} (-1)`}
+                                              </span>
+                                            ) : (
+                                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                Skipped (0)
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          {/* Explanation Section */}
+                                          {q.explanation && (
+                                            <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-1">
+                                              <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                                <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                                Explanation &amp; Solution Key
+                                              </span>
+                                              <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                                                {q.explanation}
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
