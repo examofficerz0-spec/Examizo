@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import {
   FolderDown,
   Sparkles,
@@ -15,7 +16,8 @@ import {
 export default function ResourcesListPage() {
   return (
     <div className="min-h-[85vh] bg-[#F8FAFC] dark:bg-black text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center font-sans px-4 sm:px-8 py-12">
-      <main className="max-w-xl w-full mx-auto text-center space-y-6 animate-fade-in">
+      <DigiLockerGuard>
+        <main className="max-w-xl w-full mx-auto text-center space-y-6 animate-fade-in">
         
         {/* Glowing Icon Card */}
         <div className="relative inline-block">
@@ -76,6 +78,7 @@ export default function ResourcesListPage() {
         </div>
 
       </main>
+      </DigiLockerGuard>
     </div>
   );
 }

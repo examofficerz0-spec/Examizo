@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
+import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import {
   cleanQuestionText,
   normalizeQuestionSignature,
@@ -921,7 +922,8 @@ export default function PracticeSetsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-      <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
+      <DigiLockerGuard>
+        <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 animate-page-in pb-24 lg:pb-0">
           {/* Header Title Bar (when not in active session) */}
           {!activeSession && (
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2369,6 +2371,7 @@ export default function PracticeSetsPage() {
           </div>
         </div>
       )}
+      </DigiLockerGuard>
     </div>
   );
 }
