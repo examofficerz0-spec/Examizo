@@ -168,7 +168,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             setCurrentUserEmail(active.accountEmail || active.email);
             setCurrentCourseName(active.lockedCourseName || null);
             if (active.lockedCourseName && typeof window !== 'undefined') {
-              sessionStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
+              localStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
+              localStorage.setItem('examizo_is_competitive', isCompetitiveCourse(active.lockedCourseName) ? 'true' : 'false');
             }
           }
         }
@@ -199,9 +200,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           setUserName(data.user.name);
           setCurrentUserEmail(data.user.email);
           if (data.user.lockedCourse?.name) {
-            setCurrentCourseName(data.user.lockedCourse.name);
+            const cName = data.user.lockedCourse.name;
+            setCurrentCourseName(cName);
             if (typeof window !== 'undefined') {
-              sessionStorage.setItem('examizo_cached_course_name', data.user.lockedCourse.name);
+              localStorage.setItem('examizo_cached_course_name', cName);
+              localStorage.setItem('examizo_is_competitive', isCompetitiveCourse(data.user.lockedCourse || cName) ? 'true' : 'false');
             }
           }
         }
@@ -409,19 +412,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-                const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && (link.href === '/mock-tests' || link.href === '/practice' || link.href === '/resources');
                 
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     prefetch={true}
-                    onClick={(e) => {
-                      if (isBlocked) {
-                        e.preventDefault();
-                        setShowDigiLockerModal(true);
-                      }
-                    }}
                     className={`px-2.5 xl:px-4 h-full text-xs font-bold flex items-center gap-1.5 xl:gap-2 transition-all relative border-b-2 cursor-pointer shrink-0 whitespace-nowrap ${
                       isActive
                         ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-extrabold'
@@ -430,11 +426,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
                     <span>{link.label}</span>
-                    {isBlocked && (
-                      <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-black inline-flex items-center gap-0.5 border border-amber-300 dark:border-amber-800 shadow-2xs">
-                        <Lock className="w-2.5 h-2.5" /> Locked
-                      </span>
-                    )}
                   </Link>
                 );
               })}
@@ -845,18 +836,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           </div>
         </div>
       )}
-
-      {/* DigiLocker Verification Modal */}
-      <DigiLockerModal
-        isOpen={showDigiLockerModal}
-        onClose={() => setShowDigiLockerModal(false)}
-        onSuccess={() => {
-          setIsDigiLockerVerified(true);
-          setShowDigiLockerModal(false);
-        }}
-        courseName={currentCourseName || undefined}
-        studentName={displayName}
-      />
     </>
   );
 };

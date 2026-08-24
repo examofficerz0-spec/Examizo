@@ -280,7 +280,17 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
   return true;
 }
 
-/* Lock Overlay Guard for Pages outside Dashboard & Profile when DigiLocker Verification is required */
+export function getCachedIsCompetitive(courseOrName?: any): boolean {
+  if (courseOrName) return isCompetitiveCourse(courseOrName);
+  if (typeof window === 'undefined') return false;
+  const cachedFlag = localStorage.getItem('examizo_is_competitive');
+  if (cachedFlag !== null) return cachedFlag === 'true';
+  const cachedCourseName = localStorage.getItem('examizo_cached_course_name') || sessionStorage.getItem('examizo_cached_course_name');
+  if (cachedCourseName) return isCompetitiveCourse(cachedCourseName);
+  return false;
+}
+
+/* Universal Lock Overlay Guard for restricted pages when DigiLocker Verification is required */
 interface DigiLockerGuardProps {
   children: React.ReactNode;
   courseName?: string;
@@ -300,84 +310,65 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
   });
 
   const [isComp, setIsComp] = useState<boolean>(() => {
-    if (courseName) return isCompetitiveCourse(courseName);
-    if (typeof window !== 'undefined') {
-      try {
-        const cachedUser = sessionStorage.getItem('examizo_user');
-        if (cachedUser) {
-          const parsed = JSON.parse(cachedUser);
-          return isCompetitiveCourse(parsed?.lockedCourse || parsed?.lockedCourseName);
-        }
-      } catch (_) {}
-    }
-    return true;
+    return getCachedIsCompetitive(courseName);
   });
 
-  const [resolvedCourseName, setResolvedCourseName] = useState<string>(courseName || '');
-  const [resolvedStudentName, setResolvedStudentName] = useState<string>(studentName || '');
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [checking, setChecking] = useState<boolean>(true);
+  const [resolvedCourseName, setResolvedCourseName] = useState<string>(() => {
+    if (courseName) return courseName;
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('examizo_cached_course_name') || sessionStorage.getItem('examizo_cached_course_name') || '';
+    }
+    return '';
+  });
 
   useEffect(() => {
-    const checkStatus = () => {
-      const verified = getDigiLockerStatus();
-      setIsVerified(verified);
-
-      // Fetch active user course to determine if it's competitive
-      fetch('/api/auth/me')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.user) {
-            const courseObj = data.user.lockedCourse;
-            const cName = courseObj?.name || courseName || '';
-            setResolvedCourseName(cName);
-            setResolvedStudentName(data.user.name || studentName || 'Student');
-            const comp = isCompetitiveCourse(courseObj || cName);
-            setIsComp(comp);
-
-            try {
-              sessionStorage.setItem('examizo_user', JSON.stringify({
-                name: data.user.name,
-                lockedCourse: courseObj,
-                lockedCourseName: cName,
-              }));
-            } catch (_) {}
-          }
-        })
-        .catch(console.error)
-        .finally(() => setChecking(false));
-    };
-
-    checkStatus();
-
-    const handleStorageChange = () => {
+    const syncStatus = () => {
       setIsVerified(getDigiLockerStatus());
     };
+    syncStatus();
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('digilocker_status_change', handleStorageChange);
+    // Background silent cache sync
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user) {
+          const courseObj = data.user.lockedCourse;
+          const cName = courseObj?.name || courseName || '';
+          const comp = isCompetitiveCourse(courseObj || cName);
+          setResolvedCourseName(cName);
+          setIsComp(comp);
 
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('examizo_cached_course_name', cName);
+            localStorage.setItem('examizo_is_competitive', comp ? 'true' : 'false');
+          }
+        }
+      })
+      .catch(console.error);
+
+    window.addEventListener('storage', syncStatus);
+    window.addEventListener('digilocker_status_change', syncStatus);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('digilocker_status_change', handleStorageChange);
+      window.removeEventListener('storage', syncStatus);
+      window.removeEventListener('digilocker_status_change', syncStatus);
     };
-  }, [courseName, studentName]);
+  }, [courseName]);
 
-  // If verified OR course is not competitive, grant full access
-  if (isVerified || (!checking && !isComp)) {
+  // If verified OR course is not competitive, render immediately with 0 delay!
+  if (isVerified || !isComp) {
     return <>{children}</>;
   }
 
-  // If not verified and course IS competitive, render DigiLocker mandatory verification screen
+  // Universal Restriction Card: Redirects to /profile where the original DigiLocker button is located!
   return (
     <div className="w-full min-h-[70vh] flex items-center justify-center p-4 sm:p-8 animate-fade-in">
-      <div className="max-w-2xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
+      <div className="max-w-xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
         {/* Ambient Corner Glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 dark:bg-blue-600/15 blur-3xl pointer-events-none rounded-full" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-sky-500/10 dark:bg-blue-600/15 blur-3xl pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-indigo-500/10 dark:bg-indigo-600/15 blur-3xl pointer-events-none rounded-full" />
 
         {/* Security Shield Badge */}
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center mx-auto text-white shadow-xl shadow-blue-500/25 relative z-10 border-2 border-white/30">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center mx-auto text-white shadow-xl shadow-blue-500/25 relative z-10 border-2 border-white/30">
           <Lock className="w-9 h-9" />
         </div>
 
@@ -389,9 +380,9 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
             Academic Verification Required
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-            Under the Academic Security Framework, students enrolled in competitive tracks{' '}
+            DigiLocker identity authentication is mandatory for competitive tracks{' '}
             <strong className="text-slate-900 dark:text-white font-extrabold">({resolvedCourseName || 'Competitive Course'})</strong>{' '}
-            must complete a one-time DigiLocker identity verification to unlock Mock Examination Papers and Daily Practice sets.
+            to access Mock Examinations, Practice sets, and Material.
           </p>
         </div>
 
@@ -400,30 +391,30 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
           <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
             <ShieldCheck className="w-5 h-5 text-emerald-500 mb-1.5" />
             <span className="text-xs font-black text-slate-900 dark:text-white block">Official Security</span>
-            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">UIDAI &amp; Academic Depository verified</span>
+            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">UIDAI &amp; Academic Depository</span>
           </div>
           <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
             <Lock className="w-5 h-5 text-blue-500 mb-1.5" />
-            <span className="text-xs font-black text-slate-900 dark:text-white block">Quick 60 Seconds</span>
-            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Instant one-time identity sync</span>
+            <span className="text-xs font-black text-slate-900 dark:text-white block">One-Time Sync</span>
+            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Sync once for lifetime</span>
           </div>
           <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
             <CheckCircle2 className="w-5 h-5 text-amber-500 mb-1.5" />
             <span className="text-xs font-black text-slate-900 dark:text-white block">Full Unlock</span>
-            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Unlocks all tests &amp; practice sets</span>
+            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Unlocks tests &amp; practice</span>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
+          <a
+            href="/profile"
             className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Verify with DigiLocker Gateway</span>
-          </button>
+            <span>Verify on Profile Page</span>
+            <ArrowRight className="w-4 h-4 ml-0.5" />
+          </a>
           <a
             href="/dashboard"
             className="w-full sm:w-auto px-6 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center"
@@ -432,18 +423,6 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
           </a>
         </div>
       </div>
-
-      {/* Embedded Modal */}
-      <DigiLockerModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={() => {
-          setIsVerified(true);
-          setShowModal(false);
-        }}
-        studentName={resolvedStudentName}
-        courseName={resolvedCourseName}
-      />
     </div>
   );
 };
