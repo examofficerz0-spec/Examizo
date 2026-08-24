@@ -257,7 +257,7 @@ export default function StudentDashboardPage() {
     setOpenTestGroups((prev) => {
       const isCurrentlyOpen = Boolean(prev[testId]);
       if (isCurrentlyOpen) {
-        return { ...prev, [testId]: false };
+        return {};
       }
       return { [testId]: true };
     });

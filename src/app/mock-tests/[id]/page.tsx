@@ -1401,14 +1401,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <button
                   type="button"
                   onClick={() => {
-                    const nextTopicState: Record<string, boolean> = {};
-                    filteredReviewQuestions.forEach((q) => {
-                      const { subject, topic } = getQuestionSubjectAndTopic(q);
-                      const resolvedTopic = topic || 'General';
-                      const key = `${subject}__${resolvedTopic}`;
-                      nextTopicState[key] = false;
-                    });
-                    setOpenTopics(nextTopicState);
+                    setOpenTopics({});
                     setOpenReviewQuestions({});
                   }}
                   className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] cursor-pointer transition-colors"
@@ -1452,7 +1445,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                       );
                     })}
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
             )}
@@ -1514,7 +1507,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               return (
                 <div className="space-y-3.5">
                   {groupedTopicList.map((grp) => {
-                    const isTopicOpen = openTopics[grp.topicKey] !== undefined ? Boolean(openTopics[grp.topicKey]) : true;
+                    const isTopicOpen = Boolean(openTopics[grp.topicKey]);
 
                     return (
                       <div
@@ -1526,9 +1519,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                           type="button"
                           onClick={() => {
                             setOpenTopics((prev) => {
-                              const isCurrentlyOpen = prev[grp.topicKey] !== undefined ? Boolean(prev[grp.topicKey]) : true;
+                              const isCurrentlyOpen = Boolean(prev[grp.topicKey]);
                               if (isCurrentlyOpen) {
-                                return { ...prev, [grp.topicKey]: false };
+                                return {};
                               } else {
                                 return { [grp.topicKey]: true };
                               }

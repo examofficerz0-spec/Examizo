@@ -1088,14 +1088,7 @@ export default function PracticeSetsPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            const nextTopicState: Record<string, boolean> = {};
-                            filteredQuestions.forEach((q: any) => {
-                              const resolvedTopic = q.topic || selectedTopic || 'Practice Questions';
-                              const resolvedSub = q.subject || selectedSubject || 'General';
-                              const key = `${resolvedSub}__${resolvedTopic}`;
-                              nextTopicState[key] = false;
-                            });
-                            setOpenPracticeTopics(nextTopicState);
+                            setOpenPracticeTopics({});
                             setOpenPracticeQuestions({});
                           }}
                           className="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 cursor-pointer transition-colors"
@@ -1171,7 +1164,7 @@ export default function PracticeSetsPage() {
                       return (
                         <div className="space-y-3.5">
                           {practiceTopics.map((grp) => {
-                            const isTopicOpen = openPracticeTopics[grp.topicKey] !== undefined ? Boolean(openPracticeTopics[grp.topicKey]) : true;
+                            const isTopicOpen = Boolean(openPracticeTopics[grp.topicKey]);
 
                             return (
                               <div
@@ -1183,9 +1176,9 @@ export default function PracticeSetsPage() {
                                   type="button"
                                   onClick={() =>
                                     setOpenPracticeTopics((prev) => {
-                                      const isCurrentlyOpen = prev[grp.topicKey] !== undefined ? Boolean(prev[grp.topicKey]) : true;
+                                      const isCurrentlyOpen = Boolean(prev[grp.topicKey]);
                                       if (isCurrentlyOpen) {
-                                        return { ...prev, [grp.topicKey]: false };
+                                        return {};
                                       }
                                       return { [grp.topicKey]: true };
                                     })
