@@ -242,6 +242,32 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
     category = (courseOrName.category || '').toLowerCase().trim();
   }
 
+  // 1. School Section: Class 11 & Class 12 (Mandatory DigiLocker)
+  const isSeniorSchool =
+    /\b(class|grade|standard|std)\s*(11|12|xi|xii)\b/i.test(name) ||
+    /\b(11th|12th)\b/i.test(name) ||
+    /\b(class\s*11|class\s*12|class\s*xi|class\s*xii)\b/i.test(category);
+
+  if (isSeniorSchool) {
+    return true;
+  }
+
+  // 2. School Section: Class 3 to Class 10 (Exempt from DigiLocker)
+  const isJuniorSchool =
+    /\b(class|grade|standard|std)\s*(3|4|5|6|7|8|9|10|iii|iv|v|vi|vii|viii|ix|x)\b/i.test(name) ||
+    /\b(3rd|4th|5th|6th|7th|8th|9th|10th)\b/i.test(name) ||
+    /\b(class\s*(3|4|5|6|7|8|9|10)|grade\s*(3|4|5|6|7|8|9|10))\b/i.test(category);
+
+  if (isJuniorSchool) {
+    return false;
+  }
+
+  // 3. Other School Category classes (e.g. primary/kindergarten)
+  if (category === 'school' || category.includes('school')) {
+    return false;
+  }
+
+  // 4. Competitive / Entrance / Govt / Olympiad Categories
   if (
     category.includes('competitive') ||
     category.includes('entrance') ||
@@ -251,17 +277,7 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
     return true;
   }
 
-  if (category === 'school' || category.includes('school')) {
-    const juniorSchoolRegex = /class\s*(3|4|5|6|7|8|9|10)\b|grade\s*(3|4|5|6|7|8|9|10)\b/i;
-    if (juniorSchoolRegex.test(name) || juniorSchoolRegex.test(category)) {
-      return false;
-    }
-    if (/class\s*(11|12)\b|grade\s*(11|12)\b/i.test(name)) {
-      return true;
-    }
-    return false;
-  }
-
+  // 5. Competitive Exam Name Keywords
   const compKeywords = [
     'jee', 'neet', 'cuet', 'nda', 'wbjee', 'bitsat', 'iiser', 'nest', 'kvpy',
     'olympiad', 'clat', 'cat', 'gate', 'upsc', 'ssc', 'bank', 'railway', 'defence',
@@ -272,11 +288,7 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
     return true;
   }
 
-  const juniorRegex = /class\s*(3|4|5|6|7|8|9|10)\b|grade\s*(3|4|5|6|7|8|9|10)\b/i;
-  if (juniorRegex.test(name)) {
-    return false;
-  }
-
+  // Default: treat other professional/entrance tracks as restricted
   return true;
 }
 
