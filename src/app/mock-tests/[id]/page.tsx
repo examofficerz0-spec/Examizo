@@ -176,6 +176,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const routeParams = useParams();
   const searchParams = useSearchParams();
   const initialLangParam = searchParams?.get('lang') || 'en';
+  const isRetakeRequested = searchParams?.get('retake') === 'true';
   const testId = (params?.id || routeParams?.id) as string;
 
   const [test, setTest] = useState<any>(null);
@@ -202,6 +203,27 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
   const [openReviewQuestions, setOpenReviewQuestions] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
+
+  // Check sessionStorage on initial load for completed test results
+  useEffect(() => {
+    if (!testId) return;
+    if (isRetakeRequested) {
+      try {
+        sessionStorage.removeItem(`mock_result_${testId}`);
+      } catch (_) {}
+      return;
+    }
+    try {
+      const saved = sessionStorage.getItem(`mock_result_${testId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.result) {
+          setResult(parsed.result);
+          if (parsed.userState) setUserState(parsed.userState);
+        }
+      }
+    } catch (_) {}
+  }, [testId, isRetakeRequested]);
 
   // Post-Test Completion Window & Feedback State
   const [showCompletionWindow, setShowCompletionWindow] = useState(false);
@@ -313,7 +335,42 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
             }
           }
         });
-        setUserState(initial);
+
+        // Restore latest completed attempt from server if available and not explicitly retaking
+        if (!isRetakeRequested && data.latestAttempt) {
+          setResult((prev: any) => {
+            if (prev) return prev;
+            return {
+              score: data.latestAttempt.score,
+              accuracyPercent: data.latestAttempt.accuracyPercent,
+              correctCount: data.latestAttempt.correctCount,
+              incorrectCount: data.latestAttempt.incorrectCount,
+              unattemptedCount: data.latestAttempt.unattemptedCount,
+              totalQuestions: data.latestAttempt.totalQuestions,
+              xpEarned: data.latestAttempt.xpEarned || 0,
+              cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || false,
+              submissionType: data.latestAttempt.submissionType || 'manual',
+            };
+          });
+
+          if (Array.isArray(data.latestAttempt.responses)) {
+            const reconstructedUserState: Record<string, any> = {};
+            data.latestAttempt.responses.forEach((r: any) => {
+              if (r.question_id) {
+                reconstructedUserState[r.question_id] = {
+                  selectedOption: r.selected_option,
+                  isMFR: false,
+                  isVisited: true,
+                };
+              }
+            });
+            setUserState((prev) => ({ ...initial, ...prev, ...reconstructedUserState }));
+          } else {
+            setUserState((prev) => ({ ...initial, ...prev }));
+          }
+        } else {
+          setUserState((prev) => ({ ...initial, ...prev }));
+        }
 
         // Set timer (duration in minutes * 60)
         setTimeLeft((data.test?.duration_minutes || 60) * 60);
@@ -322,7 +379,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         console.error(err);
       })
       .finally(() => setLoading(false));
-  }, [testId, router]);
+  }, [testId, router, isRetakeRequested]);
 
   // Fullscreen Lockdown & Exam Start State
   const [isExamStarted, setIsExamStarted] = useState(false);
@@ -813,6 +870,13 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         exitFullscreen();
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
+          try {
+            sessionStorage.setItem(`mock_result_${targetTestId}`, JSON.stringify({
+              result: data.result,
+              userState,
+              submittedAt: Date.now(),
+            }));
+          } catch (_) {}
         }
       } else {
         alert(data.error || 'Submission failed. Please try again.');
@@ -825,6 +889,16 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRetakeTest = () => {
+    try {
+      sessionStorage.removeItem(`mock_result_${testId}`);
+    } catch (_) {}
+    setResult(null);
+    setIsExamStarted(false);
+    setHasAcceptedRules(false);
+    router.push(`/mock-tests/${testId}?retake=true`);
   };
 
   // Format Timer MM:SS or HH:MM:SS
@@ -1220,7 +1294,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
+                  onClick={handleRetakeTest}
                   className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#181622] border border-slate-200 dark:border-[#242033] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Retake Test

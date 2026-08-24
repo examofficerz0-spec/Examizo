@@ -227,6 +227,40 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           subjects = [];
         }
 
+        let latestAttempt = null;
+        try {
+          const d1Attempts = await queryD1(
+            'SELECT * FROM attempts WHERE (student_id = ? OR student_id = ?) AND (test_id = ? OR topic_tag = ?) ORDER BY started_at DESC LIMIT 1',
+            [userId, String(auth.email || ''), params.id, rawTest.title || '']
+          );
+          if (d1Attempts && d1Attempts.length > 0) {
+            const att = d1Attempts[0];
+            let responses = [];
+            try {
+              responses = typeof att.responses_json === 'string' ? JSON.parse(att.responses_json) : (att.responses_json || []);
+            } catch (_) {}
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let unattemptedCount = 0;
+            responses.forEach((r: any) => {
+              if (r.is_correct === true) correctCount++;
+              else if (r.is_correct === false) incorrectCount++;
+              else unattemptedCount++;
+            });
+            latestAttempt = {
+              id: att.id,
+              score: Number(att.score || 0),
+              accuracyPercent: Number(att.accuracy || 0),
+              correctCount,
+              incorrectCount,
+              unattemptedCount,
+              totalQuestions: responses.length,
+              submissionType: att.submission_type || 'manual',
+              responses,
+            };
+          }
+        } catch (_) {}
+
         const test = {
           _id: rawTest.id,
           id: rawTest.id,
@@ -240,7 +274,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           question_ids: orderedQs,
         };
 
-        return NextResponse.json({ test });
+        return NextResponse.json({ test, latestAttempt });
       }
     } catch (d1Err) {
       console.warn('[api/mock-tests/[id]] D1 fallback:', d1Err);
@@ -257,13 +291,41 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const rawQuestions = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
     const question_ids = deduplicateQuestions(rawQuestions);
 
+    const userAttempts = (db.attempts || []).filter(
+      (a: any) => (a.student_id === user._id || a.student_id === auth.userId) && (a.test_id === params.id || a.topic_tag === rawTest.title)
+    );
+    const lastAtt = userAttempts[userAttempts.length - 1];
+    let latestAttempt = null;
+    if (lastAtt) {
+      const responses = Array.isArray(lastAtt.responses) ? lastAtt.responses : [];
+      let correctCount = 0;
+      let incorrectCount = 0;
+      let unattemptedCount = 0;
+      responses.forEach((r: any) => {
+        if (r.is_correct === true) correctCount++;
+        else if (r.is_correct === false) incorrectCount++;
+        else unattemptedCount++;
+      });
+      latestAttempt = {
+        id: lastAtt._id,
+        score: Number(lastAtt.score || 0),
+        accuracyPercent: Number(lastAtt.accuracy || 0),
+        correctCount,
+        incorrectCount,
+        unattemptedCount,
+        totalQuestions: responses.length,
+        submissionType: lastAtt.submission_type || 'manual',
+        responses,
+      };
+    }
+
     const test = {
       ...rawTest,
       course_id: course ? { _id: course._id, name: course.name } : { name: 'Locked Course' },
       question_ids,
     };
 
-    return NextResponse.json({ test });
+    return NextResponse.json({ test, latestAttempt });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

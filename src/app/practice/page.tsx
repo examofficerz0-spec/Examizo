@@ -205,6 +205,23 @@ export default function PracticeSetsPage() {
       }
     });
 
+    // Hydrate submitted result from sessionStorage if reloading on score sheet
+    try {
+      const saved = sessionStorage.getItem('practice_submitted_result');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.result) {
+          setSubmittedResult(parsed.result);
+          if (parsed.userAnswers) setUserAnswers(parsed.userAnswers);
+          if (parsed.sessionQuestions) setSessionQuestions(parsed.sessionQuestions);
+          if (parsed.selectedSubject) setSelectedSubject(parsed.selectedSubject);
+          if (parsed.selectedTopic) setSelectedTopic(parsed.selectedTopic);
+          if (parsed.activeSession) setActiveSession(parsed.activeSession);
+          setCurrentLevel('questions');
+        }
+      }
+    } catch (_) {}
+
     fetchQuestions();
 
     return () => unsubscribe();
@@ -557,6 +574,7 @@ export default function PracticeSetsPage() {
   };
 
   const handleStartSession = (mode: 'practice' | 'quiz') => {
+    try { sessionStorage.removeItem('practice_submitted_result'); } catch (_) {}
     setSelectedMode(mode);
     setShowModeModal(false);
 
@@ -632,15 +650,26 @@ export default function PracticeSetsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setSubmittedResult({
+        const resPayload = {
           ...data,
           totalQuestions: data.totalQuestions || filteredQuestions.length,
           mode: activeSession,
           timeSpent: timerSeconds,
-        });
+        };
+        setSubmittedResult(resPayload);
         setShowConfirmModal(false);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('xpUpdated'));
+          try {
+            sessionStorage.setItem('practice_submitted_result', JSON.stringify({
+              result: resPayload,
+              userAnswers,
+              sessionQuestions,
+              selectedSubject,
+              selectedTopic,
+              activeSession,
+            }));
+          } catch (_) {}
         }
         fetchQuestions();
       } else {
@@ -666,6 +695,7 @@ export default function PracticeSetsPage() {
   }, [activeSession, submittedResult]);
 
   const handleResetSession = () => {
+    try { sessionStorage.removeItem('practice_submitted_result'); } catch (_) {}
     setIsWeeklySession(false);
     setActiveSession(null);
     setSessionQuestions([]);
