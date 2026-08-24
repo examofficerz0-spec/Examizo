@@ -17,8 +17,8 @@ export function isAbove10thClass(courseName?: string | null): boolean {
 }
 
 export function getDigiLockerStatus(): boolean {
-  // DigiLocker restriction temporarily removed - all features unlocked
-  return true;
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('examizo_digilocker_verified') === 'true';
 }
 
 export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
