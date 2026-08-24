@@ -8,6 +8,7 @@ import {
   Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
+import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -295,8 +296,9 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
-      {/* Toast Notification */}
-      {toastMessage && (
+      <DigiLockerGuard>
+        {/* Toast Notification */}
+        {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-bounce">
           <Trophy className="w-4 h-4 text-amber-400" />
           {toastMessage}
@@ -944,13 +946,14 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Student Performance Statistics Modal */}
-      {selectedStudentStatsId && (
-        <StudentStatsModal
-          studentId={selectedStudentStatsId}
-          onClose={() => setSelectedStudentStatsId(null)}
-        />
-      )}
+        {/* Student Performance Statistics Modal */}
+        {selectedStudentStatsId && (
+          <StudentStatsModal
+            studentId={selectedStudentStatsId}
+            onClose={() => setSelectedStudentStatsId(null)}
+          />
+        )}
+      </DigiLockerGuard>
     </div>
   );
 }
