@@ -409,7 +409,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
-                const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && (link.href === '/mock-tests' || link.href === '/practice' || link.href === '/resources');
+                const isBlocked = isCompetitiveCourse(currentCourseName) && !isDigiLockerVerified && link.href !== '/dashboard';
                 
                 return (
                   <Link
