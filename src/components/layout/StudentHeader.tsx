@@ -836,6 +836,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           </div>
         </div>
       )}
+
+      {/* Global DigiLocker Verification Modal */}
+      <DigiLockerModal
+        isOpen={showDigiLockerModal}
+        onClose={() => setShowDigiLockerModal(false)}
+        onSuccess={() => setIsDigiLockerVerified(true)}
+        studentName={userName}
+        courseName={currentCourseName || undefined}
+      />
     </>
   );
 };

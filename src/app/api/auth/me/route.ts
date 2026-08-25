@@ -96,6 +96,10 @@ export async function GET() {
         lockedCourseId: rawCourseId ? String(rawCourseId) : null,
         xp_total: user.xp_total || 0,
         status: user.status,
+        digilocker_verified: Boolean(user.digilocker_verified),
+        digilocker_profile_json: user.digilocker_profile_json || '{}',
+        digilocker_raw_response_json: user.digilocker_raw_response_json || '{}',
+        digilockerProfile: user.digilockerProfile || null,
       },
     });
   } catch (error: any) {

@@ -104,6 +104,31 @@ export default function StudentDashboardPage() {
 
     fetchPromoteInfo();
 
+    // Check for DigiLocker redirect return
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dlParam = urlParams.get('digilocker');
+      const dlMsg = urlParams.get('message');
+      if (dlParam === 'success') {
+        showToast('DigiLocker identity verified successfully! All academic features unlocked.');
+        localStorage.setItem('examizo_digilocker_verified', 'true');
+        fetch('/api/digilocker/sync', { method: 'POST' })
+          .then((r) => r.json())
+          .then((syncData) => {
+            if (syncData?.verified) {
+              window.dispatchEvent(new Event('digilocker_status_change'));
+              window.dispatchEvent(new Event('storage'));
+            }
+          })
+          .catch(console.error);
+
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (dlParam === 'error') {
+        showToast(`DigiLocker verification failed: ${dlMsg || 'Authorization cancelled'}`);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     return () => unsubscribe();
   }, []);
 

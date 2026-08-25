@@ -16,10 +16,54 @@ export default function ProfilePage() {
   const [showMyStatsModal, setShowMyStatsModal] = useState(false);
   const [showDigiLockerModal, setShowDigiLockerModal] = useState(false);
   const [isDigiLockerVerified, setIsDigiLockerVerified] = useState(false);
+  const [digilockerProfile, setDigilockerProfile] = useState<any>(null);
   const [isSubProfile, setIsSubProfile] = useState(false);
+
+  const fetchDigiLockerStatus = () => {
+    fetch('/api/digilocker/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.verified) {
+          setIsDigiLockerVerified(true);
+          setDigilockerProfile(data.profile);
+          localStorage.setItem('examizo_digilocker_verified', 'true');
+        } else {
+          setIsDigiLockerVerified(false);
+          setDigilockerProfile(null);
+        }
+      })
+      .catch(console.error);
+  };
 
   useEffect(() => {
     setIsDigiLockerVerified(getDigiLockerStatus());
+    fetchDigiLockerStatus();
+
+    // Check for ?digilocker=success or ?digilocker=error in URL query
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dlParam = urlParams.get('digilocker');
+      if (dlParam === 'success') {
+        setMessage('DigiLocker identity verified successfully! Your academic credentials are now authenticated.');
+        fetch('/api/digilocker/sync', { method: 'POST' })
+          .then((r) => r.json())
+          .then((syncData) => {
+            if (syncData && syncData.verified) {
+              setIsDigiLockerVerified(true);
+              setDigilockerProfile(syncData.profile);
+              localStorage.setItem('examizo_digilocker_verified', 'true');
+              window.dispatchEvent(new Event('digilocker_status_change'));
+            }
+          })
+          .catch(console.error);
+
+        // Clean query param
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (dlParam === 'error') {
+        setMessage('DigiLocker verification could not be completed. Please try again.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
 
     fetch('/api/profile/list')
       .then((res) => res.json())
@@ -33,7 +77,10 @@ export default function ProfilePage() {
       })
       .catch(console.error);
 
-    const handleStorage = () => setIsDigiLockerVerified(getDigiLockerStatus());
+    const handleStorage = () => {
+      setIsDigiLockerVerified(getDigiLockerStatus());
+      fetchDigiLockerStatus();
+    };
     window.addEventListener('storage', handleStorage);
     window.addEventListener('digilocker_status_change', handleStorage);
     return () => {
@@ -73,6 +120,10 @@ export default function ProfilePage() {
         if (data.user) {
           setUserData(data.user);
           setName(data.user.name);
+          if (data.user.digilocker_verified || data.user.digilockerProfile?.verified) {
+            setIsDigiLockerVerified(true);
+            setDigilockerProfile(data.user.digilockerProfile);
+          }
         }
       })
       .catch(console.error)
@@ -444,36 +495,91 @@ export default function ProfilePage() {
               <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                 <span>DigiLocker Identity Status</span>
                 <span className={`text-[10px] font-extrabold uppercase ${isDigiLockerVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
-                  {isDigiLockerVerified ? '● Verified' : '● Pending Verification'}
+                  {isDigiLockerVerified ? '● Verified ✓' : '● Pending Verification'}
                 </span>
               </label>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
-                    <Building2 className="w-4 h-4" />
+
+              {isDigiLockerVerified && digilockerProfile ? (
+                /* Verified Detailed KYC Summary */
+                <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/60 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-emerald-950 block">MeriPehchaan DigiLocker KYC Authenticated</span>
+                        <span className="text-[11px] text-emerald-700 font-medium block">Govt. of India National Academic Depository</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDigiLockerModal(true)}
+                      className="px-3 py-1 bg-white hover:bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-lg border border-emerald-300 transition-all cursor-pointer shadow-2xs"
+                    >
+                      View Details
+                    </button>
                   </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 block">
-                      {isDigiLockerVerified ? 'National Academic Depository (Verified)' : 'DigiLocker Verification Gateway'}
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-medium block">
-                      {isDigiLockerVerified ? 'Official student identity authenticated' : 'Verify student Aadhaar / Academic marksheets'}
-                    </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
+                      <span className="text-slate-500 font-semibold text-[11px] block">Verified Student Name</span>
+                      <span className="font-black text-slate-900 block mt-0.5 text-xs">{digilockerProfile.name || name}</span>
+                    </div>
+
+                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
+                      <span className="text-slate-500 font-semibold text-[11px] block">Date of Birth &amp; Verified Age</span>
+                      <span className="font-black text-slate-900 block mt-0.5 text-xs">
+                        {digilockerProfile.formattedDob || digilockerProfile.dob || 'On Record'}{' '}
+                        {digilockerProfile.age !== null && digilockerProfile.age !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-black ml-1">
+                            {digilockerProfile.age} yrs old
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
+                      <span className="text-slate-500 font-semibold text-[11px] block">Masked Aadhaar / ID</span>
+                      <span className="font-mono font-bold text-slate-800 block mt-0.5 text-xs">
+                        {digilockerProfile.maskedAadhaar || 'Verified via Aadhaar'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
+                      <span className="text-slate-500 font-semibold text-[11px] block">DigiLocker Reference</span>
+                      <span className="font-mono font-bold text-slate-700 block mt-0.5 text-xs truncate">
+                        {digilockerProfile.digilockerid || digilockerProfile.referenceKey || 'DL-PKCE-VERIFIED'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowDigiLockerModal(true)}
-                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
-                    isDigiLockerVerified
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {isDigiLockerVerified ? 'View Verification' : 'Verify with DigiLocker'}
-                </button>
-              </div>
+              ) : (
+                /* Unverified Prompt */
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">
+                        DigiLocker Verification Gateway
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-medium block">
+                        Verify student Aadhaar / Academic marksheets via MeriPehchaan
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDigiLockerModal(true)}
+                    className="px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0 bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Verify with DigiLocker
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>

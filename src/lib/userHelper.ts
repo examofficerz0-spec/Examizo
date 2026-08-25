@@ -2,6 +2,8 @@ import { readSharedDb } from '@/lib/sharedDb';
 import { UserPayload } from '@/lib/auth';
 import { queryD1 } from '@/lib/d1';
 
+import { normalizeDigiLockerProfile } from '@/lib/digilockerHelper';
+
 export interface UserLookupResult {
   user: any;
   isMemoryMode: boolean;
@@ -13,6 +15,25 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
 
   const emailLower = auth.email ? auth.email.toLowerCase().trim() : '';
   const userIdStr = auth.userId ? String(auth.userId) : '';
+
+  // Helper to parse digilockerProfile
+  const parseDigiProfile = (rawJson: any, verifiedVal: any) => {
+    let parsed: any = null;
+    if (typeof rawJson === 'string') {
+      try {
+        parsed = JSON.parse(rawJson);
+      } catch (e) {}
+    } else if (rawJson && typeof rawJson === 'object') {
+      parsed = rawJson;
+    }
+    if (parsed) {
+      return normalizeDigiLockerProfile(parsed);
+    }
+    if (verifiedVal === 1 || verifiedVal === true || verifiedVal === '1') {
+      return { verified: true, name: '', dob: '', formattedDob: '', age: null, gender: '', email: '', mobile: '', maskedAadhaar: '', digilockerid: '', referenceKey: '', panNumber: '', drivingLicence: '', eaadhaar: '', linkedAt: '' };
+    }
+    return null;
+  };
 
   // 1. Primary: Cloudflare D1 database lookup
   try {
@@ -38,6 +59,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           const isSubDeleted = u.status === 'Deleted' || u.name === 'Deleted User' || (u.email && u.email.startsWith('deleted_'));
           if (isSubDeleted || isSubSuspended) {
             // Sub-profile suspended/deleted: Fallback seamlessly to the active main profile
+            const pDigi = parseDigiProfile(p.digilocker_profile_json, p.digilocker_verified);
             return {
               user: {
                 _id: p.id,
@@ -49,6 +71,10 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
                 locked_course_id: p.locked_course_id || null,
                 status: p.status || 'Active',
                 xp_total: p.xp_total || 0,
+                digilocker_verified: Boolean(p.digilocker_verified),
+                digilocker_profile_json: p.digilocker_profile_json || '{}',
+                digilocker_raw_response_json: p.digilocker_raw_response_json || '{}',
+                digilockerProfile: pDigi,
               },
               isMemoryMode: false,
               isD1: true,
@@ -64,6 +90,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         return null;
       }
 
+      const uDigi = parseDigiProfile(u.digilocker_profile_json, u.digilocker_verified);
       return {
         user: {
           _id: u.id,
@@ -75,6 +102,10 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           locked_course_id: u.locked_course_id || null,
           status: u.status || 'Active',
           xp_total: u.xp_total || 0,
+          digilocker_verified: Boolean(u.digilocker_verified),
+          digilocker_profile_json: u.digilocker_profile_json || '{}',
+          digilocker_raw_response_json: u.digilocker_raw_response_json || '{}',
+          digilockerProfile: uDigi,
         },
         isMemoryMode: false,
         isD1: true,
@@ -127,7 +158,14 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         if (isDeleted || isSuspended) {
           return null;
         }
-        return { user: memUser, isMemoryMode: true };
+        const memDigi = parseDigiProfile(memUser.digilocker_profile_json, memUser.digilocker_verified);
+        return {
+          user: {
+            ...memUser,
+            digilockerProfile: memDigi,
+          },
+          isMemoryMode: true,
+        };
       }
     }
   } catch (e) {

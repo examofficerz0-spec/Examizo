@@ -1,7 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Lock, CheckCircle2, AlertCircle, X, ExternalLink, ArrowRight, Loader2, Building2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  ExternalLink,
+  ArrowRight,
+  Loader2,
+  Building2,
+  User,
+  Calendar,
+  CreditCard,
+  Hash
+} from 'lucide-react';
+import { DigiLockerWarmupModal } from './DigiLockerWarmupModal';
 
 interface DigiLockerModalProps {
   isOpen: boolean;
@@ -9,10 +24,10 @@ interface DigiLockerModalProps {
   onSuccess: () => void;
   studentName?: string;
   courseName?: string;
+  verifiedProfile?: any;
 }
 
 export function isAbove10thClass(courseName?: string | null): boolean {
-  // DigiLocker restriction temporarily removed
   return false;
 }
 
@@ -27,50 +42,36 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   onSuccess,
   studentName = 'Student',
   courseName,
+  verifiedProfile,
 }) => {
-  const [aadhaar, setAadhaar] = useState('');
-  const [pin, setPin] = useState('');
-  const [step, setStep] = useState<'input' | 'verifying' | 'success'>('input');
-  const [error, setError] = useState('');
-  const [progressMsg, setProgressMsg] = useState('Connecting to DigiLocker Gateway...');
+  const [showWarmup, setShowWarmup] = useState(false);
+  const [profileData, setProfileData] = useState<any>(verifiedProfile || null);
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingStatus(true);
+      fetch('/api/digilocker/status')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.verified) {
+            setIsVerified(true);
+            setProfileData(data.profile);
+            localStorage.setItem('examizo_digilocker_verified', 'true');
+          } else {
+            setIsVerified(false);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoadingStatus(false));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleStartVerification = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (aadhaar.replaceAll(' ', '').length < 12) {
-      setError('Please enter a valid 12-digit Aadhaar / Virtual ID number.');
-      return;
-    }
-    if (pin.length < 6) {
-      setError('Please enter your 6-digit DigiLocker Security PIN.');
-      return;
-    }
-
-    setError('');
-    setStep('verifying');
-
-    // Simulate realistic DigiLocker Government Gateway Verification Progress
-    setTimeout(() => {
-      setProgressMsg('Authenticating Aadhaar credentials with UIDAI...');
-    }, 1000);
-
-    setTimeout(() => {
-      setProgressMsg('Fetching verified academic certificates...');
-    }, 2200);
-
-    setTimeout(() => {
-      setProgressMsg('Finalizing DigiLocker Academic ID verification...');
-    }, 3400);
-
-    setTimeout(() => {
-      setStep('success');
-      localStorage.setItem('examizo_digilocker_verified', 'true');
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new Event('digilocker_status_change'));
-      }
-    }, 4400);
+  const handleStartLiveVerification = () => {
+    setShowWarmup(true);
   };
 
   const handleFinish = () => {
@@ -79,155 +80,189 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900">
-        
-        {/* Top DigiLocker Banner Header */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 text-white relative">
-          <button
-            onClick={onClose}
-            type="button"
-            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-all"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in font-sans">
+        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900">
+          {/* Top DigiLocker Banner Header */}
+          <div className="bg-gradient-to-r from-[#072448] via-[#0b3c68] to-[#144272] p-6 text-white relative">
+            <button
+              onClick={onClose}
+              type="button"
+              className="absolute top-4 right-4 p-2 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600/30 border border-blue-400/40 backdrop-blur-md flex items-center justify-center text-blue-300 font-bold shrink-0 shadow-inner">
-              <Building2 className="w-6 h-6 text-blue-300" />
-            </div>
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider">
-                <ShieldCheck className="w-3 h-3 text-blue-400" />
-                <span>Govt. of India Integration</span>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 backdrop-blur-md flex items-center justify-center text-sky-300 font-bold shrink-0 shadow-inner">
+                <Building2 className="w-6 h-6 text-sky-300" />
               </div>
-              <h2 className="text-xl font-black tracking-tight mt-1">DigiLocker Academic Verification</h2>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 text-[10px] font-black uppercase tracking-wider">
+                  <ShieldCheck className="w-3 h-3 text-sky-300" />
+                  <span>Govt. of India Integration</span>
+                </div>
+                <h2 className="text-xl font-black tracking-tight mt-1">DigiLocker Academic Verification</h2>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Modal Body */}
-        <div className="p-6 sm:p-8">
-          {step === 'input' && (
-            <form onSubmit={handleStartVerification} className="space-y-5">
-              <div className="p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-blue-900 leading-relaxed font-medium">
-                  <p className="font-extrabold">Why is DigiLocker Verification needed?</p>
-                  <p className="mt-0.5 text-blue-800">
-                    For students in <strong className="font-extrabold text-blue-950">Class 11, 12, and Competitive Exams</strong>, DigiLocker verification ensures identity compliance and unlocks your full practice portal.
+          {/* Modal Body */}
+          <div className="p-6 sm:p-8">
+            {loadingStatus ? (
+              <div className="py-12 text-center space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
+                <p className="text-xs font-bold text-slate-500">Checking DigiLocker verification records...</p>
+              </div>
+            ) : isVerified ? (
+              /* Verified Profile Details Card */
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="w-16 h-16 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mx-auto text-emerald-600 shadow-md shadow-emerald-500/20">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[11px] font-black uppercase tracking-wider border border-emerald-300">
+                    Verified with MeriPehchaan ✓
+                  </span>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Identity KYC Verified</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    National Academic Depository & UIDAI identity verified.
                   </p>
                 </div>
-              </div>
 
-              {error && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
+                {/* Profile Key-Value Grid */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3.5 text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-blue-600" /> Verified Name
+                    </span>
+                    <span className="font-extrabold text-slate-900 text-sm">
+                      {profileData?.name || studentName}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-indigo-600" /> Date of Birth & Age
+                    </span>
+                    <span className="font-extrabold text-slate-900">
+                      {profileData?.formattedDob || profileData?.dob || 'On Record'}{' '}
+                      {profileData?.age ? (
+                        <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-black text-[11px] ml-1">
+                          {profileData.age} yrs
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+
+                  {profileData?.gender && (
+                    <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                      <span className="text-slate-500 font-semibold">Gender</span>
+                      <span className="font-bold text-slate-800">{profileData.gender}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                      <CreditCard className="w-4 h-4 text-emerald-600" /> Masked Aadhaar
+                    </span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {profileData?.maskedAadhaar || 'Verified via Aadhaar'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                      <Hash className="w-4 h-4 text-purple-600" /> DigiLocker Ref / ID
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-slate-700 truncate max-w-[200px]">
+                      {profileData?.digilockerid || profileData?.referenceKey || 'DL-PKCE-VERIFIED'}
+                    </span>
+                  </div>
                 </div>
-              )}
 
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                  12-Digit Aadhaar / Virtual ID Number
-                </label>
-                <input
-                  type="text"
-                  maxLength={14}
-                  required
-                  placeholder="e.g. 5482 9102 3841"
-                  value={aadhaar}
-                  onChange={(e) => setAadhaar(e.target.value)}
-                  className="w-full text-sm p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-                  6-Digit DigiLocker Security PIN
-                </label>
-                <input
-                  type="password"
-                  maxLength={6}
-                  required
-                  placeholder="******"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  className="w-full text-sm p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                />
-              </div>
-
-              <div className="pt-2">
                 <button
-                  type="submit"
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-blue-600/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  type="button"
+                  onClick={handleFinish}
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ShieldCheck className="w-5 h-5" />
-                  <span>Verify with DigiLocker Gateway</span>
+                  <span>Close & Continue</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
+            ) : (
+              /* Unverified: Initiate Live Gateway Verification */
+              <div className="space-y-6">
+                <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-sky-950 leading-relaxed font-medium">
+                    <p className="font-extrabold">Official Govt. of India DigiLocker Portal</p>
+                    <p className="mt-1 text-sky-800">
+                      Verify your student identity securely using your registered Aadhaar / Mobile number with the DigiLocker MeriPehchaan Gateway.
+                    </p>
+                  </div>
+                </div>
 
-              <p className="text-[11px] text-center text-slate-400 font-medium">
-                Protected by 256-bit SSL Encryption • DigiLocker National Academic Depository
-              </p>
-            </form>
-          )}
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                      1
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-bold text-slate-800 block">Click Verify with DigiLocker</span>
+                      <span className="text-[11px] text-slate-500 font-medium">Redirects to official MeriPehchaan authentication</span>
+                    </div>
+                  </div>
 
-          {step === 'verifying' && (
-            <div className="py-10 text-center space-y-5">
-              <div className="w-16 h-16 rounded-full bg-blue-50 border-4 border-blue-200 flex items-center justify-center mx-auto text-blue-600">
-                <Loader2 className="w-8 h-8 animate-spin" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900">Verifying DigiLocker Identity...</h3>
-                <p className="text-xs font-bold text-blue-600 animate-pulse">{progressMsg}</p>
-              </div>
-              <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                Please wait while we establish a secure connection with the DigiLocker National Gateway.
-              </p>
-            </div>
-          )}
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                      2
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-bold text-slate-800 block">Authenticate with 6-Digit PIN or OTP</span>
+                      <span className="text-[11px] text-slate-500 font-medium">Secured by 256-bit SSL encryption</span>
+                    </div>
+                  </div>
 
-          {step === 'success' && (
-            <div className="py-6 text-center space-y-6">
-              <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mx-auto text-emerald-600 shadow-lg shadow-emerald-500/20">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                      3
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-bold text-slate-800 block">Instant Verification & Unlock</span>
+                      <span className="text-[11px] text-slate-500 font-medium">Verified Name & Age saved directly to account</span>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black uppercase tracking-wider border border-emerald-300">
-                  Verification Successful ✅
-                </span>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">DigiLocker Identity Verified!</h3>
-                <p className="text-xs text-slate-600 max-w-sm mx-auto font-medium leading-relaxed">
-                  Congratulations <strong className="text-slate-900">{studentName}</strong>! Your DigiLocker Academic ID has been successfully verified. All practice sets, mock tests, and leaderboards are now unlocked.
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleStartLiveVerification}
+                    className="w-full py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-5 h-5 text-sky-200" />
+                    <span>Proceed to DigiLocker Verification</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-center text-slate-400 font-medium">
+                  Protected by 256-bit SSL Encryption • DigiLocker National Academic Depository
                 </p>
               </div>
-
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">Verification Status:</span>
-                  <span className="font-extrabold text-emerald-600">Active & Verified</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">DigiLocker Reference:</span>
-                  <span className="font-mono font-bold text-slate-800">DL-2026-EXAMIZO-9842</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleFinish}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Continue to Portal</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Animated Warmup Connecting Modal */}
+      <DigiLockerWarmupModal
+        isOpen={showWarmup}
+        onClose={() => setShowWarmup(false)}
+        authorizeUrl="/api/digilocker/authorize"
+      />
+    </>
   );
 };
 

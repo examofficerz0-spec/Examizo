@@ -10,6 +10,23 @@ export interface IFriendRequest {
   created_at?: string;
 }
 
+export interface IDigiLockerProfile {
+  verified: boolean;
+  name?: string;
+  dob?: string;
+  age?: number | string;
+  gender?: string;
+  email?: string;
+  mobile?: string;
+  maskedAadhaar?: string;
+  digilockerid?: string;
+  referenceKey?: string;
+  panNumber?: string;
+  drivingLicence?: string;
+  eaadhaar?: string;
+  linkedAt?: string;
+}
+
 export interface IUser {
   _id?: string;
   id: string;
@@ -24,6 +41,10 @@ export interface IUser {
   account_email?: string;
   friends?: string[];
   friendRequests?: IFriendRequest[];
+  digilocker_verified?: number | boolean;
+  digilocker_profile_json?: string;
+  digilocker_raw_response_json?: string;
+  digilockerProfile?: IDigiLockerProfile | null;
 }
 
 export interface ICourse {

@@ -73,6 +73,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/reset-password',
   '/api/gallery',
   '/api/seed',
+  '/api/digilocker',
 ];
 
 export async function middleware(request: NextRequest) {
