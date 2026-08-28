@@ -431,7 +431,7 @@ export default function LeaderboardPage() {
 
             {/* TAB 1: GLOBAL LEADERBOARD */}
             {activeTab === 'global' && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs">
                 {loadingGlobal ? (
                   <PageLoader
                     inline
@@ -587,7 +587,7 @@ export default function LeaderboardPage() {
               </div>
             )}
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs">
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/40">
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">

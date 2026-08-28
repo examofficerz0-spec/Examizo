@@ -106,7 +106,7 @@ export const MobileBottomNav: React.FC = () => {
                     />
                   </span>
                   <span
-                    className={`text-[10px] font-extrabold mt-1 transition-colors duration-200 ${
+                    className={`text-[10px] font-extrabold mt-1 transition-colors duration-200 truncate whitespace-nowrap px-0.5 ${
                       isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'
                     }`}
                   >
@@ -133,7 +133,7 @@ export const MobileBottomNav: React.FC = () => {
                 strokeWidth={isActive ? 2.5 : 2}
               />
               <span
-                className={`text-[10px] font-bold mt-0.5 transition-colors duration-200 ${
+                className={`text-[10px] font-bold mt-0.5 transition-colors duration-200 truncate whitespace-nowrap px-0.5 ${
                   isActive
                     ? 'text-blue-600 dark:text-blue-400 font-extrabold'
                     : 'text-slate-400 dark:text-slate-500'

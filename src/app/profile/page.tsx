@@ -289,7 +289,7 @@ export default function ProfilePage() {
         </div>
 
         {/* My Performance Analytics & Stats Card */}
-        <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-800 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden border border-white/15">
+        <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-800 rounded-3xl p-5 sm:p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 relative overflow-hidden border border-white/15">
           {/* Background Patterns & Grid Mesh */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {/* Dot Grid Pattern */}
@@ -328,15 +328,15 @@ export default function ProfilePage() {
             <BarChart2 className="absolute right-48 -top-8 w-32 h-32 text-white/[0.04] select-none" />
           </div>
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
-              <BarChart2 className="w-7 h-7 text-white drop-shadow-xs" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
+              <BarChart2 className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-xs" />
             </div>
             <div>
               <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-white/20 text-white tracking-wider border border-white/25 shadow-2xs inline-flex items-center gap-1.5">
                 <Activity className="w-3 h-3 text-blue-200" /> Personal Analytics
               </span>
-              <h2 className="text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">My Performance & Statistics</h2>
+              <h2 className="text-lg sm:text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">My Performance & Statistics</h2>
               <p className="text-xs text-blue-100 mt-1 leading-relaxed max-w-xl font-medium">
                 View your overall accuracy benchmark, average practice speed per question, topic completion progress, and complete mock test attempt history.
               </p>
@@ -354,7 +354,7 @@ export default function ProfilePage() {
         </div>
 
         {/* DigiLocker Identity Verification Card (Available for all courses) */}
-        <div className="bg-gradient-to-br from-[#072448] via-[#0b3c68] to-[#144272] rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden border border-white/20">
+        <div className="bg-gradient-to-br from-[#072448] via-[#0b3c68] to-[#144272] rounded-3xl p-5 sm:p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 relative overflow-hidden border border-white/20">
           {/* Background Security Hexagon Vault & Guilloche Security Waves */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {/* Hexagonal Vault Honeycomb Mesh */}
@@ -408,9 +408,9 @@ export default function ProfilePage() {
             <ShieldCheck className="absolute right-60 -top-6 w-36 h-36 text-white/[0.04] select-none" />
           </div>
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
-              <Building2 className="w-7 h-7 text-sky-200 drop-shadow-xs" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-sky-200 drop-shadow-xs" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -427,7 +427,7 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <h2 className="text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">DigiLocker Identity Verification</h2>
+              <h2 className="text-lg sm:text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">DigiLocker Identity Verification</h2>
               <p className="text-xs text-sky-100 mt-1 leading-relaxed max-w-xl font-medium">
                 {isDigiLockerVerified
                   ? 'Your DigiLocker Academic ID and student credentials have been securely verified with the National Academic Depository.'

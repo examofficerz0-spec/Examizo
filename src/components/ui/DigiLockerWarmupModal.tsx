@@ -74,8 +74,8 @@ export const DigiLockerWarmupModal: React.FC<DigiLockerWarmupModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in font-sans">
-      <div className="relative w-full max-w-md bg-[#0B1315] border border-emerald-500/30 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(0,200,150,0.25)] p-6 sm:p-8 text-center overflow-hidden">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in font-sans">
+      <div className="relative w-full max-w-md bg-[#0B1315] border border-emerald-500/30 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(0,200,150,0.25)] p-5 sm:p-8 text-center overflow-hidden max-h-[92dvh] overflow-y-auto">
         {/* Ambient Top Glow */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
 

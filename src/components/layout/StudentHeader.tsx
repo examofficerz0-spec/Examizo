@@ -483,7 +483,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
               {/* Notification Menu Dropdown */}
               {showNotificationMenu && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-50 animate-dropdown">
+                <div className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-1.5rem))] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-50 animate-dropdown">
                   <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -612,7 +612,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
               {/* Dropdown — Netflix Style Multi-Profile Switcher */}
               <div
-                className={`absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50
+                className={`absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50
                   transition-all duration-200 ease-out origin-top-right
                   ${
                     showProfileMenu

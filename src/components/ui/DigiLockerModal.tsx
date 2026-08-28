@@ -81,34 +81,34 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in font-sans">
-        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in font-sans">
+        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900 max-h-[92dvh] flex flex-col">
           {/* Top DigiLocker Banner Header */}
-          <div className="bg-gradient-to-r from-[#072448] via-[#0b3c68] to-[#144272] p-6 text-white relative">
+          <div className="bg-gradient-to-r from-[#072448] via-[#0b3c68] to-[#144272] p-4 sm:p-6 text-white relative shrink-0">
             <button
               onClick={onClose}
               type="button"
-              className="absolute top-4 right-4 p-2 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+              className="absolute top-3.5 right-3.5 p-2 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 backdrop-blur-md flex items-center justify-center text-sky-300 font-bold shrink-0 shadow-inner">
-                <Building2 className="w-6 h-6 text-sky-300" />
+            <div className="flex items-center gap-3 pr-8 sm:pr-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 backdrop-blur-md flex items-center justify-center text-sky-300 font-bold shrink-0 shadow-inner">
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 text-[10px] font-black uppercase tracking-wider">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                   <ShieldCheck className="w-3 h-3 text-sky-300" />
                   <span>Govt. of India Integration</span>
                 </div>
-                <h2 className="text-xl font-black tracking-tight mt-1">DigiLocker Academic Verification</h2>
+                <h2 className="text-base sm:text-xl font-black tracking-tight mt-0.5">DigiLocker Academic Verification</h2>
               </div>
             </div>
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 sm:p-8">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1">
             {loadingStatus ? (
               <div className="py-12 text-center space-y-4">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
