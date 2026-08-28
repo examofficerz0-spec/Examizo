@@ -1,280 +1,372 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 interface ExamizoIconProps {
   size?: number;
   className?: string;
   animate?: boolean;
+  interactive?: boolean;
 }
 
+/**
+ * ExamizoIcon — Official Brand Icon featuring the Examizo Closed Book Mascot with Graduation Cap.
+ * 
+ * Interactive:
+ * - Touch or Click: plays squash-and-bounce animation, eyes sparkle, graduation cap tips, sparkle burst.
+ * - Continuous: gentle floating animation, eye blinking, and tassel sway.
+ */
 export const ExamizoIcon: React.FC<ExamizoIconProps> = ({
   size = 42,
   className = '',
   animate = true,
+  interactive = true,
 }) => {
+  const [isBouncing, setIsBouncing] = useState(false);
+  const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const sparkleCountRef = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerBounce = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (!interactive || isBouncing) return;
+    if (e) {
+      e.stopPropagation();
+    }
+    setIsBouncing(true);
+
+    // Spawn 4 playful micro-sparkles
+    const newSparkles = [
+      { id: ++sparkleCountRef.current, x: 25, y: 30 },
+      { id: ++sparkleCountRef.current, x: 95, y: 25 },
+      { id: ++sparkleCountRef.current, x: 15, y: 70 },
+      { id: ++sparkleCountRef.current, x: 105, y: 65 },
+    ];
+    setSparkles(newSparkles);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setIsBouncing(false);
+      setSparkles([]);
+    }, 900);
+  }, [interactive, isBouncing]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative inline-flex items-center justify-center shrink-0 select-none overflow-visible group/icon ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 select-none overflow-visible group/ezicon ${
+        interactive ? 'cursor-pointer' : ''
+      } ${className}`}
+      onClick={triggerBounce}
+      onTouchStart={triggerBounce}
     >
       <svg
-        viewBox="0 0 220 220"
+        viewBox="0 0 120 125"
         width={size}
         height={size}
-        className="w-full h-full overflow-visible"
+        className={`w-full h-full overflow-visible transition-transform duration-200 active:scale-90 ${
+          animate ? 'ez-mascot-ambient' : ''
+        } ${isBouncing ? 'ez-mascot-active-bounce' : ''}`}
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Gradients matching the signature Examizo Ribbon Logo */}
-          <linearGradient id="ezTopBarGrad" x1="0%" y1="0%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#1a56db" />
-            <stop offset="50%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
+          {/* Book Cover Gradient */}
+          <linearGradient id="ezBookCoverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e1b4b" />
+            <stop offset="35%" stopColor="#312e81" />
+            <stop offset="70%" stopColor="#3730a3" />
+            <stop offset="100%" stopColor="#4338ca" />
           </linearGradient>
 
-          <linearGradient id="ezMidBarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0a1931" />
-            <stop offset="50%" stopColor="#0f2b5c" />
-            <stop offset="100%" stopColor="#1e40af" />
+          {/* Book Spine Gradient */}
+          <linearGradient id="ezBookSpineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e1b4b" />
+            <stop offset="100%" stopColor="#312e81" />
           </linearGradient>
 
-          <linearGradient id="ezBotBarGrad" x1="0%" y1="0%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#1e40af" />
-            <stop offset="40%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
+          {/* Gold Trim & Accents */}
+          <linearGradient id="ezGoldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fef08a" />
+            <stop offset="30%" stopColor="#fbbf24" />
+            <stop offset="70%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
 
-          <linearGradient id="ezSpineMain" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="30%" stopColor="#2563eb" />
-            <stop offset="70%" stopColor="#1d4ed8" />
-            <stop offset="100%" stopColor="#172554" />
+          {/* Cap Diamond Gradient */}
+          <linearGradient id="ezCapGrad" x1="0%" y1="70%" x2="100%" y2="30%">
+            <stop offset="0%" stopColor="#0a0a14" />
+            <stop offset="40%" stopColor="#1e1b4b" />
+            <stop offset="80%" stopColor="#312e81" />
+            <stop offset="100%" stopColor="#3b82f6" />
           </linearGradient>
 
-          <linearGradient id="ezSpineDarkFold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0b172a" />
-            <stop offset="100%" stopColor="#172554" />
-          </linearGradient>
-
-          {/* Mortarboard Graduation Cap Gradients */}
-          <linearGradient id="ezHatTopGrad" x1="0%" y1="70%" x2="100%" y2="30%">
-            <stop offset="0%" stopColor="#071126" />
-            <stop offset="30%" stopColor="#0c234b" />
-            <stop offset="70%" stopColor="#1e40af" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-
-          <linearGradient id="ezHatSideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#071126" />
-            <stop offset="100%" stopColor="#030814" />
-          </linearGradient>
-
-          <linearGradient id="ezTasselGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="50%" stopColor="#0f2b5c" />
-            <stop offset="100%" stopColor="#071126" />
-          </linearGradient>
-
-          {/* Glow filter */}
-          <filter id="ezDropShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#1e40af" floodOpacity="0.3" />
+          {/* Drop shadow */}
+          <filter id="ezIconShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#1e1b4b" floodOpacity="0.25" />
           </filter>
         </defs>
 
         <style>{`
-          /* Fluid Floating Tilt Animation for the Graduation Hat */
-          @keyframes ezHatInfiniteFloat {
-            0%, 100% {
-              transform: translate3d(0, 0px, 0) rotate(0deg);
-              -webkit-transform: translate3d(0, 0px, 0) rotate(0deg);
-            }
-            25% {
-              transform: translate3d(0, -3.5px, 0) rotate(-2.5deg);
-              -webkit-transform: translate3d(0, -3.5px, 0) rotate(-2.5deg);
-            }
-            50% {
-              transform: translate3d(0, -0.8px, 0) rotate(1.2deg);
-              -webkit-transform: translate3d(0, -0.8px, 0) rotate(1.2deg);
-            }
-            75% {
-              transform: translate3d(0, -2.8px, 0) rotate(-1.2deg);
-              -webkit-transform: translate3d(0, -2.8px, 0) rotate(-1.2deg);
-            }
+          @keyframes ezAmbientBob {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3.5px); }
           }
-
-          /* Fluid Continuous Swaying Loop for the Tassel */
-          @keyframes ezTasselContinuousLoop {
-            0%, 100% {
-              transform: rotate(0deg);
-              -webkit-transform: rotate(0deg);
-            }
-            25% {
-              transform: rotate(-18deg);
-              -webkit-transform: rotate(-18deg);
-            }
-            50% {
-              transform: rotate(14deg);
-              -webkit-transform: rotate(14deg);
-            }
-            75% {
-              transform: rotate(-10deg);
-              -webkit-transform: rotate(-10deg);
-            }
+          @keyframes ezMascotSquashBounce {
+            0% { transform: scale(1) translateY(0); }
+            20% { transform: scale(0.88, 1.12) translateY(2px); }
+            45% { transform: scale(1.12, 0.88) translateY(-8px); }
+            70% { transform: scale(0.96, 1.04) translateY(-2px); }
+            100% { transform: scale(1) translateY(0); }
           }
-
-          /* Fluid Secondary Wave for the Tassel Brush Tip */
-          @keyframes ezTasselBrushContinuous {
-            0%, 100% {
-              transform: rotate(0deg) skewX(0deg);
-              -webkit-transform: rotate(0deg) skewX(0deg);
-            }
-            25% {
-              transform: rotate(-12deg) skewX(-6deg);
-              -webkit-transform: rotate(-12deg) skewX(-6deg);
-            }
-            50% {
-              transform: rotate(10deg) skewX(5deg);
-              -webkit-transform: rotate(10deg) skewX(5deg);
-            }
-            75% {
-              transform: rotate(-6deg) skewX(-3deg);
-              -webkit-transform: rotate(-6deg) skewX(-3deg);
-            }
+          @keyframes ezCapTiltFloat {
+            0%, 100% { transform: rotate(0deg) translateY(0); }
+            50% { transform: rotate(-3deg) translateY(-1px); }
           }
-
-          .ez-hat-animated {
-            transform-origin: 110px 72px;
-            -webkit-transform-origin: 110px 72px;
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            animation: ezHatInfiniteFloat 3.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            -webkit-animation: ezHatInfiniteFloat 3.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          @keyframes ezTasselSway {
+            0%, 100% { transform: rotate(0deg); }
+            30% { transform: rotate(-16deg); }
+            70% { transform: rotate(12deg); }
           }
-
-          .ez-tassel-loop {
-            transform-origin: 64px 72px;
-            -webkit-transform-origin: 64px 72px;
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            animation: ezTasselContinuousLoop 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            -webkit-animation: ezTasselContinuousLoop 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          @keyframes ezArmWaveHello {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-18deg); }
+            75% { transform: rotate(14deg); }
           }
-
-          .ez-tassel-brush-loop {
-            transform-origin: 62px 90px;
-            -webkit-transform-origin: 62px 90px;
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            animation: ezTasselBrushContinuous 2.8s ease-in-out infinite;
-            -webkit-animation: ezTasselBrushContinuous 2.8s ease-in-out infinite;
+          .ez-mascot-ambient {
+            animation: ezAmbientBob 2.6s ease-in-out infinite;
           }
-
-          .ez-e-animated {
-            transform-origin: 110px 140px;
-            -webkit-transform-origin: 110px 140px;
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+          .ez-mascot-active-bounce {
+            animation: ezMascotSquashBounce 0.75s ease-out;
           }
-
-          .group\\/icon:hover .ez-hat-animated,
-          .group:hover .ez-hat-animated,
-          .examizo-container:hover .ez-hat-animated {
-            animation: ezHatInfiniteFloat 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            -webkit-animation: ezHatInfiniteFloat 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          .ez-cap-layer {
+            transform-origin: 60px 30px;
+            animation: ezCapTiltFloat 2.6s ease-in-out infinite;
           }
-
-          .group\\/icon:hover .ez-tassel-loop,
-          .group:hover .ez-tassel-loop,
-          .examizo-container:hover .ez-tassel-loop {
-            animation: ezTasselContinuousLoop 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-            -webkit-animation: ezTasselContinuousLoop 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          .ez-tassel-layer {
+            transform-origin: 80px 42px;
+            animation: ezTasselSway 2.2s ease-in-out infinite;
+          }
+          .ez-waving-arm {
+            transform-origin: 90px 68px;
+            animation: ezArmWaveHello 2s ease-in-out infinite;
+          }
+          .group\\/ezicon:hover .ez-waving-arm {
+            animation: ezArmWaveHello 0.6s ease-in-out infinite;
+          }
+          .group\\/ezicon:hover .ez-cap-layer {
+            animation: ezCapTiltFloat 1.2s ease-in-out infinite;
           }
         `}</style>
 
-        {/* 1. Base Stylized 'E' Ribbon Group */}
-        <g filter="url(#ezDropShadow)" className={animate ? 'ez-e-animated' : ''}>
-          {/* Top Bar of 'E' */}
+        {/* Ground ambient shadow */}
+        <ellipse cx="60" cy="120" rx="26" ry="3.5" fill="#1e1b4b" opacity="0.15" />
+
+        {/* === MAIN BOOK BODY GROUP === */}
+        <g filter="url(#ezIconShadow)">
+          {/* Left Book Spine */}
+          <rect x="25" y="32" width="9" height="74" rx="3.5" fill="url(#ezBookSpineGrad)" />
+          {/* Gold Ribs on Spine */}
+          <rect x="25" y="42" width="9" height="2.5" rx="1" fill="url(#ezGoldTrim)" opacity="0.85" />
+          <rect x="25" y="52" width="9" height="2.5" rx="1" fill="url(#ezGoldTrim)" opacity="0.85" />
+          <rect x="25" y="92" width="9" height="2.5" rx="1" fill="url(#ezGoldTrim)" opacity="0.85" />
+
+          {/* Book Front Cover */}
+          <rect x="32" y="30" width="58" height="78" rx="5.5" fill="url(#ezBookCoverGrad)" />
+
+          {/* Gold Decorative Corner Trim on Cover */}
+          <rect x="37" y="35" width="48" height="68" rx="3.5" fill="none" stroke="url(#ezGoldTrim)" strokeWidth="1.4" opacity="0.65" />
+          
+          {/* Gold Filigree Header Banner Arc */}
           <path
-            d="M 96 90 C 114 86 138 84 158 84 C 165 84 170 89 170 96 C 170 102 165 107 158 107 C 128 107 106 109 90 113 Z"
-            fill="url(#ezTopBarGrad)"
+            d="M 42 42 Q 61 46 80 42"
+            fill="none"
+            stroke="url(#ezGoldTrim)"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.8"
           />
 
-          {/* Under Spine Dark Depth Layer */}
-          <path
-            d="M 98 94 L 70 148 C 66 156 70 167 80 174 C 84 176 89 177 94 177 L 115 132 C 118 123 112 113 102 111 Z"
-            fill="url(#ezSpineDarkFold)"
-          />
+          {/* Gold Corner Flourishes */}
+          <path d="M 39 37 L 45 37 L 39 43 Z" fill="url(#ezGoldTrim)" opacity="0.75" />
+          <path d="M 83 37 L 77 37 L 83 43 Z" fill="url(#ezGoldTrim)" opacity="0.75" />
+          <path d="M 39 101 L 45 101 L 39 95 Z" fill="url(#ezGoldTrim)" opacity="0.75" />
+          <path d="M 83 101 L 77 101 L 83 95 Z" fill="url(#ezGoldTrim)" opacity="0.75" />
 
-          {/* Middle Bar of 'E' (Dark Ribbon fold) */}
-          <path
-            d="M 96 114 C 108 111 128 110 146 110 C 153 110 158 114 158 120 C 158 126 152 131 144 131 C 124 131 106 136 86 144 C 81 146 77 143 79 137 C 83 128 90 119 96 114 Z"
-            fill="url(#ezMidBarGrad)"
-          />
+          {/* Gold Stars */}
+          <polygon points="61,40 62.5,43 65.5,43 63,45 64,48 61,46 58,48 59,45 56.5,43 59.5,43" fill="url(#ezGoldTrim)" opacity="0.9" />
 
-          {/* Bottom Bar of 'E' */}
-          <path
-            d="M 76 160 C 72 171 80 184 92 184 L 148 184 C 157 184 162 178 158 170 C 155 163 148 159 140 159 L 96 159 C 88 159 80 158 76 160 Z"
-            fill="url(#ezBotBarGrad)"
-          />
+          {/* Page Edge (Bottom) */}
+          <rect x="32" y="102" width="58" height="6" rx="2" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="0.5" />
+          <line x1="35" y1="104" x2="87" y2="104" stroke="#cbd5e1" strokeWidth="0.5" />
+          <line x1="35" y1="106" x2="87" y2="106" stroke="#cbd5e1" strokeWidth="0.5" />
+        </g>
 
-          {/* Dynamic Front Spine Ribbon (Sweeping 3D Blue Curve) */}
+        {/* === CUTE KAWAII FACE === */}
+        <g>
+          {/* Left Eye */}
+          <ellipse cx="49" cy="67" rx="7" ry="7.5" fill="white" stroke="#1e1b4b" strokeWidth="1" />
+          <ellipse cx="49" cy="67" rx="4.5" ry="5" fill="#1e293b" />
+          <circle cx="47" cy="65" r="2.2" fill="white" />
+          <circle cx="51" cy="69" r="1.1" fill="white" opacity="0.75" />
+
+          {/* Right Eye */}
+          <ellipse cx="73" cy="67" rx="7" ry="7.5" fill="white" stroke="#1e1b4b" strokeWidth="1" />
+          <ellipse cx="73" cy="67" rx="4.5" ry="5" fill="#1e293b" />
+          <circle cx="71" cy="65" r="2.2" fill="white" />
+          <circle cx="75" cy="69" r="1.1" fill="white" opacity="0.75" />
+
+          {/* Blinking Animation on eyes */}
+          {animate && (
+            <>
+              <ellipse cx="49" cy="67" rx="7" ry="7.5" fill="url(#ezBookCoverGrad)">
+                <animate
+                  attributeName="ry"
+                  values="0;0;0;7.5;7.5;7.5;7.5;7.5;7.5;7.5;0;0;7.5"
+                  dur="4s"
+                  repeatCount="indefinite"
+                />
+              </ellipse>
+              <ellipse cx="73" cy="67" rx="7" ry="7.5" fill="url(#ezBookCoverGrad)">
+                <animate
+                  attributeName="ry"
+                  values="0;0;0;7.5;7.5;7.5;7.5;7.5;7.5;7.5;0;0;7.5"
+                  dur="4s"
+                  repeatCount="indefinite"
+                />
+              </ellipse>
+            </>
+          )}
+
+          {/* Cheerful Star sparkle in eyes when clicked/bouncing */}
+          {isBouncing && (
+            <>
+              <polygon points="49,63 50.5,65.5 53,65.5 51,67.5 52,70 49,68.5 46,70 47,67.5 45,65.5 47.5,65.5" fill="#fbbf24" opacity="0.95" />
+              <polygon points="73,63 74.5,65.5 77,65.5 75,67.5 76,70 73,68.5 70,70 71,67.5 69,65.5 71.5,65.5" fill="#fbbf24" opacity="0.95" />
+            </>
+          )}
+
+          {/* Rosy Cheeks */}
+          <circle cx="42" cy="74" r="4.2" fill="#f87171" opacity="0.45" />
+          <circle cx="80" cy="74" r="4.2" fill="#f87171" opacity="0.45" />
+
+          {/* Happy Open Smile */}
           <path
-            d="M 136 86 C 116 88 94 103 84 120 C 66 148 58 174 74 187 C 82 194 96 193 106 183 C 115 174 122 157 126 146 C 128 140 124 134 117 134 C 105 134 94 143 90 154 C 85 167 75 169 73 158 C 71 145 82 123 97 108 C 108 97 122 90 136 86 Z"
-            fill="url(#ezSpineMain)"
+            d={isBouncing ? "M 55 77 Q 61 87 67 77" : "M 55 77 Q 61 84 67 77"}
+            fill={isBouncing ? "#ef4444" : "none"}
+            stroke="#1e1b4b"
+            strokeWidth="1.8"
+            strokeLinecap="round"
           />
         </g>
 
-        {/* 2. Mortarboard Graduation Cap (The Hat with Infinite Floating Motion) */}
-        <g className={animate ? 'ez-hat-animated' : ''}>
-          {/* Skull cap band sitting on E's crest */}
+        {/* === ARMS === */}
+        {/* Left Arm: Thumbs Up */}
+        <g>
           <path
-            d="M 94 72 C 105 70 128 72 142 76 L 140 92 C 124 96 104 94 94 88 Z"
-            fill="url(#ezHatSideGrad)"
+            d="M 25 65 Q 15 67 13 75 Q 11 81 18 83"
+            fill="none"
+            stroke="#3730a3"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+          />
+          <circle cx="17" cy="82" r="3.5" fill="#6366f1" />
+          <path d="M 15 79 L 13 74" stroke="#e0e7ff" strokeWidth="2.8" strokeLinecap="round" />
+        </g>
+
+        {/* Right Arm: Friendly Waving Hand */}
+        <g className="ez-waving-arm">
+          <path
+            d="M 90 65 Q 100 60 105 52"
+            fill="none"
+            stroke="#3730a3"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+          />
+          {/* Hand Palm & Glove */}
+          <circle cx="104" cy="50" r="4.5" fill="#818cf8" />
+          {/* Fingers */}
+          <line x1="102" y1="46" x2="100" y2="42" stroke="#e0e7ff" strokeWidth="2.2" strokeLinecap="round" />
+          <line x1="105" y1="45" x2="106" y2="40" stroke="#e0e7ff" strokeWidth="2.2" strokeLinecap="round" />
+          <line x1="108" y1="47" x2="111" y2="43" stroke="#e0e7ff" strokeWidth="2.2" strokeLinecap="round" />
+        </g>
+
+        {/* === LITTLE FEET === */}
+        <g>
+          <rect x="42" y="108" width="7" height="9" rx="3.5" fill="#3730a3" />
+          <rect x="71" y="108" width="7" height="9" rx="3.5" fill="#3730a3" />
+          <ellipse cx="45.5" cy="117" rx="5.5" ry="3" fill="#1e1b4b" />
+          <ellipse cx="74.5" cy="117" rx="5.5" ry="3" fill="#1e1b4b" />
+        </g>
+
+        {/* === GRADUATION CAP (MORTARBOARD) === */}
+        <g className="ez-cap-layer">
+          {/* Skull Cap Base */}
+          <path
+            d="M 45 28 C 52 26 68 26 77 28 L 75 35 C 67 38 53 38 46 34 Z"
+            fill="#0f172a"
           />
 
-          {/* Mortarboard Diamond Board */}
+          {/* Diamond Mortarboard Board */}
           <polygon
-            points="112,32 182,54 112,76 42,54"
-            fill="url(#ezHatTopGrad)"
+            points="61,12 95,23 61,34 27,23"
+            fill="url(#ezCapGrad)"
+            stroke="#1e1b4b"
+            strokeWidth="0.8"
           />
-
-          {/* Top highlight facet */}
+          {/* Top Board Highlight */}
           <polygon
-            points="112,32 182,54 112,38 48,54"
-            fill="#60a5fa"
-            opacity="0.4"
+            points="61,12 95,23 61,20 33,23"
+            fill="#93c5fd"
+            opacity="0.35"
           />
 
-          {/* Center Mortarboard Button */}
-          <ellipse cx="112" cy="54" rx="5" ry="3.5" fill="#071126" />
+          {/* Cap Button */}
+          <circle cx="61" cy="23" r="3" fill="url(#ezGoldTrim)" />
 
-          {/* Tassel Assembly (Continuous Infinite Swaying Loop) */}
-          <g className={animate ? 'ez-tassel-loop' : ''}>
-            {/* Tassel Cord hanging from hat to left */}
+          {/* Tassel Assembly */}
+          <g className="ez-tassel-layer">
+            {/* Tassel Golden String */}
             <path
-              d="M 112 54 Q 80 58 64 72 L 62 90"
+              d="M 61 23 Q 73 26 80 34 L 81 44"
               fill="none"
-              stroke="#071126"
-              strokeWidth="2.8"
+              stroke="url(#ezGoldTrim)"
+              strokeWidth="1.6"
               strokeLinecap="round"
             />
-
-            {/* Tassel Ring & Brush Tip with fluid secondary flex */}
-            <g className={animate ? 'ez-tassel-brush-loop' : ''}>
-              <circle cx="62" cy="90" r="4" fill="#071126" />
-              <path
-                d="M 59 92 L 65 92 L 68 112 C 68 114 56 114 56 112 Z"
-                fill="url(#ezTasselGrad)"
-              />
-            </g>
+            {/* Tassel Ring */}
+            <circle cx="81" cy="44" r="2.8" fill="url(#ezGoldTrim)" />
+            {/* Tassel Brush Strands */}
+            <line x1="79" y1="44" x2="79" y2="52" stroke="#d97706" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="81" y1="44" x2="81" y2="54" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="83" y1="44" x2="83" y2="52" stroke="#d97706" strokeWidth="1.4" strokeLinecap="round" />
           </g>
         </g>
+
+        {/* === BURST SPARKLES (on click/touch) === */}
+        {sparkles.map((s) => (
+          <g key={s.id}>
+            <circle cx={s.x} cy={s.y} r="2.5" fill="#fbbf24">
+              <animate attributeName="r" values="0;3.5;0" dur="0.75s" repeatCount="1" />
+              <animate attributeName="cy" values={`${s.y};${s.y - 12}`} dur="0.75s" repeatCount="1" />
+              <animate attributeName="opacity" values="1;0" dur="0.75s" repeatCount="1" />
+            </circle>
+            <polygon
+              points={`${s.x},${s.y - 3} ${s.x + 1},${s.y - 1} ${s.x + 3},${s.y - 1} ${s.x + 1.5},${s.y + 0.5} ${s.x + 2},${s.y + 3} ${s.x},${s.y + 1.5} ${s.x - 2},${s.y + 3} ${s.x - 1.5},${s.y + 0.5} ${s.x - 3},${s.y - 1} ${s.x - 1},${s.y - 1}`}
+              fill="#60a5fa"
+            >
+              <animate attributeName="opacity" values="0;1;0" dur="0.6s" repeatCount="1" />
+            </polygon>
+          </g>
+        ))}
       </svg>
     </div>
   );
 };
+
+export default ExamizoIcon;

@@ -8,6 +8,7 @@ interface LogoProps {
   subtitle?: string;
   textColor?: string;
   animate?: boolean;
+  interactive?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -16,11 +17,12 @@ export const Logo: React.FC<LogoProps> = ({
   showText = true,
   textColor,
   animate = true,
+  interactive = true,
 }) => {
   return (
-    <div className={`flex items-center gap-2.5 group examizo-container cursor-pointer select-none ${className}`}>
+    <div className={`flex items-center gap-2.5 group examizo-container select-none ${className}`}>
       <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
-        <ExamizoIcon size={size} animate={animate} />
+        <ExamizoIcon size={size} animate={animate} interactive={interactive} />
       </div>
 
       {showText && (
