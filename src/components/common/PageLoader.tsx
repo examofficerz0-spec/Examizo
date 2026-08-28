@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Logo } from '@/components/common/Logo';
+import { ExamizoMascot } from '@/components/common/ExamizoMascot';
 import { ShieldCheck, Lock, Sparkles } from 'lucide-react';
 
 interface PageLoaderProps {
@@ -10,6 +11,8 @@ interface PageLoaderProps {
   badgeText?: string;
   inline?: boolean;
   minHeight?: string;
+  /** Set to true to hide the mascot and use the classic spinner instead */
+  classic?: boolean;
 }
 
 export function PageLoader({
@@ -18,18 +21,25 @@ export function PageLoader({
   badgeText = 'Examizo Cloud System',
   inline = false,
   minHeight,
+  classic = false,
 }: PageLoaderProps) {
   if (inline) {
     return (
       <div className={`w-full flex flex-col items-center justify-center p-8 text-center select-none ${minHeight || 'min-h-[260px]'}`}>
-        <div className="relative flex items-center justify-center w-16 h-16 mb-4">
-          <div className="absolute inset-0 rounded-full bg-blue-500/10 dark:bg-purple-500/10 animate-ping" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 dark:border-t-purple-500 border-r-blue-400 dark:border-r-purple-300 animate-spin" />
-          <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-indigo-500 dark:border-b-blue-400 border-l-indigo-300 animate-[spin_1.5s_linear_infinite_reverse]" />
-          <div className="relative z-10 p-1.5 bg-white dark:bg-[#181622] rounded-xl shadow-xs border border-slate-100 dark:border-[#242033]">
-            <Logo size={24} showText={false} />
+        {classic ? (
+          <div className="relative flex items-center justify-center w-16 h-16 mb-4">
+            <div className="absolute inset-0 rounded-full bg-blue-500/10 dark:bg-purple-500/10 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 dark:border-t-purple-500 border-r-blue-400 dark:border-r-purple-300 animate-spin" />
+            <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-indigo-500 dark:border-b-blue-400 border-l-indigo-300 animate-[spin_1.5s_linear_infinite_reverse]" />
+            <div className="relative z-10 p-1.5 bg-white dark:bg-[#181622] rounded-xl shadow-xs border border-slate-100 dark:border-[#242033]">
+              <Logo size={24} showText={false} />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mb-3">
+            <ExamizoMascot size={72} autoAnimate />
+          </div>
+        )}
         <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">{title}</h3>
         {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">{subtitle}</p>}
         <div className="w-36 h-1 bg-slate-100 dark:bg-[#181622] rounded-full overflow-hidden relative mt-3 border border-slate-200/50 dark:border-[#242033]">
@@ -45,17 +55,21 @@ export function PageLoader({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/15 dark:bg-purple-600/20 blur-[130px] pointer-events-none rounded-full" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-600/10 dark:bg-purple-800/15 blur-[100px] pointer-events-none rounded-full" />
 
-      <div className="relative z-10 flex flex-col items-center text-center space-y-6 max-w-sm w-full p-8 sm:p-10 rounded-3xl bg-white/90 dark:bg-[#0D0D12]/90 backdrop-blur-xl border border-slate-200/90 dark:border-[#242033] shadow-xl dark:shadow-2xl animate-fade-in">
+      <div className="relative z-10 flex flex-col items-center text-center space-y-5 max-w-sm w-full p-8 sm:p-10 rounded-3xl bg-white/90 dark:bg-[#0D0D12]/90 backdrop-blur-xl border border-slate-200/90 dark:border-[#242033] shadow-xl dark:shadow-2xl animate-fade-in">
         
-        {/* Glowing Animated Spinner / Logo Center */}
-        <div className="relative flex items-center justify-center w-24 h-24">
-          <div className="absolute inset-0 rounded-full bg-blue-500/10 dark:bg-purple-500/10 animate-ping" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 dark:border-t-purple-500 border-r-blue-400 dark:border-r-purple-300 animate-spin" />
-          <div className="absolute inset-2.5 rounded-full border-2 border-transparent border-b-indigo-500 dark:border-b-blue-400 border-l-indigo-300 dark:border-l-blue-200 animate-[spin_2s_linear_infinite_reverse]" />
-          <div className="relative z-10 p-2.5 bg-white dark:bg-[#181622] rounded-2xl shadow-sm border border-slate-100 dark:border-[#242033]">
-            <Logo size={34} showText={false} />
+        {/* Animated Mascot */}
+        {classic ? (
+          <div className="relative flex items-center justify-center w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-blue-500/10 dark:bg-purple-500/10 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 dark:border-t-purple-500 border-r-blue-400 dark:border-r-purple-300 animate-spin" />
+            <div className="absolute inset-2.5 rounded-full border-2 border-transparent border-b-indigo-500 dark:border-b-blue-400 border-l-indigo-300 dark:border-l-blue-200 animate-[spin_2s_linear_infinite_reverse]" />
+            <div className="relative z-10 p-2.5 bg-white dark:bg-[#181622] rounded-2xl shadow-sm border border-slate-100 dark:border-[#242033]">
+              <Logo size={34} showText={false} />
+            </div>
           </div>
-        </div>
+        ) : (
+          <ExamizoMascot size={110} autoAnimate showLabel />
+        )}
 
         {/* Typography */}
         <div className="space-y-1.5">
@@ -92,3 +106,4 @@ export function PageLoader({
     </div>
   );
 }
+
