@@ -8,8 +8,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:41:35.908Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-02T01:41:35.908Z"
     },
     {
       "_id": "o9qpxf37vmsb4y3ds",
@@ -19,8 +18,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:42:32.608Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-02T01:42:32.608Z"
     },
     {
       "_id": "qv0yzg7yrmsb4yhs9",
@@ -30,8 +28,7 @@
       "status": "Active",
       "xp_total": 81,
       "locked_course_id": "ynzp9kszdms7g1ytt",
-      "created_at": "2026-08-02T01:42:51.273Z",
-      "raw_password": "password123"
+      "created_at": "2026-08-02T01:42:51.273Z"
     },
     {
       "_id": "nakaymym3msd3w2qg",
@@ -41,8 +38,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
-      "created_at": "2026-08-03T10:48:31.192Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-03T10:48:31.192Z"
     },
     {
       "_id": "t39s5yy8imsejvw8m",
@@ -53,8 +49,7 @@
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
       "created_at": "2026-08-04T11:04:02.806Z",
-      "account_email": "aranya@gmail.com",
-      "raw_password": "123456"
+      "account_email": "aranya@gmail.com"
     },
     {
       "_id": "shs0v0etrmsn5ncpy",
@@ -65,8 +60,7 @@
       "xp_total": 0,
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "created_at": "2026-08-10T11:35:25.222Z",
-      "account_email": "roy@gmail.com",
-      "raw_password": "123456"
+      "account_email": "roy@gmail.com"
     },
     {
       "_id": "bdq2qy6esmsn5pyf2",
@@ -77,8 +71,7 @@
       "locked_course_id": "ynzp9kszdms7g1ytt",
       "status": "Active",
       "xp_total": 54,
-      "created_at": "2026-08-10T11:37:26.654Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-10T11:37:26.654Z"
     },
     {
       "_id": "wijw5853mmsn61d9f",
@@ -89,8 +82,7 @@
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "status": "Active",
       "xp_total": 81,
-      "created_at": "2026-08-10T11:46:19.107Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-10T11:46:19.107Z"
     },
     {
       "_id": "auw3ct49omsop5el6",
@@ -100,8 +92,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-11T13:29:06.330Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-11T13:29:06.330Z"
     },
     {
       "_id": "xy1jghu99mspyzonl",
@@ -111,8 +102,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-12T10:52:21.777Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-12T10:52:21.777Z"
     },
     {
       "_id": "p82xngs9amsr1cksi",
@@ -122,8 +112,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-13T04:46:08.706Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-13T04:46:08.706Z"
     },
     {
       "_id": "lbghyex2dmt04bnzq",
@@ -134,8 +123,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:21.822Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:19:21.822Z"
     },
     {
       "_id": "6qo0pow7mmt04c076",
@@ -146,8 +134,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:37.227Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:19:37.227Z"
     },
     {
       "_id": "ijcngxv5omt04habe",
@@ -158,8 +145,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:23:43.286Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:23:43.286Z"
     },
     {
       "_id": "ymtpm8rsamt04j5y0",
@@ -170,8 +156,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:25:10.857Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:25:10.857Z"
     },
     {
       "_id": "6d6rta7u1mt04vnnd",
@@ -182,8 +167,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-19T13:34:53.577Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:34:53.577Z"
     },
     {
       "_id": "gt7j46snmmt8f7qd0",
@@ -196,7 +180,6 @@
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
       "created_at": "2026-08-25T08:46:22.488Z",
-      "raw_password": "123456",
       "digilocker_verified": 1,
       "digilocker_profile_json": "{\"verified\":true,\"name\":\"Ahmad Shajee Zubairy\",\"dob\":\"17102003\",\"formattedDob\":\"17/10/2003\",\"age\":22,\"gender\":\"Male\",\"email\":\"ahmadshajee2016@gmail.com\",\"mobile\":\"9507494785\",\"maskedAadhaar\":\"xxxxxxxx9617\",\"digilockerid\":\"71af51ef-50ac-5507-a34d-1d2ed99814f5\",\"referenceKey\":\"6f5edb6aed2fd2c5de96abeace603921b4c8b092c88dc49ca37da4104df257ee\",\"panNumber\":\"ADSPZ9708R\",\"drivingLicence\":\"BR0120220010509\",\"eaadhaar\":\"\",\"linkedAt\":\"2026-08-25T09:34:36.949Z\"}",
       "digilocker_raw_response_json": "{\"id\":\"gt7j46snmmt8f7qd0\",\"email\":\"donybanks02@gmail.com\",\"digilockerVerified\":1,\"digilockerProfile\":\"{\\\"verified\\\":true,\\\"name\\\":\\\"Ahmad Shajee Zubairy\\\",\\\"dob\\\":\\\"17102003\\\",\\\"gender\\\":\\\"M\\\",\\\"email\\\":\\\"ahmadshajee2016@gmail.com\\\",\\\"mobile\\\":\\\"9507494785\\\",\\\"maskedAadhaar\\\":\\\"xxxxxxxx9617\\\",\\\"digilockerid\\\":\\\"71af51ef-50ac-5507-a34d-1d2ed99814f5\\\",\\\"referenceKey\\\":\\\"6f5edb6aed2fd2c5de96abeace603921b4c8b092c88dc49ca37da4104df257ee\\\",\\\"eaadhaar\\\":\\\"\\\",\\\"panNumber\\\":\\\"ADSPZ9708R\\\",\\\"drivingLicence\\\":\\\"BR0120220010509\\\",\\\"linkedAt\\\":\\\"2026-08-25T09:34:36.949Z\\\"}\"}",
@@ -229,7 +212,6 @@
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
       "created_at": "2026-08-25T09:41:12.717Z",
-      "raw_password": "123456",
       "digilocker_verified": 1,
       "digilocker_profile_json": "{\"verified\":true,\"name\":\"Ahmad Shajee Zubairy\",\"dob\":\"17102003\",\"formattedDob\":\"17/10/2003\",\"age\":22,\"gender\":\"Male\",\"email\":\"ahmadshajee2016@gmail.com\",\"mobile\":\"9507494785\",\"maskedAadhaar\":\"xxxxxxxx9617\",\"digilockerid\":\"71af51ef-50ac-5507-a34d-1d2ed99814f5\",\"referenceKey\":\"6f5edb6aed2fd2c5de96abeace603921b4c8b092c88dc49ca37da4104df257ee\",\"panNumber\":\"ADSPZ9708R\",\"drivingLicence\":\"BR0120220010509\",\"eaadhaar\":\"\",\"linkedAt\":\"2026-08-25T09:43:11.764Z\"}",
       "digilocker_raw_response_json": "{\"id\":\"xi4usngprmt8h694p\",\"email\":\"samcruise2017@gmail.com\",\"digilockerVerified\":1,\"digilockerProfile\":\"{\\\"verified\\\":true,\\\"name\\\":\\\"Ahmad Shajee Zubairy\\\",\\\"dob\\\":\\\"17102003\\\",\\\"gender\\\":\\\"M\\\",\\\"email\\\":\\\"ahmadshajee2016@gmail.com\\\",\\\"mobile\\\":\\\"9507494785\\\",\\\"maskedAadhaar\\\":\\\"xxxxxxxx9617\\\",\\\"digilockerid\\\":\\\"71af51ef-50ac-5507-a34d-1d2ed99814f5\\\",\\\"referenceKey\\\":\\\"6f5edb6aed2fd2c5de96abeace603921b4c8b092c88dc49ca37da4104df257ee\\\",\\\"eaadhaar\\\":\\\"\\\",\\\"panNumber\\\":\\\"ADSPZ9708R\\\",\\\"drivingLicence\\\":\\\"BR0120220010509\\\",\\\"linkedAt\\\":\\\"2026-08-25T09:43:11.764Z\\\"}\"}",
@@ -250,6 +232,29 @@
         "eaadhaar": "",
         "linkedAt": "2026-08-25T09:43:11.764Z"
       }
+    },
+    {
+      "_id": "ha132aetxmtcwz33e",
+      "id": "ha132aetxmtcwz33e",
+      "name": "Test Student",
+      "email": "student@example.com",
+      "password_hash": "$2a$10$2vVpHPpmeIYl/hF7bNweOOP60ut.D96963ZhbFxOuHbZloiPPnqhW",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "course_jee_2027",
+      "created_at": "2026-08-28T12:14:37.413Z"
+    },
+    {
+      "_id": "1rbwivg8nmtcx3krm",
+      "id": "1rbwivg8nmtcx3krm",
+      "name": "School Student",
+      "email": "student+profile_6178_165@exammaster.internal",
+      "password_hash": "$2a$10$2vVpHPpmeIYl/hF7bNweOOP60ut.D96963ZhbFxOuHbZloiPPnqhW",
+      "account_email": "student@example.com",
+      "locked_course_id": "a2dmfatfwmszyy4et",
+      "status": "Active",
+      "xp_total": 0,
+      "created_at": "2026-08-28T12:18:06.329Z"
     }
   ],
   "courses": [
@@ -3941,8 +3946,7 @@
       ],
       "allowed_courses": [
         "all"
-      ],
-      "raw_password": "Admin@123456"
+      ]
     }
   ],
   "auditLogs": [
