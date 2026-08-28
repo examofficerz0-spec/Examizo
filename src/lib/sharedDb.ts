@@ -58,7 +58,6 @@ export function readSharedDb(): SharedDbData {
           name: 'Master Controller',
           email: 'admin',
           password_hash: hashedAdminPassword,
-          raw_password: 'Admin@123456',
           role: 'Super Admin',
           permissions: ['all'],
           allowed_courses: ['all'],
@@ -68,16 +67,19 @@ export function readSharedDb(): SharedDbData {
       writeSharedDb(data);
     } else {
       let modified = false;
-      data.admins.forEach((a: any) => {
-        if (!a.raw_password) {
-          a.raw_password = 'Admin@123456';
-          modified = true;
-        }
-      });
-      if (data.users && Array.isArray(data.users)) {
+      // Strip any sensitive raw_password fields that may have been previously cached
+      if (Array.isArray(data.admins)) {
+        data.admins.forEach((a: any) => {
+          if (a.raw_password) {
+            delete a.raw_password;
+            modified = true;
+          }
+        });
+      }
+      if (Array.isArray(data.users)) {
         data.users.forEach((u: any) => {
-          if (!u.raw_password) {
-            u.raw_password = u.email === 'ishan@gmail.com' ? 'password123' : '123456';
+          if (u.raw_password) {
+            delete u.raw_password;
             modified = true;
           }
         });

@@ -72,8 +72,8 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/google',
   '/api/auth/reset-password',
   '/api/gallery',
-  '/api/seed',
   '/api/digilocker',
+  ...(process.env.NODE_ENV !== 'production' ? ['/api/seed'] : []),
 ];
 
 export async function middleware(request: NextRequest) {
@@ -146,6 +146,10 @@ function applySecurityHeaders(response: NextResponse) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
 }
 
 export const config = {

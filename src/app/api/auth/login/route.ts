@@ -1,11 +1,27 @@
 import { NextResponse } from 'next/server';
-import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
+import { readSharedDb } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1 } from '@/lib/d1';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateCheck = checkRateLimit(`login_${clientIp}`, 6, 60000);
+
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          error: `Too many login attempts. Please wait ${rateCheck.retryAfterSeconds} seconds before trying again.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) },
+        }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -30,14 +46,10 @@ export async function POST(req: Request) {
         }
 
         let isMatch = false;
-        try {
-          isMatch = await bcrypt.compare(password, u.password_hash);
-        } catch (e) {}
-
-        if (!isMatch && u.password_hash === password) {
-          isMatch = true;
-          const newHash = await bcrypt.hash(password, 10);
-          await executeD1('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, u.id]);
+        if (u.password_hash) {
+          try {
+            isMatch = await bcrypt.compare(password, u.password_hash);
+          } catch (e) {}
         }
 
         if (!isMatch) {
@@ -88,14 +100,10 @@ export async function POST(req: Request) {
     }
 
     let isMatch = false;
-    try {
-      isMatch = await bcrypt.compare(password, user.password_hash);
-    } catch (e) {}
-
-    if (!isMatch && user.password_hash === password) {
-      isMatch = true;
-      user.password_hash = await bcrypt.hash(password, 10);
-      writeSharedDb(db);
+    if (user.password_hash) {
+      try {
+        isMatch = await bcrypt.compare(password, user.password_hash);
+      } catch (e) {}
     }
 
     if (!isMatch) {

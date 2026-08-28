@@ -2,10 +2,26 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
 import { queryD1, executeD1 } from '@/lib/d1';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateCheck = checkRateLimit(`register_${clientIp}`, 5, 120000); // 5 registrations per 2 minutes
+
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          error: `Too many registration attempts. Please wait ${rateCheck.retryAfterSeconds} seconds before trying again.`,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) },
+        }
+      );
+    }
+
     const { name, email, password, confirmPassword, courseId, course_id } = await req.json();
 
     if (!name || !email || !password) {
