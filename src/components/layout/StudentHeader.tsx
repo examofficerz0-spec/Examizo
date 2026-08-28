@@ -402,7 +402,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             )}
 
             <Link href="/dashboard" prefetch={true} className="flex items-center shrink-0">
-              <Logo size={36} />
+              <Logo size={44} />
             </Link>
           </div>
 

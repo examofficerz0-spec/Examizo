@@ -159,7 +159,7 @@ export default function LandingPage() {
       >
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <Logo size={38} textColor={isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'} />
+            <Logo size={48} textColor={isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'} />
           </Link>
 
           {/* Animated Nav Links */}

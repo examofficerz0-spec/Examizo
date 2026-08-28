@@ -482,7 +482,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
               }}
               className="cursor-pointer"
             >
-              <Logo size={40} subtitle="ACADEMIC PRECISION" />
+              <Logo size={48} subtitle="ACADEMIC PRECISION" />
             </Link>
             <Link
               href="/"

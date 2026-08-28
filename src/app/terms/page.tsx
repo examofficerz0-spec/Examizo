@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <Logo size={38} />
+            <Logo size={48} />
           </Link>
 
           <div className="flex items-center gap-4">

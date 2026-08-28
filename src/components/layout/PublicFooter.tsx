@@ -16,7 +16,7 @@ export const PublicFooter: React.FC = () => {
           {/* Brand & Organization Information */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <Logo size={36} />
+              <Logo size={44} />
               <span className="text-xs font-black uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800">
                 Official Assessment Portal
               </span>

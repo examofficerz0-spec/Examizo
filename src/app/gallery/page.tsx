@@ -107,7 +107,7 @@ export default function GalleryPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/80 dark:border-slate-800 shadow-sm shadow-slate-900/5 transition-all duration-300">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <Logo size={38} />
+            <Logo size={48} />
           </Link>
 
           {/* Animated Nav Links */}
