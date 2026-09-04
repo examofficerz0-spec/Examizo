@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
@@ -123,6 +123,9 @@ export async function POST(req: Request) {
     const lowerEmail = email.toLowerCase().trim();
     const cleanName = (name || lowerEmail.split('@')[0]).trim();
 
+    // Ensure Cloudflare D1 users table exists
+    await ensureD1Tables();
+
     // Check if user already exists
     let existingUser: any = null;
 
@@ -213,8 +216,8 @@ export async function POST(req: Request) {
     // 1. Insert into Cloudflare D1
     try {
       await executeD1(
-        'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, cleanName, lowerEmail, dummyPasswordHash, 'Active', 0, null]
+        'INSERT OR REPLACE INTO users (id, name, email, password_hash, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, cleanName, lowerEmail, dummyPasswordHash, 'google', 'Active', 0, null]
       );
     } catch (d1Err) {
       console.warn('[Google D1 User Insert Warning]:', d1Err);

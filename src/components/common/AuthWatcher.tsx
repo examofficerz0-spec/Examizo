@@ -36,6 +36,8 @@ export function AuthWatcher() {
       window.location.replace('/login?session_expired=1');
     };
 
+    let failedAttempts = 0;
+
     const verifySession = async () => {
       if (isPurgingRef.current || !isMounted) return;
 
@@ -48,19 +50,33 @@ export function AuthWatcher() {
         if (!isMounted || isPurgingRef.current) return;
 
         if (res.status === 401 || res.status === 403 || res.status === 404) {
-          await purgeAndRedirect(`HTTP_${res.status}`);
+          const data = await res.json().catch(() => null);
+          // If explicitly flagged as deleted or suspended, purge immediately
+          if (data && (data.deleted === true || data.error?.includes('suspended'))) {
+            await purgeAndRedirect(`HTTP_${res.status}_${data.error || 'deleted'}`);
+            return;
+          }
+
+          failedAttempts++;
+          if (failedAttempts >= 2) {
+            await purgeAndRedirect(`HTTP_${res.status}`);
+          }
           return;
         }
 
         const data = await res.json().catch(() => null);
         if (!isMounted || isPurgingRef.current) return;
 
-        if (!data || data.authenticated === false || data.deleted === true || data.error) {
-          await purgeAndRedirect(data?.error || 'unauthenticated');
+        if (data && data.deleted === true) {
+          await purgeAndRedirect(data.error || 'account_deleted');
           return;
         }
+
+        if (data && data.authenticated === true) {
+          failedAttempts = 0;
+        }
       } catch (err) {
-        // Network offline or transient error; do not forcibly logout on pure network blip
+        // Transient network blip; do not log out
       }
     };
 

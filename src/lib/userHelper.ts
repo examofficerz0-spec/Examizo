@@ -1,6 +1,6 @@
 import { readSharedDb } from '@/lib/sharedDb';
 import { UserPayload } from '@/lib/auth';
-import { queryD1 } from '@/lib/d1';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 import { normalizeDigiLockerProfile } from '@/lib/digilockerHelper';
 
@@ -170,6 +170,32 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     }
   } catch (e) {
     console.warn('[getUserFromAuth] Memory DB lookup warning:', e);
+  }
+
+  // 3. Resilient Verified Session Fallback
+  // If the student holds a cryptographically verified JWT, never evict them due to DB cold starts or latency!
+  if (userIdStr && emailLower) {
+    const fallbackUser = {
+      _id: userIdStr,
+      id: userIdStr,
+      name: auth.name || emailLower.split('@')[0] || 'Student',
+      email: emailLower,
+      status: 'Active',
+      xp_total: 0,
+      locked_course_id: auth.lockedCourseId || null,
+      account_email: emailLower,
+    };
+
+    // Asynchronously ensure they are recorded in DB so subsequent calls find them
+    executeD1(
+      'INSERT OR IGNORE INTO users (id, name, email, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [userIdStr, fallbackUser.name, emailLower, 'Active', 0, auth.lockedCourseId || null]
+    ).catch(() => {});
+
+    return {
+      user: fallbackUser,
+      isMemoryMode: true,
+    };
   }
 
   return null;

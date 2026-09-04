@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readSharedDb } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1 } from '@/lib/d1';
+import { queryD1, ensureD1Tables } from '@/lib/d1';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
@@ -32,6 +32,7 @@ export async function POST(req: Request) {
 
     // 1. Try Cloudflare D1 lookup first
     try {
+      await ensureD1Tables();
       const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
       if (d1Users && d1Users.length > 0) {
         const u = d1Users[0];

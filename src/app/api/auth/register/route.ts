@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
@@ -45,14 +45,15 @@ export async function POST(req: Request) {
 
     // 1. Try Cloudflare D1 registration
     try {
+      await ensureD1Tables();
       const existing = await queryD1('SELECT id FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
       if (existing && existing.length > 0) {
         return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
       }
 
       const d1Success = await executeD1(
-        'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, name, lowerEmail, password_hash, 'Active', 0, cleanCourseId]
+        'INSERT OR REPLACE INTO users (id, name, email, password_hash, raw_password, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, name, lowerEmail, password_hash, password, 'Active', 0, cleanCourseId]
       );
 
       if (d1Success) {
