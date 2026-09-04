@@ -45,6 +45,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
   // Compute animation synchronously on mount so the first painted frame is animated
   const [animClass] = useState(() => {
+    if (pathname === '/') return '';
     const prev =
       previousGlobalPath ||
       (typeof window !== 'undefined' ? sessionStorage.getItem('ez_student_last_path') : null);
@@ -57,6 +58,14 @@ export default function Template({ children }: { children: React.ReactNode }) {
       sessionStorage.setItem('ez_student_last_path', pathname);
     }
   }, [pathname]);
+
+  if (pathname === '/') {
+    return (
+      <div key={pathname} className="w-full min-h-full">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div key={pathname} className={`w-full min-h-full ${animClass}`}>

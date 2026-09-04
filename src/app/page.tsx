@@ -129,9 +129,15 @@ export default function LandingPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Switch to white navbar smoothly when scrolling out of the dark hero into the white section
-      const threshold = Math.max(300, (window.innerHeight || 700) - 140);
-      setIsScrolled(window.scrollY > threshold);
+      const hero = document.getElementById('hero-section');
+      if (hero) {
+        const heroBottom = hero.getBoundingClientRect().bottom;
+        // The navbar is 72px-80px tall. When the bottom of the hero reaches or passes 76px,
+        // the white region enters behind the navbar.
+        setIsScrolled(heroBottom <= 76);
+      } else {
+        setIsScrolled(window.scrollY > 400);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -149,17 +155,17 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-[30rem] h-[30rem] bg-sky-200/40 rounded-full blur-[128px]" />
       </div>
 
-      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Synchronized Lockstep Transition on Scroll) */}
+      {/* 1. DYNAMIC FIXED HEADER NAVBAR (Transparent on Hero, White on White Content Region) */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ease-out ${
+        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ease-out ${
           isScrolled
-            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl backdrop-saturate-150 border-slate-200/80 dark:border-slate-800 shadow-md shadow-slate-900/5'
+            ? 'bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-slate-900/5'
             : 'bg-transparent border-transparent shadow-none backdrop-blur-none'
         }`}
       >
         <div className="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <Logo size={48} textColor={isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'} />
+            <Logo size={48} textColor={isScrolled ? 'text-slate-900' : 'text-white'} />
           </Link>
 
           {/* Animated Nav Links */}
@@ -175,7 +181,7 @@ export default function LandingPage() {
                 href={link.href}
                 className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-colors duration-300 group flex items-center justify-center overflow-hidden ${
                   isScrolled
-                    ? 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50/80 dark:hover:bg-slate-800/80'
+                    ? 'text-slate-700 hover:text-blue-600 hover:bg-slate-100/80'
                     : 'text-white/90 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -208,7 +214,7 @@ export default function LandingPage() {
       <main className="relative z-10 flex-1">
         
         {/* 2. FULL-SCREEN HERO SECTION WITH BOTTOM GRADIENT FADE */}
-        <section className="relative z-10 w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#070B16] pt-24 sm:pt-28 pb-14 sm:pb-20">
+        <section id="hero-section" className="relative z-10 w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#070B16] pt-24 sm:pt-28 pb-14 sm:pb-20">
           
           {/* Edge-to-Edge Continuous One-Direction Carousel */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
