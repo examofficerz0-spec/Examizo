@@ -175,26 +175,36 @@ export default function LandingPage() {
               { name: 'Exams Covered', href: '#exams' },
               { name: 'How It Works', href: '#how-it-works' },
               { name: 'Gallery', href: '/gallery' },
-            ].map((link, i) => (
-              <a
-                key={i}
-                href={link.href}
-                className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-colors duration-300 group flex items-center justify-center overflow-hidden ${
-                  isScrolled
-                    ? 'text-slate-700 hover:text-blue-600 hover:bg-slate-100/80'
-                    : 'text-white/90 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <span className="relative z-10 group-hover:scale-105 transition-transform duration-200">{link.name}</span>
-                <span
-                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] rounded-full transition-all duration-300 group-hover:w-3/4 ${
-                    isScrolled
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600'
-                      : 'bg-gradient-to-r from-blue-400 to-indigo-400'
-                  }`}
-                />
-              </a>
-            ))}
+            ].map((link, i) => {
+              const linkClasses = `relative px-4 py-2 rounded-xl font-bold text-sm transition-colors duration-300 group flex items-center justify-center overflow-hidden ${
+                isScrolled
+                  ? 'text-slate-700 hover:text-blue-600 hover:bg-slate-100/80'
+                  : 'text-white/90 hover:text-white hover:bg-white/15'
+              }`;
+
+              const content = (
+                <>
+                  <span className="relative z-10 group-hover:scale-105 transition-transform duration-200">{link.name}</span>
+                  <span
+                    className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2.5px] rounded-full transition-all duration-300 group-hover:w-3/4 ${
+                      isScrolled
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600'
+                        : 'bg-gradient-to-r from-blue-400 to-indigo-400'
+                    }`}
+                  />
+                </>
+              );
+
+              return link.href.startsWith('#') ? (
+                <a key={i} href={link.href} className={linkClasses}>
+                  {content}
+                </a>
+              ) : (
+                <Link key={i} href={link.href} className={linkClasses}>
+                  {content}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Action Button - Get Started Only */}

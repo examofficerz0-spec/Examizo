@@ -59,7 +59,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
     }
   }, [pathname]);
 
-  if (pathname === '/') {
+  if (pathname === '/' || pathname === '/gallery') {
     return (
       <div key={pathname} className="w-full min-h-full">
         {children}

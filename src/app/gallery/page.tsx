@@ -31,10 +31,67 @@ interface GalleryPhoto {
   created_at?: string;
 }
 
+const INITIAL_FALLBACK_PHOTOS: GalleryPhoto[] = [
+  {
+    id: 'gal_default_1',
+    title: 'National Proctored Exam Hall Alpha',
+    description: 'High-capacity, CCTV-monitored examination environment designed for national competitive entrance simulations.',
+    image_url: '/images/exam_hall_1.jpg',
+    category: 'Exam Halls',
+    display_order: 1,
+    is_active: 1,
+  },
+  {
+    id: 'gal_default_2',
+    title: 'Advanced Computer Testing Center',
+    description: 'High-speed isolated terminals configured for timed online mock exams and real-time rank evaluations.',
+    image_url: '/images/exam_hall_2.jpg',
+    category: 'Exam Halls',
+    display_order: 2,
+    is_active: 1,
+  },
+  {
+    id: 'gal_default_3',
+    title: 'Intensive Aspirant Study Circles',
+    description: 'Focused collaborative discussion halls and silent doubt resolution pods for JEE and NEET aspirants.',
+    image_url: '/images/exam_hall_3.jpg',
+    category: 'Classrooms',
+    display_order: 3,
+    is_active: 1,
+  },
+  {
+    id: 'gal_default_4',
+    title: 'Central Examination Auditorium',
+    description: 'State-of-the-art auditorium equipped with digital clocks and proctor supervision for large-scale scholarship tests.',
+    image_url: '/images/exam_hall_4.jpg',
+    category: 'Campus & Facilities',
+    display_order: 4,
+    is_active: 1,
+  },
+  {
+    id: 'gal_default_5',
+    title: 'Academic Prep & Strategic Library',
+    description: 'Comprehensive repository of national test archives, reference texts, and revision problem sets.',
+    image_url: '/study_hero_bg.png',
+    category: 'Campus & Facilities',
+    display_order: 5,
+    is_active: 1,
+  },
+  {
+    id: 'gal_default_6',
+    title: 'Official Examizo Student Mascot',
+    description: 'Meet our student mascot cheering every aspirant towards consistency, discipline, and top ranks.',
+    image_url: '/mascot.jpg',
+    category: 'General',
+    display_order: 6,
+    is_active: 1,
+  },
+];
+
 export default function GalleryPage() {
   const [mounted, setMounted] = useState(false);
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [photos, setPhotos] = useState<GalleryPhoto[]>(INITIAL_FALLBACK_PHOTOS);
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -46,27 +103,24 @@ export default function GalleryPage() {
     const cached = getSwrCache<GalleryPhoto[]>('student_gallery_cache');
     if (cached && Array.isArray(cached) && cached.length > 0) {
       setPhotos(cached);
-      setLoading(false);
     }
 
     // Live reactive subscription to gallery updates
     const unsubscribe = subscribeSwrCache<GalleryPhoto[]>('student_gallery_cache', (fresh) => {
-      if (Array.isArray(fresh)) {
+      if (Array.isArray(fresh) && fresh.length > 0) {
         setPhotos(fresh);
-        setLoading(false);
       }
     });
 
     fetch('/api/gallery', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && Array.isArray(data.gallery)) {
+        if (data.success && Array.isArray(data.gallery) && data.gallery.length > 0) {
           setPhotos(data.gallery);
           setSwrCache('student_gallery_cache', data.gallery);
         }
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch(console.error);
 
     return () => unsubscribe();
   }, []);
