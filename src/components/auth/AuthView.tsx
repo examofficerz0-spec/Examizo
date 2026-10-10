@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
@@ -13,7 +13,20 @@ interface AuthViewProps {
 
 export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'signin' | 'register'>(initialMode);
+  const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState<'signin' | 'register'>(() => {
+    if (pathname === '/register') return 'register';
+    if (pathname === '/login') return 'signin';
+    return initialMode;
+  });
+
+  useEffect(() => {
+    if (pathname === '/register' && activeTab !== 'register') {
+      setActiveTab('register');
+    } else if (pathname === '/login' && activeTab !== 'signin') {
+      setActiveTab('signin');
+    }
+  }, [pathname, activeTab]);
 
   // Common Form States
   const [name, setName] = useState('');
@@ -534,7 +547,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
               </button>
               {/* Sliding Pill Background Knob */}
               <div
-                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all duration-300 ease-out transform-gpu ${
+                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all duration-300 ease-out transform-gpu pointer-events-none ${
                   activeTab === 'signin' ? 'left-1' : 'left-[calc(50%)]'
                 }`}
               />

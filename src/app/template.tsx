@@ -67,8 +67,10 @@ export default function Template({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const templateKey = (pathname === '/login' || pathname === '/register') ? '/auth' : pathname;
+
   return (
-    <div key={pathname} className={`w-full min-h-full ${animClass}`}>
+    <div key={templateKey} className={`w-full min-h-full ${animClass}`}>
       {/* Sleek top micro-glow bar for instant screen switch feedback */}
       <div className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 z-50 pointer-events-none animate-screen-switch-bar shadow-[0_1px_8px_rgba(59,130,246,0.5)]" />
       {children}
