@@ -4,7 +4,7 @@ import { queryD1 } from '@/lib/d1';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export const DEFAULT_GALLERY = [
+const DEFAULT_GALLERY = [
   {
     id: 'gal_default_1',
     title: 'National Proctored Exam Hall Alpha',
