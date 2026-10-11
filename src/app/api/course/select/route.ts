@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { executeD1 } from '@/lib/d1';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +11,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { courseId } = await req.json();
+    const body = await req.json();
+    const courseId = body.courseId || body.course_id || body.locked_course_id;
     if (!courseId || !String(courseId).trim()) {
       return NextResponse.json({ error: 'Course selection is required' }, { status: 400 });
     }
@@ -19,72 +20,72 @@ export async function POST(req: Request) {
     const cleanCourseId = String(courseId).trim();
     const emailLower = (auth.email || '').toLowerCase().trim();
     const userId = String(auth.userId || generateId());
-    const name = auth.name || emailLower.split('@')[0];
+    const name = auth.name || emailLower.split('@')[0] || 'Student';
 
-    const authResult = await getUserFromAuth(auth);
-
-    if (!authResult || !authResult.user) {
-      // 1. New user registration completion (e.g. from Google OAuth pending token)
-      // Insert into Cloudflare D1
-      try {
-        await executeD1(
-          'INSERT INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [userId, name, emailLower, 'google_oauth_authenticated', 'Active', 0, cleanCourseId]
-        );
-      } catch (e) {
-        console.warn('[course/select] D1 insert warning:', e);
+    // 1. Resolve Course from either D1 or sharedDb
+    let matchedCourse: any = null;
+    try {
+      const d1Courses = await queryD1('SELECT id, name FROM courses WHERE id = ? LIMIT 1', [cleanCourseId]);
+      if (d1Courses && d1Courses.length > 0) {
+        matchedCourse = d1Courses[0];
       }
+    } catch (_) {}
 
-      // Memory DB insert
-      try {
-        const db = readSharedDb();
-        if (!db.users) db.users = [];
-        const existingIdx = db.users.findIndex((u) => u.email?.toLowerCase() === emailLower || String(u._id) === userId);
-        if (existingIdx >= 0) {
-          db.users[existingIdx].locked_course_id = cleanCourseId;
-          db.users[existingIdx].status = 'Active';
-        } else {
-          db.users.push({
-            _id: userId,
-            name,
-            email: emailLower,
-            password_hash: 'google_oauth_authenticated',
-            status: 'Active',
-            xp_total: 0,
-            locked_course_id: cleanCourseId,
-            created_at: new Date().toISOString(),
-          });
-        }
-        writeSharedDb(db);
-      } catch (_) {}
-    } else {
-      const { user } = authResult;
-      const targetUserId = String(user._id || user.id || auth.userId);
+    const db = readSharedDb();
+    if (!matchedCourse && db.courses) {
+      const memCourse = db.courses.find(
+        (c: any) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId
+      );
+      if (memCourse) {
+        matchedCourse = {
+          id: String(memCourse._id || memCourse.id),
+          name: memCourse.name,
+        };
+      }
+    }
 
-      // Update in Cloudflare D1
-      try {
-        await executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR email = ?', [
-          cleanCourseId,
-          'Active',
-          targetUserId,
-          emailLower,
-        ]);
-      } catch (_) {}
+    // 2. Cloudflare D1 Update & Upsert
+    try {
+      await executeD1(
+        'UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ? OR LOWER(account_email) = ?',
+        [cleanCourseId, 'Active', userId, emailLower, emailLower]
+      );
+      await executeD1(
+        'INSERT OR IGNORE INTO users (id, name, email, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, name, emailLower, 'Active', 0, cleanCourseId]
+      );
+    } catch (e) {
+      console.warn('[course/select] D1 warning:', e);
+    }
 
-      // Update in Memory DB
-      try {
-        const db = readSharedDb();
-        if (db.users) {
-          const dbUser = db.users.find(
-            (u: any) => String(u._id) === targetUserId || String(u.id) === targetUserId || String(u.email).toLowerCase() === emailLower
-          );
-          if (dbUser) {
-            dbUser.locked_course_id = cleanCourseId;
-            dbUser.status = 'Active';
-            writeSharedDb(db);
-          }
-        }
-      } catch (_) {}
+    // 3. Shared DB Update & Upsert
+    try {
+      if (!db.users) db.users = [];
+      const userIndex = db.users.findIndex(
+        (u: any) =>
+          (userId && (String(u._id) === userId || String(u.id) === userId)) ||
+          (emailLower && (u.email?.toLowerCase().trim() === emailLower || u.account_email?.toLowerCase().trim() === emailLower))
+      );
+
+      if (userIndex !== -1) {
+        db.users[userIndex].locked_course_id = cleanCourseId;
+        db.users[userIndex].status = 'Active';
+        if (!db.users[userIndex].id) db.users[userIndex].id = db.users[userIndex]._id;
+      } else {
+        db.users.push({
+          _id: userId,
+          id: userId,
+          name,
+          email: emailLower,
+          status: 'Active',
+          xp_total: 0,
+          locked_course_id: cleanCourseId,
+          created_at: new Date().toISOString(),
+        });
+      }
+      writeSharedDb(db);
+    } catch (dbErr) {
+      console.error('[course/select] sharedDb error:', dbErr);
     }
 
     const newToken = signUserToken({
@@ -94,12 +95,20 @@ export async function POST(req: Request) {
       lockedCourseId: cleanCourseId,
     });
 
-    const response = NextResponse.json({ success: true, lockedCourseId: cleanCourseId });
+    const response = NextResponse.json({
+      success: true,
+      course: {
+        id: cleanCourseId,
+        name: matchedCourse?.name || 'Selected Course Track',
+      },
+      lockedCourseId: cleanCourseId,
+    });
+
     response.cookies.set('student_token', newToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });
 

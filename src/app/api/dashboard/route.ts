@@ -23,7 +23,23 @@ export async function GET() {
     }
 
     const { user } = authResult;
-    const rawCourseId = user.locked_course_id || auth.lockedCourseId;
+    let rawCourseId = user.locked_course_id || auth.lockedCourseId;
+
+    if (!rawCourseId || !String(rawCourseId).trim()) {
+      try {
+        const memDb = readSharedDb();
+        const emailLower = (auth.email || '').toLowerCase().trim();
+        const uId = String(auth.userId || user._id || user.id);
+        const memMatch = (memDb.users || []).find(
+          (u: any) =>
+            (uId && (String(u._id) === uId || String(u.id) === uId)) ||
+            (emailLower && (u.email?.toLowerCase().trim() === emailLower || u.account_email?.toLowerCase().trim() === emailLower))
+        );
+        if (memMatch?.locked_course_id) {
+          rawCourseId = memMatch.locked_course_id;
+        }
+      } catch (_) {}
+    }
 
     if (!rawCourseId || !String(rawCourseId).trim()) {
       return NextResponse.json({ needsCourseSelection: true }, { status: 200 });

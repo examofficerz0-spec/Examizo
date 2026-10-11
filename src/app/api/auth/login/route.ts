@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { readSharedDb } from '@/lib/sharedDb';
+import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { signUserToken } from '@/lib/auth';
-import { queryD1, ensureD1Tables } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import bcrypt from 'bcryptjs';
 
@@ -30,10 +30,18 @@ export async function POST(req: Request) {
 
     const lowerEmail = email.toLowerCase().trim();
 
+    // Read sharedDb upfront for cross-referencing and resilience
+    const db = readSharedDb();
+    const memUser = (db.users || []).find(
+      (mu) =>
+        (mu.email || '').toLowerCase().trim() === lowerEmail ||
+        (mu.account_email || '').toLowerCase().trim() === lowerEmail
+    );
+
     // 1. Try Cloudflare D1 lookup first
     try {
       await ensureD1Tables();
-      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
+      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(account_email) = ? LIMIT 1', [lowerEmail, lowerEmail]);
       if (d1Users && d1Users.length > 0) {
         const u = d1Users[0];
         const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
@@ -53,27 +61,59 @@ export async function POST(req: Request) {
           } catch (e) {}
         }
 
+        // Also allow matching if memUser has password_hash
+        if (!isMatch && memUser?.password_hash) {
+          try {
+            isMatch = await bcrypt.compare(password, memUser.password_hash);
+          } catch (e) {}
+        }
+
         if (!isMatch) {
           return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+
+        // Cross-sync locked course between D1 and sharedDb
+        const resolvedCourseId = u.locked_course_id || memUser?.locked_course_id || null;
+
+        if (resolvedCourseId && !u.locked_course_id) {
+          executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ?', [resolvedCourseId, 'Active', u.id]).catch(() => {});
+        }
+
+        if (resolvedCourseId && memUser && !memUser.locked_course_id) {
+          memUser.locked_course_id = resolvedCourseId;
+          writeSharedDb(db);
+        } else if (!memUser && db.users) {
+          db.users.push({
+            _id: u.id,
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            password_hash: u.password_hash,
+            status: u.status || 'Active',
+            xp_total: u.xp_total || 0,
+            locked_course_id: resolvedCourseId,
+            created_at: u.created_at || new Date().toISOString(),
+          });
+          writeSharedDb(db);
         }
 
         const token = signUserToken({
           userId: u.id,
           email: u.email,
           name: u.name,
-          lockedCourseId: u.locked_course_id || null,
+          lockedCourseId: resolvedCourseId,
         });
 
         const response = NextResponse.json({
           success: true,
-          user: { id: u.id, name: u.name, email: u.email, lockedCourseId: u.locked_course_id || null },
+          user: { id: u.id, name: u.name, email: u.email, lockedCourseId: resolvedCourseId },
         });
 
         response.cookies.set('student_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60,
+          maxAge: 30 * 24 * 60 * 60,
           path: '/',
         });
 
@@ -84,14 +124,12 @@ export async function POST(req: Request) {
     }
 
     // 2. Memory / Shared DB Fallback
-    const db = readSharedDb();
-    const user = (db.users || []).find((u) => (u.email || '').toLowerCase().trim() === lowerEmail);
-    if (!user) {
+    if (!memUser) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const isSuspended = user.status === 'Suspended' || user.status === 'suspended' || user.status === 'SUSPENDED';
-    const isDeleted = user.status === 'Deleted' || user.name === 'Deleted User' || (user.email && user.email.startsWith('deleted_'));
+    const isSuspended = memUser.status === 'Suspended' || memUser.status === 'suspended' || memUser.status === 'SUSPENDED';
+    const isDeleted = memUser.status === 'Deleted' || memUser.name === 'Deleted User' || (memUser.email && memUser.email.startsWith('deleted_'));
 
     if (isDeleted) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
@@ -101,9 +139,9 @@ export async function POST(req: Request) {
     }
 
     let isMatch = false;
-    if (user.password_hash) {
+    if (memUser.password_hash) {
       try {
-        isMatch = await bcrypt.compare(password, user.password_hash);
+        isMatch = await bcrypt.compare(password, memUser.password_hash);
       } catch (e) {}
     }
 
@@ -111,23 +149,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    const resolvedCourseId = memUser.locked_course_id || null;
+    const userId = String(memUser._id || memUser.id);
+
+    // Asynchronously ensure D1 has the record
+    executeD1(
+      'INSERT OR IGNORE INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, memUser.name, memUser.email, memUser.password_hash, 'Active', memUser.xp_total || 0, resolvedCourseId]
+    ).catch(() => {});
+
     const token = signUserToken({
-      userId: user._id || user.id,
-      email: user.email,
-      name: user.name,
-      lockedCourseId: user.locked_course_id || null,
+      userId,
+      email: memUser.email,
+      name: memUser.name,
+      lockedCourseId: resolvedCourseId,
     });
 
     const response = NextResponse.json({
       success: true,
-      user: { id: user._id || user.id, name: user.name, email: user.email, lockedCourseId: user.locked_course_id || null },
+      user: { id: userId, name: memUser.name, email: memUser.email, lockedCourseId: resolvedCourseId },
     });
 
     response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });
 

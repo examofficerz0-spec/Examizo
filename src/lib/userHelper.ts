@@ -90,6 +90,22 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         return null;
       }
 
+      // Cross-check memory DB for locked course or profile sync
+      let memCourseId = null;
+      try {
+        const db = readSharedDb();
+        const memMatch = (db.users || []).find(
+          (mu: any) =>
+            (userIdStr && (String(mu._id) === userIdStr || String(mu.id) === userIdStr)) ||
+            (emailLower && mu.email?.toLowerCase().trim() === emailLower)
+        );
+        if (memMatch?.locked_course_id) {
+          memCourseId = memMatch.locked_course_id;
+        }
+      } catch (_) {}
+
+      const resolvedCourseId = u.locked_course_id || memCourseId || auth.lockedCourseId || null;
+
       const uDigi = parseDigiProfile(u.digilocker_profile_json, u.digilocker_verified);
       return {
         user: {
@@ -99,7 +115,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           email: u.email,
           password_hash: u.password_hash,
           account_email: u.account_email || (u.email.includes('+profile_') ? `${u.email.split('+profile_')[0]}@${u.email.split('@')[1] || 'exammaster.internal'}` : u.email),
-          locked_course_id: u.locked_course_id || null,
+          locked_course_id: resolvedCourseId,
           status: u.status || 'Active',
           xp_total: u.xp_total || 0,
           digilocker_verified: Boolean(u.digilocker_verified),
@@ -162,6 +178,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         return {
           user: {
             ...memUser,
+            locked_course_id: memUser.locked_course_id || auth.lockedCourseId || null,
             digilockerProfile: memDigi,
           },
           isMemoryMode: true,

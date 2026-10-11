@@ -8,8 +8,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:41:35.908Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-02T01:41:35.908Z"
     },
     {
       "_id": "o9qpxf37vmsb4y3ds",
@@ -19,8 +18,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:42:32.608Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-02T01:42:32.608Z"
     },
     {
       "_id": "qv0yzg7yrmsb4yhs9",
@@ -30,8 +28,7 @@
       "status": "Active",
       "xp_total": 81,
       "locked_course_id": "ynzp9kszdms7g1ytt",
-      "created_at": "2026-08-02T01:42:51.273Z",
-      "raw_password": "password123"
+      "created_at": "2026-08-02T01:42:51.273Z"
     },
     {
       "_id": "nakaymym3msd3w2qg",
@@ -41,8 +38,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
-      "created_at": "2026-08-03T10:48:31.192Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-03T10:48:31.192Z"
     },
     {
       "_id": "t39s5yy8imsejvw8m",
@@ -53,8 +49,7 @@
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
       "created_at": "2026-08-04T11:04:02.806Z",
-      "account_email": "aranya@gmail.com",
-      "raw_password": "123456"
+      "account_email": "aranya@gmail.com"
     },
     {
       "_id": "shs0v0etrmsn5ncpy",
@@ -65,8 +60,7 @@
       "xp_total": 0,
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "created_at": "2026-08-10T11:35:25.222Z",
-      "account_email": "roy@gmail.com",
-      "raw_password": "123456"
+      "account_email": "roy@gmail.com"
     },
     {
       "_id": "bdq2qy6esmsn5pyf2",
@@ -77,8 +71,7 @@
       "locked_course_id": "ynzp9kszdms7g1ytt",
       "status": "Active",
       "xp_total": 54,
-      "created_at": "2026-08-10T11:37:26.654Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-10T11:37:26.654Z"
     },
     {
       "_id": "wijw5853mmsn61d9f",
@@ -89,8 +82,7 @@
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "status": "Active",
       "xp_total": 81,
-      "created_at": "2026-08-10T11:46:19.107Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-10T11:46:19.107Z"
     },
     {
       "_id": "auw3ct49omsop5el6",
@@ -100,8 +92,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-11T13:29:06.330Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-11T13:29:06.330Z"
     },
     {
       "_id": "xy1jghu99mspyzonl",
@@ -111,8 +102,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-12T10:52:21.777Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-12T10:52:21.777Z"
     },
     {
       "_id": "p82xngs9amsr1cksi",
@@ -122,8 +112,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-13T04:46:08.706Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-13T04:46:08.706Z"
     },
     {
       "_id": "lbghyex2dmt04bnzq",
@@ -134,8 +123,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:21.822Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:19:21.822Z"
     },
     {
       "_id": "6qo0pow7mmt04c076",
@@ -146,8 +134,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:37.227Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:19:37.227Z"
     },
     {
       "_id": "ijcngxv5omt04habe",
@@ -158,8 +145,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:23:43.286Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:23:43.286Z"
     },
     {
       "_id": "ymtpm8rsamt04j5y0",
@@ -170,8 +156,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:25:10.857Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:25:10.857Z"
     },
     {
       "_id": "6d6rta7u1mt04vnnd",
@@ -182,8 +167,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-19T13:34:53.577Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-19T13:34:53.577Z"
     },
     {
       "_id": "gt7j46snmmt8f7qd0",
@@ -215,8 +199,7 @@
         "drivingLicence": "BR0120220010509",
         "eaadhaar": "",
         "linkedAt": "2026-08-25T09:34:36.949Z"
-      },
-      "raw_password": "123456"
+      }
     },
     {
       "_id": "xi4usngprmt8h694p",
@@ -248,8 +231,7 @@
         "drivingLicence": "BR0120220010509",
         "eaadhaar": "",
         "linkedAt": "2026-08-25T09:43:11.764Z"
-      },
-      "raw_password": "123456"
+      }
     },
     {
       "_id": "ha132aetxmtcwz33e",
@@ -260,8 +242,7 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-28T12:14:37.413Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-28T12:14:37.413Z"
     },
     {
       "_id": "1rbwivg8nmtcx3krm",
@@ -273,8 +254,7 @@
       "locked_course_id": "a2dmfatfwmszyy4et",
       "status": "Active",
       "xp_total": 0,
-      "created_at": "2026-08-28T12:18:06.329Z",
-      "raw_password": "123456"
+      "created_at": "2026-08-28T12:18:06.329Z"
     },
     {
       "_id": "do29rlwcmmv2554g8",
@@ -285,9 +265,42 @@
       "auth_provider": "google",
       "status": "Active",
       "xp_total": 0,
-      "locked_course_id": null,
-      "created_at": "2026-10-10T08:37:12.119Z",
-      "raw_password": "123456"
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "created_at": "2026-10-10T08:37:12.119Z"
+    },
+    {
+      "_id": "s81hdoxh0mv3ulbce",
+      "id": "s81hdoxh0mv3ulbce",
+      "name": "Flow Tester",
+      "email": "flow_test_1791724643762@example.com",
+      "password_hash": "$2a$10$mrgzqv/v/gq3CHXvQ.HQKurHg0eMK9s52.LmVOfg9NwGX7hTAVuRm",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "created_at": "2026-10-11T13:17:24.344Z"
+    },
+    {
+      "_id": "o0s298tu8mv3uwkos",
+      "id": "o0s298tu8mv3uwkos",
+      "name": "Persistent Student",
+      "email": "locktest_1791725167116@example.com",
+      "password_hash": "$2a$10$PRF7f0zayXtO3Y5miWIm6OmdjEzIoQL/r6w3G96WERW.WQWbMvA5C",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "created_at": "2026-10-11T13:26:09.732Z"
+    },
+    {
+      "_id": "4rigt6f90mv3uwsxo",
+      "id": "4rigt6f90mv3uwsxo",
+      "name": "Google Student",
+      "email": "google_flow_1791725179398@gmail.com",
+      "password_hash": "$2a$10$ZG00IyR6AfH3Up2iKQxWVeaUg47VeavZ6LSQU0gDe/55zsA3/mM96",
+      "auth_provider": "google",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "created_at": "2026-10-11T13:26:20.164Z"
     }
   ],
   "courses": [
@@ -308,7 +321,8 @@
         "penalty_per_incorrect": 0
       },
       "is_active": true,
-      "created_at": "2026-08-11T06:17:11.723Z"
+      "created_at": "2026-08-11T06:17:11.723Z",
+      "id": "rk0cw5w0imso9pyqz"
     },
     {
       "_id": "kjx0k9x51msd3o1gr",
@@ -326,7 +340,8 @@
       "board": "ICSE",
       "curriculum": "CISCE Class 8 Foundation Curriculum",
       "is_active": true,
-      "created_at": "2026-08-03T10:42:16.299Z"
+      "created_at": "2026-08-03T10:42:16.299Z",
+      "id": "kjx0k9x51msd3o1gr"
     },
     {
       "_id": "ynzp9kszdms7g1ytt",
@@ -343,7 +358,8 @@
         "penalty_per_incorrect": 1
       },
       "is_active": true,
-      "created_at": "2026-07-30T11:42:24.401Z"
+      "created_at": "2026-07-30T11:42:24.401Z",
+      "id": "ynzp9kszdms7g1ytt"
     },
     {
       "_id": "1339osvcems5xpvjb",
@@ -360,7 +376,8 @@
         "penalty_per_incorrect": 1
       },
       "is_active": true,
-      "created_at": "2026-07-29T10:21:20.999Z"
+      "created_at": "2026-07-29T10:21:20.999Z",
+      "id": "1339osvcems5xpvjb"
     },
     {
       "_id": "course_jee_2027",
@@ -377,7 +394,8 @@
         "penalty_per_incorrect": 1
       },
       "is_active": true,
-      "created_at": "2026-07-29T09:40:00.000Z"
+      "created_at": "2026-07-29T09:40:00.000Z",
+      "id": "course_jee_2027"
     },
     {
       "_id": "course_class_10_2027",
@@ -396,7 +414,8 @@
       "board": "CBSE",
       "curriculum": "Central Board of Secondary Education - NCERT Aligned Curriculum",
       "is_active": true,
-      "created_at": "2026-08-03T16:00:00.000Z"
+      "created_at": "2026-08-03T16:00:00.000Z",
+      "id": "course_class_10_2027"
     },
     {
       "_id": "course_class_12_2027",
@@ -416,7 +435,8 @@
       "board": "CBSE",
       "curriculum": "Central Board of Secondary Education - Grade 12 Science Stream",
       "is_active": true,
-      "created_at": "2026-08-03T16:05:00.000Z"
+      "created_at": "2026-08-03T16:05:00.000Z",
+      "id": "course_class_12_2027"
     }
   ],
   "questions": [
@@ -3979,8 +3999,7 @@
       ],
       "allowed_courses": [
         "all"
-      ],
-      "raw_password": "Admin@123456"
+      ]
     },
     {
       "_id": "admin_pkumar_2026",
@@ -3988,7 +4007,6 @@
       "name": "Prabir Kumar",
       "email": "pkumar@cluso.in",
       "password_hash": "$2a$10$lnN9ikOiLJO/.l/wKIHnBO737mfVHTwKwsg1C0EEhI2sCn5eyrJpq",
-      "raw_password": "Cluso@2026",
       "role": "Super Admin",
       "permissions": [
         "all",
@@ -4010,13 +4028,13 @@
   ],
   "auditLogs": [
     {
-      "_id": "log_mv3tjei9",
+      "_id": "log_mv3tjehy",
       "admin_id": "admin_master_1",
       "admin_name": "Master Controller",
       "action_type": "ASSIGN_ADMIN",
       "affected_entity_id": "admin_pkumar_2026",
       "details": "Created and assigned Super Admin account for pkumar@cluso.in",
-      "timestamp": "2026-10-11T12:47:55.185Z"
+      "timestamp": "2026-10-11T12:47:55.174Z"
     },
     {
       "_id": "x0jckgq3smsorgmn1",

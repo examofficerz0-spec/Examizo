@@ -127,44 +127,80 @@ export async function POST(req: Request) {
     await ensureD1Tables();
 
     // Check if user already exists
+    // Check if user already exists in either store
     let existingUser: any = null;
+    let d1UserRow: any = null;
+    let memUserRow: any = null;
 
-    // A. Check Cloudflare D1
+    // Read Memory DB (shared-db.json)
+    const db = readSharedDb();
+    if (db && db.users) {
+      memUserRow = db.users.find(
+        (u: any) =>
+          (u.email || '').toLowerCase().trim() === lowerEmail ||
+          (u.account_email || '').toLowerCase().trim() === lowerEmail
+      );
+    }
+
+    // Check Cloudflare D1
     try {
-      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
+      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(account_email) = ? LIMIT 1', [lowerEmail, lowerEmail]);
       if (d1Users && d1Users.length > 0) {
-        const u = d1Users[0];
-        existingUser = {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          status: u.status || 'Active',
-          xp_total: u.xp_total || 0,
-          locked_course_id: u.locked_course_id || null,
-        };
+        d1UserRow = d1Users[0];
       }
     } catch (e) {
       console.warn('[Google D1 Lookup Warning]:', e);
     }
 
-    // B. Check Memory DB (shared-db.json)
-    if (!existingUser) {
-      try {
-        const db = readSharedDb();
-        if (db.users) {
-          const memUser = db.users.find((u: any) => (u.email || '').toLowerCase().trim() === lowerEmail);
-          if (memUser) {
-            existingUser = {
-              id: String(memUser._id || memUser.id),
-              name: memUser.name,
-              email: memUser.email,
-              status: memUser.status || 'Active',
-              xp_total: memUser.xp_total || 0,
-              locked_course_id: memUser.locked_course_id || null,
-            };
+    if (d1UserRow || memUserRow) {
+      const resolvedCourseId = d1UserRow?.locked_course_id || memUserRow?.locked_course_id || null;
+      const resolvedId = String(d1UserRow?.id || memUserRow?._id || memUserRow?.id);
+      const resolvedName = d1UserRow?.name || memUserRow?.name || cleanName;
+      const resolvedStatus = d1UserRow?.status || memUserRow?.status || 'Active';
+      const resolvedXp = d1UserRow?.xp_total ?? memUserRow?.xp_total ?? 0;
+
+      existingUser = {
+        id: resolvedId,
+        name: resolvedName,
+        email: lowerEmail,
+        status: resolvedStatus,
+        xp_total: resolvedXp,
+        locked_course_id: resolvedCourseId,
+      };
+
+      // Cross-sync to D1 if missing
+      if (resolvedCourseId && d1UserRow && !d1UserRow.locked_course_id) {
+        executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ?', [resolvedCourseId, 'Active', d1UserRow.id]).catch(() => {});
+      } else if (!d1UserRow) {
+        executeD1(
+          'INSERT OR IGNORE INTO users (id, name, email, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [resolvedId, resolvedName, lowerEmail, 'google', 'Active', resolvedXp, resolvedCourseId]
+        ).catch(() => {});
+      }
+
+      // Cross-sync to sharedDb if missing
+      if (db && db.users) {
+        if (memUserRow) {
+          if (resolvedCourseId && !memUserRow.locked_course_id) {
+            memUserRow.locked_course_id = resolvedCourseId;
+            memUserRow.status = 'Active';
+            writeSharedDb(db);
           }
+        } else {
+          db.users.push({
+            _id: resolvedId,
+            id: resolvedId,
+            name: resolvedName,
+            email: lowerEmail,
+            auth_provider: 'google',
+            status: 'Active',
+            xp_total: resolvedXp,
+            locked_course_id: resolvedCourseId,
+            created_at: new Date().toISOString(),
+          });
+          writeSharedDb(db);
         }
-      } catch (_) {}
+      }
     }
 
     // Existing User handling

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 export default function CourseSelectionPage() {
   const router = useRouter();
@@ -96,6 +97,18 @@ export default function CourseSelectionPage() {
         setError(data.error || 'Failed to lock course');
         setShowConfirmModal(false);
       } else {
+        clearAllClientUserCaches();
+        try {
+          const savedStr = localStorage.getItem('exammaster_saved_accounts');
+          if (savedStr) {
+            const saved = JSON.parse(savedStr);
+            if (Array.isArray(saved) && saved.length > 0) {
+              saved[0].lockedCourseId = selectedCourseId;
+              localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
+            }
+          }
+        } catch (_) {}
+
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');

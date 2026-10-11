@@ -22,85 +22,92 @@ export async function POST(req: Request) {
 
     const cleanCourseId = courseId.trim();
 
-    // 1. Primary: Cloudflare D1
+    // 1. Resolve Course from either D1 or sharedDb
+    let matchedCourse: any = null;
+
     try {
       const d1Courses = await queryD1('SELECT id, name FROM courses WHERE id = ? LIMIT 1', [cleanCourseId]);
       if (d1Courses && d1Courses.length > 0) {
-        const matchedCourse = d1Courses[0];
-
-        await executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [
-          cleanCourseId,
-          'Active',
-          String(auth.userId),
-          auth.email.toLowerCase().trim(),
-        ]);
-
-        // Mirror to sharedDb for local consistency
-        try {
-          const db = readSharedDb();
-          if (db.users) {
-            const userIndex = (db.users || []).findIndex(
-              (u: any) => String(u._id) === String(auth.userId) || String(u.id) === String(auth.userId) || u.email?.toLowerCase() === auth.email?.toLowerCase()
-            );
-            if (userIndex !== -1) {
-              db.users[userIndex].locked_course_id = cleanCourseId;
-              db.users[userIndex].status = 'Active';
-              writeSharedDb(db);
-            }
-          }
-        } catch (_) {}
-
-        const token = signUserToken({
-          userId: auth.userId,
-          email: auth.email,
-          name: auth.name,
-          lockedCourseId: cleanCourseId,
-        });
-
-        const response = NextResponse.json({
-          success: true,
-          course: {
-            id: cleanCourseId,
-            name: matchedCourse.name,
-          },
-          lockedCourseId: cleanCourseId,
-        });
-
-        response.cookies.set('student_token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 7 * 24 * 60 * 60,
-          path: '/',
-          sameSite: 'lax',
-        });
-
-        return response;
+        matchedCourse = d1Courses[0];
       }
     } catch (e) {
-      console.warn('[Courses Lock D1 Error]:', e);
+      console.warn('[Courses Lock D1 course lookup warning]:', e);
     }
 
-    // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
-    const course = (db.courses || []).find((c: any) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId);
-    if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    if (!matchedCourse && db.courses) {
+      const memCourse = db.courses.find(
+        (c: any) => String(c._id) === cleanCourseId || String(c.id) === cleanCourseId
+      );
+      if (memCourse) {
+        matchedCourse = {
+          id: String(memCourse._id || memCourse.id),
+          name: memCourse.name,
+        };
+      }
     }
 
-    const userIndex = (db.users || []).findIndex(
-      (u: any) => String(u._id) === String(auth.userId) || String(u.id) === String(auth.userId) || u.email?.toLowerCase() === auth.email?.toLowerCase()
-    );
+    if (!matchedCourse) {
+      matchedCourse = {
+        id: cleanCourseId,
+        name: 'Selected Course Track',
+      };
+    }
 
-    if (userIndex !== -1) {
-      db.users[userIndex].locked_course_id = cleanCourseId;
-      db.users[userIndex].status = 'Active';
+    const authUserId = String(auth.userId || '');
+    const authEmailLower = (auth.email || '').toLowerCase().trim();
+    const authName = auth.name || authEmailLower.split('@')[0] || 'Student';
+
+    // 2. Persist to Cloudflare D1
+    try {
+      await executeD1(
+        'UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ? OR LOWER(account_email) = ?',
+        [cleanCourseId, 'Active', authUserId, authEmailLower, authEmailLower]
+      );
+      await executeD1(
+        'INSERT OR IGNORE INTO users (id, name, email, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?)',
+        [authUserId, authName, authEmailLower, 'Active', 0, cleanCourseId]
+      );
+    } catch (e) {
+      console.warn('[Courses Lock D1 user update warning]:', e);
+    }
+
+    // 3. Persist to shared-db.json (with guaranteed Upsert)
+    try {
+      if (!db.users) db.users = [];
+      const userIndex = db.users.findIndex(
+        (u: any) =>
+          (authUserId && (String(u._id) === authUserId || String(u.id) === authUserId)) ||
+          (authEmailLower && (u.email?.toLowerCase().trim() === authEmailLower || u.account_email?.toLowerCase().trim() === authEmailLower))
+      );
+
+      if (userIndex !== -1) {
+        db.users[userIndex].locked_course_id = cleanCourseId;
+        db.users[userIndex].status = 'Active';
+        if (!db.users[userIndex].id) db.users[userIndex].id = db.users[userIndex]._id;
+      } else {
+        // Upsert user into shared-db.json so course selection is never lost
+        db.users.push({
+          _id: authUserId,
+          id: authUserId,
+          name: authName,
+          email: authEmailLower,
+          status: 'Active',
+          xp_total: 0,
+          locked_course_id: cleanCourseId,
+          created_at: new Date().toISOString(),
+        });
+      }
       writeSharedDb(db);
+    } catch (dbErr) {
+      console.error('[Courses Lock sharedDb error]:', dbErr);
     }
 
+    // 4. Sign and issue updated token
     const token = signUserToken({
-      userId: auth.userId,
-      email: auth.email,
-      name: auth.name,
+      userId: authUserId,
+      email: authEmailLower,
+      name: authName,
       lockedCourseId: cleanCourseId,
     });
 
@@ -108,7 +115,7 @@ export async function POST(req: Request) {
       success: true,
       course: {
         id: cleanCourseId,
-        name: course.name,
+        name: matchedCourse.name,
       },
       lockedCourseId: cleanCourseId,
     });
@@ -116,7 +123,7 @@ export async function POST(req: Request) {
     response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
       sameSite: 'lax',
     });

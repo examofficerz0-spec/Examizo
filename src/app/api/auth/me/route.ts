@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { readSharedDb } from '@/lib/sharedDb';
-import { getAuthenticatedUser } from '@/lib/auth';
+import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
 
@@ -86,7 +86,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       authenticated: true,
       user: {
         id: user._id ? String(user._id) : auth.userId,
@@ -102,6 +102,26 @@ export async function GET() {
         digilockerProfile: user.digilockerProfile || null,
       },
     });
+
+    // Auto-heal cookie if database holds a locked course but the client JWT does not
+    if (rawCourseId && (!auth.lockedCourseId || String(auth.lockedCourseId).trim() !== String(rawCourseId).trim())) {
+      const refreshedToken = signUserToken({
+        userId: user._id ? String(user._id) : auth.userId,
+        email: user.email,
+        name: user.name,
+        lockedCourseId: String(rawCourseId),
+      });
+
+      response.cookies.set('student_token', refreshedToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60,
+        path: '/',
+      });
+    }
+
+    return response;
   } catch (error: any) {
     const res = NextResponse.json({ error: error.message || 'Failed to authenticate' }, { status: 500 });
     return res;
