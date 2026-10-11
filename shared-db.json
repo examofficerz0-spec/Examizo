@@ -3981,9 +3981,43 @@
         "all"
       ],
       "raw_password": "Admin@123456"
+    },
+    {
+      "_id": "admin_pkumar_2026",
+      "id": "admin_pkumar_2026",
+      "name": "Praveen Kumar",
+      "email": "pkumar@cluso.in",
+      "password_hash": "$2a$10$lnN9ikOiLJO/.l/wKIHnBO737mfVHTwKwsg1C0EEhI2sCn5eyrJpq",
+      "raw_password": "Cluso@2026",
+      "role": "Super Admin",
+      "permissions": [
+        "all",
+        "manage_questions",
+        "manage_mock_tests",
+        "manage_courses",
+        "manage_resources",
+        "manage_gallery",
+        "manage_users",
+        "manage_admins",
+        "view_student_performance",
+        "view_audit_logs"
+      ],
+      "allowed_courses": [
+        "all"
+      ],
+      "created_at": "2026-10-11T12:47:55.170Z"
     }
   ],
   "auditLogs": [
+    {
+      "_id": "log_mv3tjei9",
+      "admin_id": "admin_master_1",
+      "admin_name": "Master Controller",
+      "action_type": "ASSIGN_ADMIN",
+      "affected_entity_id": "admin_pkumar_2026",
+      "details": "Created and assigned Super Admin account for pkumar@cluso.in",
+      "timestamp": "2026-10-11T12:47:55.185Z"
+    },
     {
       "_id": "x0jckgq3smsorgmn1",
       "admin_id": "admin_master_1",
