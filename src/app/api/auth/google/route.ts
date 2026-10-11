@@ -223,14 +223,30 @@ export async function POST(req: Request) {
         lockedCourseId: existingUser.locked_course_id || null,
       });
 
+      const baseHandle = lowerEmail.split('@')[0].split('+')[0].trim();
+      const familyProfiles = (db.users || []).filter((fu: any) => {
+        if (fu.status === 'Deleted' || fu.name === 'Deleted User') return false;
+        const fuEmail = (fu.email || '').toLowerCase().trim();
+        const fuAcct = (fu.account_email || '').toLowerCase().trim();
+        const fuHandle = (fuAcct || fuEmail).split('@')[0].split('+')[0].trim();
+        return fuHandle === baseHandle;
+      });
+
+      const hasSubProfiles = familyProfiles.length > 1;
+      const activeProfileHasPin = Boolean((d1UserRow?.pin || memUserRow?.pin) && String(d1UserRow?.pin || memUserRow?.pin).trim().length === 4);
+      const requireProfileSelection = hasSubProfiles || activeProfileHasPin;
+
       const response = NextResponse.json({
         success: true,
         needsCourseSelection: !existingUser.locked_course_id,
+        requireProfileSelection,
+        profilesCount: familyProfiles.length,
         user: {
           id: existingUser.id,
           name: existingUser.name,
           email: existingUser.email,
           lockedCourseId: existingUser.locked_course_id || null,
+          hasPin: activeProfileHasPin,
         },
       });
 

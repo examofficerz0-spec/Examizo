@@ -33,6 +33,8 @@ import {
   EyeOff,
   Key,
   ShieldCheck,
+  Sparkles,
+  KeyRound,
 } from 'lucide-react';
 import { DigiLockerModal, getDigiLockerStatus, isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
 
@@ -51,6 +53,8 @@ interface ProfileItem {
   lockedCourseName?: string | null;
   isActive: boolean;
   isPrimary: boolean;
+  hasPin?: boolean;
+  avatarColor?: string;
   xp_total: number;
 }
 
@@ -75,10 +79,17 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
+  const [newProfilePin, setNewProfilePin] = useState('');
   const [availableCourses, setAvailableCourses] = useState<any[]>([]);
   const [selectedCourseForNewProfile, setSelectedCourseForNewProfile] = useState<string>('');
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+
+  // Profile PIN Prompt Modal State (when switching to a PIN-protected profile)
+  const [profilePinPrompt, setProfilePinPrompt] = useState<ProfileItem | null>(null);
+  const [pinInputValue, setPinInputValue] = useState('');
+  const [pinPromptError, setPinPromptError] = useState('');
+  const [pinPromptLoading, setPinPromptLoading] = useState(false);
 
   // Notification State
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -272,21 +283,36 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     window.location.href = '/login';
   };
 
-  const handleSwitchProfile = async (profile: ProfileItem) => {
+  const handleSwitchProfile = async (profile: ProfileItem, pinToUse?: string) => {
     if (profile.isActive) return;
 
+    if (profile.hasPin && !pinToUse) {
+      setProfilePinPrompt(profile);
+      setPinInputValue('');
+      setPinPromptError('');
+      setShowProfileMenu(false);
+      return;
+    }
+
     try {
+      setPinPromptLoading(true);
       clearAllClientUserCaches();
       const res = await fetch('/api/profile/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileId: profile.id }),
+        body: JSON.stringify({ profileId: profile.id, pin: pinToUse }),
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        setPinPromptError(data.error || 'Incorrect PIN');
+        return;
+      }
+
       if (data.success) {
         clearAllClientUserCaches();
         setShowProfileMenu(false);
+        setProfilePinPrompt(null);
         // If the target profile has NO locked course, redirect to course selection!
         if (!data.profile?.lockedCourseId) {
           window.location.href = '/course-selection';
@@ -295,7 +321,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         }
       }
     } catch (err) {
-      console.error('Failed to switch profile:', err);
+      setPinPromptError('Failed to switch profile');
+    } finally {
+      setPinPromptLoading(false);
     }
   };
 
@@ -319,6 +347,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   const openAddProfileModal = () => {
     setNewProfileName('');
+    setNewProfilePin('');
     setSelectedCourseForNewProfile('');
     setCreateError('');
     setShowAddProfileModal(true);
@@ -342,6 +371,11 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       return;
     }
 
+    if (newProfilePin && !/^\d{4}$/.test(newProfilePin.trim())) {
+      setCreateError('Profile PIN must be exactly 4 numeric digits (e.g. 1234)');
+      return;
+    }
+
     setCreateError('');
     setCreateLoading(true);
 
@@ -352,6 +386,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         body: JSON.stringify({
           name: newProfileName.trim(),
           courseId: selectedCourseForNewProfile,
+          pin: newProfilePin.trim() || null,
         }),
       });
 
@@ -361,6 +396,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       } else {
         setShowAddProfileModal(false);
         setNewProfileName('');
+        setNewProfilePin('');
         setSelectedCourseForNewProfile('');
         // Sub-profile is registered with course locked -> reload or go directly to dashboard!
         window.location.href = '/dashboard';
@@ -673,7 +709,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                             {prof.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate">{prof.name}</p>
+                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate flex items-center gap-1">
+                              {prof.name}
+                              {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
+                            </p>
                             <p className="text-[10px] text-slate-400 font-medium truncate">
                               {prof.lockedCourseName ? `Course: ${prof.lockedCourseName}` : '⚠️ Needs Course Lock'}
                             </p>
@@ -727,6 +766,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </div>
 
                 <div className="p-1">
+                  <Link
+                    href="/profiles"
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-xl transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500" /> Switch Profile (Netflix Screen)
+                  </Link>
                   <Link
                     href="/profile"
                     onClick={() => setShowProfileMenu(false)}
@@ -816,6 +862,26 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </p>
               </div>
 
+              {/* 4-Digit Profile PIN Field */}
+              <div className="space-y-1.5 pt-1">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-amber-500" />
+                  Profile Security PIN (4 digits - Optional)
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={newProfilePin}
+                  onChange={(e) => setNewProfilePin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 1234 (Leave blank if not needed)"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs font-mono tracking-widest font-bold"
+                />
+                <p className="text-[10px] text-slate-400">
+                  🔒 If set, this 4-digit PIN will be required whenever anyone switches to this profile.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
@@ -830,6 +896,75 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* PIN Prompt Modal for Header switching */}
+      {profilePinPrompt && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[80] animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-300 dark:border-amber-800/80">
+              <Lock className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Profile Locked</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Enter 4-digit PIN for <strong>{profilePinPrompt.name}</strong>
+              </p>
+            </div>
+
+            {pinPromptError && (
+              <div className="p-2 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-300 rounded-xl text-xs font-bold">
+                {pinPromptError}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (pinInputValue.length === 4) {
+                  handleSwitchProfile(profilePinPrompt, pinInputValue);
+                }
+              }}
+              className="space-y-4"
+            >
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                autoFocus
+                value={pinInputValue}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setPinInputValue(val);
+                  setPinPromptError('');
+                  if (val.length === 4) {
+                    handleSwitchProfile(profilePinPrompt, val);
+                  }
+                }}
+                placeholder="••••"
+                className="w-full text-center text-2xl font-mono tracking-[0.5em] py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-amber-500 rounded-xl text-slate-900 dark:text-white outline-none"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setProfilePinPrompt(null)}
+                  className="flex-1 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pinPromptLoading || pinInputValue.length !== 4}
+                  className="flex-1 py-2 text-xs font-black rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-40"
+                >
+                  {pinPromptLoading ? 'Verifying...' : 'Unlock'}
                 </button>
               </div>
             </form>

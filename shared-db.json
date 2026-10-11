@@ -301,6 +301,32 @@
       "xp_total": 0,
       "locked_course_id": "rk0cw5w0imso9pyqz",
       "created_at": "2026-10-11T13:26:20.164Z"
+    },
+    {
+      "_id": "4zpdeelplmv3wd5y5",
+      "id": "4zpdeelplmv3wd5y5",
+      "name": "Netflix Primary User",
+      "email": "netflix_test_1791727621658@examizo.test",
+      "password_hash": "$2a$10$86PrIvZCvYeouWpEbNec6.lKhaYFjqREIpGBPXyLhwtrNiMv22WsK",
+      "status": "Active",
+      "xp_total": 0,
+      "locked_course_id": "rk0cw5w0imso9pyqz",
+      "created_at": "2026-10-11T14:07:03.363Z",
+      "pin": "1122"
+    },
+    {
+      "_id": "ym36ykj3amv3wd6ue",
+      "id": "ym36ykj3amv3wd6ue",
+      "name": "Sub-Student Grade 8",
+      "email": "netflix_test_1791727621658+profile_4166@exammaster.internal",
+      "password_hash": "$2a$10$86PrIvZCvYeouWpEbNec6.lKhaYFjqREIpGBPXyLhwtrNiMv22WsK",
+      "account_email": "netflix_test_1791727621658@examizo.test",
+      "locked_course_id": "kjx0k9x51msd3o1gr",
+      "pin": "4321",
+      "avatar_color": null,
+      "status": "Active",
+      "xp_total": 0,
+      "created_at": "2026-10-11T14:07:04.166Z"
     }
   ],
   "courses": [

@@ -61,7 +61,9 @@ export async function GET() {
           return isPrimary || (u.locked_course_id && String(u.locked_course_id).trim().length > 0);
         });
 
-        const profiles = validD1Users.map((u: any) => {
+        const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+
+        const profiles = validD1Users.map((u: any, idx: number) => {
           const isPrimary = !u.email.includes('+');
           return {
             id: u.id,
@@ -72,6 +74,8 @@ export async function GET() {
             lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id) || null) : null,
             isActive: u.id === currentIdStr,
             isPrimary,
+            hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
+            avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],
             xp_total: u.xp_total || 0,
           };
         });
@@ -96,7 +100,9 @@ export async function GET() {
       return uHandle === baseHandle || String(u._id || u.id) === String(currentUser._id || currentUser.id);
     });
 
-    const profiles = family.map((u: any) => {
+    const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
+
+    const profiles = family.map((u: any, idx: number) => {
       const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id) || String(c.id) === String(u.locked_course_id)) || null;
       const isPrimary = !(u.email || '').includes('+');
       return {
@@ -108,6 +114,8 @@ export async function GET() {
         lockedCourseName: lockedCourse?.name || null,
         isActive: String(u._id || u.id) === String(currentUser._id || currentUser.id),
         isPrimary,
+        hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
+        avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],
         xp_total: u.xp_total || 0,
       };
     });
@@ -122,6 +130,8 @@ export async function GET() {
         lockedCourseName: null,
         isActive: true,
         isPrimary: true,
+        hasPin: Boolean(currentUser.pin && String(currentUser.pin).trim().length === 4),
+        avatarColor: currentUser.avatar_color || 'bg-blue-600',
         xp_total: currentUser.xp_total || 0,
       };
       return NextResponse.json({ success: true, profiles: [defaultProfile] });

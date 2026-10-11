@@ -102,6 +102,8 @@ export async function ensureD1Tables() {
         previous_course_id TEXT,
         auth_provider TEXT,
         account_email TEXT,
+        pin TEXT,
+        avatar_color TEXT,
         friends_json TEXT DEFAULT '[]',
         friend_requests_json TEXT DEFAULT '[]',
         digilocker_verified INTEGER DEFAULT 0,
@@ -116,6 +118,8 @@ export async function ensureD1Tables() {
       executeD1('ALTER TABLE users ADD COLUMN raw_password TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN auth_provider TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN account_email TEXT'),
+      executeD1('ALTER TABLE users ADD COLUMN pin TEXT'),
+      executeD1('ALTER TABLE users ADD COLUMN avatar_color TEXT'),
     ]).catch(() => {});
   } catch (_) {}
 }

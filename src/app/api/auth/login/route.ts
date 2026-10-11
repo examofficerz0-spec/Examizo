@@ -97,6 +97,31 @@ export async function POST(req: Request) {
           writeSharedDb(db);
         }
 
+        // Check if account has sub-profiles or PIN configured
+        const userPrefix = lowerEmail.split('@')[0];
+        let d1ProfilesCount = 0;
+        try {
+          const d1Family = await queryD1(
+            "SELECT id, pin FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ?) AND status != 'Deleted' AND name != 'Deleted User'",
+            [lowerEmail, `${userPrefix}+%`]
+          );
+          if (d1Family && Array.isArray(d1Family)) {
+            d1ProfilesCount = d1Family.length;
+          }
+        } catch (_) {}
+
+        const memFamily = (db.users || []).filter((fu: any) => {
+          if (fu.status === 'Deleted' || fu.name === 'Deleted User') return false;
+          const fuEmail = (fu.email || '').toLowerCase().trim();
+          const fuAcct = (fu.account_email || '').toLowerCase().trim();
+          return fuEmail === lowerEmail || fuAcct === lowerEmail || fuEmail.startsWith(`${userPrefix}+`);
+        });
+
+        const totalProfilesCount = Math.max(d1ProfilesCount, memFamily.length);
+        const hasSubProfiles = totalProfilesCount > 1;
+        const activeProfileHasPin = Boolean((u.pin || memUser?.pin) && String(u.pin || memUser?.pin).trim().length === 4);
+        const requireProfileSelection = hasSubProfiles || activeProfileHasPin;
+
         const token = signUserToken({
           userId: u.id,
           email: u.email,
@@ -106,7 +131,9 @@ export async function POST(req: Request) {
 
         const response = NextResponse.json({
           success: true,
-          user: { id: u.id, name: u.name, email: u.email, lockedCourseId: resolvedCourseId },
+          requireProfileSelection,
+          profilesCount: totalProfilesCount,
+          user: { id: u.id, name: u.name, email: u.email, lockedCourseId: resolvedCourseId, hasPin: activeProfileHasPin },
         });
 
         response.cookies.set('student_token', token, {
@@ -158,6 +185,19 @@ export async function POST(req: Request) {
       [userId, memUser.name, memUser.email, memUser.password_hash, 'Active', memUser.xp_total || 0, resolvedCourseId]
     ).catch(() => {});
 
+    // Check if account has sub-profiles or PIN configured
+    const userPrefixFallback = lowerEmail.split('@')[0];
+    const familyProfiles = (db.users || []).filter((fu: any) => {
+      if (fu.status === 'Deleted' || fu.name === 'Deleted User') return false;
+      const fuEmail = (fu.email || '').toLowerCase().trim();
+      const fuAcct = (fu.account_email || '').toLowerCase().trim();
+      return fuEmail === lowerEmail || fuAcct === lowerEmail || fuEmail.startsWith(`${userPrefixFallback}+`);
+    });
+
+    const hasSubProfiles = familyProfiles.length > 1;
+    const activeProfileHasPin = Boolean(memUser.pin && String(memUser.pin).trim().length === 4);
+    const requireProfileSelection = hasSubProfiles || activeProfileHasPin;
+
     const token = signUserToken({
       userId,
       email: memUser.email,
@@ -167,7 +207,9 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({
       success: true,
-      user: { id: userId, name: memUser.name, email: memUser.email, lockedCourseId: resolvedCourseId },
+      requireProfileSelection,
+      profilesCount: familyProfiles.length,
+      user: { id: userId, name: memUser.name, email: memUser.email, lockedCourseId: resolvedCourseId, hasPin: activeProfileHasPin },
     });
 
     response.cookies.set('student_token', token, {

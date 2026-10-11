@@ -29,6 +29,16 @@ export async function POST(req: Request) {
       );
     }
 
+    const rawPin = body.pin ? String(body.pin).trim() : null;
+    let cleanPin: string | null = null;
+    if (rawPin) {
+      if (!/^\d{4}$/.test(rawPin)) {
+        return NextResponse.json({ error: 'Profile PIN must be exactly 4 numeric digits (e.g. 1234)' }, { status: 400 });
+      }
+      cleanPin = rawPin;
+    }
+    const cleanAvatarColor = body.avatarColor ? String(body.avatarColor).trim() : null;
+
     const cleanName = name.trim();
     const cleanCourseId = String(courseId).trim();
 
@@ -59,7 +69,7 @@ export async function POST(req: Request) {
         const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@exammaster.internal`;
 
         await executeD1(
-          `INSERT INTO users (id, name, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO users (id, name, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             profileId,
             cleanName,
@@ -71,6 +81,8 @@ export async function POST(req: Request) {
             '[]',
             new Date().toISOString(),
             cleanCourseId,
+            cleanPin,
+            cleanAvatarColor,
           ]
         );
 
@@ -86,6 +98,8 @@ export async function POST(req: Request) {
               password_hash: currentUser.password_hash || 'profile_nopass',
               account_email: mainEmail,
               locked_course_id: cleanCourseId,
+              pin: cleanPin,
+              avatar_color: cleanAvatarColor,
               status: 'Active',
               xp_total: 0,
               created_at: new Date().toISOString(),
@@ -108,6 +122,8 @@ export async function POST(req: Request) {
             name: cleanName,
             email: profileEmail,
             lockedCourseId: cleanCourseId,
+            hasPin: Boolean(cleanPin),
+            avatarColor: cleanAvatarColor,
           },
           needsCourseSelection: false,
         });
@@ -115,8 +131,9 @@ export async function POST(req: Request) {
         response.cookies.set('student_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          maxAge: 7 * 24 * 60 * 60,
+          maxAge: 30 * 24 * 60 * 60,
           path: '/',
+          sameSite: 'lax',
         });
 
         return response;
@@ -152,6 +169,8 @@ export async function POST(req: Request) {
       password_hash: currentUser.password_hash || 'profile_nopass',
       account_email: mainEmail,
       locked_course_id: cleanCourseId,
+      pin: cleanPin,
+      avatar_color: cleanAvatarColor,
       status: 'Active',
       xp_total: 0,
       created_at: new Date().toISOString(),
@@ -178,6 +197,8 @@ export async function POST(req: Request) {
         name: newProfile.name,
         email: newProfile.email,
         lockedCourseId: cleanCourseId,
+        hasPin: Boolean(cleanPin),
+        avatarColor: cleanAvatarColor,
       },
       needsCourseSelection: false,
     });
@@ -185,8 +206,9 @@ export async function POST(req: Request) {
     response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
+      sameSite: 'lax',
     });
 
     return response;

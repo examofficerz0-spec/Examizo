@@ -150,7 +150,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
 
-        if (joinCode) {
+        if (data.requireProfileSelection || data.hasMultipleProfiles) {
+          window.location.href = '/profiles';
+        } else if (joinCode) {
           window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
         } else if (!data.user.lockedCourseId) {
           window.location.href = '/course-selection';
@@ -270,7 +272,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
 
-        if (!data.user.lockedCourseId) {
+        if (data.requireProfileSelection || data.hasMultipleProfiles) {
+          window.location.href = '/profiles';
+        } else if (!data.user.lockedCourseId) {
           if (joinCode) {
             window.location.href = `/course-selection?joinCode=${encodeURIComponent(joinCode)}`;
           } else if (joinHostId) {

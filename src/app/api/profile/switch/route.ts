@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please login first.' }, { status: 401 });
     }
 
-    const { profileId } = await req.json();
+    const { profileId, pin } = await req.json();
     if (!profileId) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 });
     }
@@ -23,6 +23,12 @@ export async function POST(req: Request) {
     if (!authResult || !authResult.user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    // Read sharedDb to cross-reference PINs
+    const db = readSharedDb();
+    const memTarget = (db.users || []).find(
+      (u: any) => String(u._id) === String(profileId) || String(u.id) === String(profileId)
+    );
 
     // 1. Primary: Cloudflare D1
     try {
@@ -36,11 +42,30 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'This sub-profile has been suspended by an administrator. Please select an active profile.' }, { status: 403 });
         }
 
+        const expectedPin = targetProfile.pin || memTarget?.pin || null;
+        if (expectedPin && String(expectedPin).trim().length === 4) {
+          if (!pin) {
+            return NextResponse.json({
+              error: '4-digit PIN required to unlock this profile',
+              requirePin: true,
+              profileName: targetProfile.name,
+            }, { status: 403 });
+          }
+          if (String(pin).trim() !== String(expectedPin).trim()) {
+            return NextResponse.json({
+              error: 'Incorrect 4-digit PIN. Please try again.',
+              requirePin: true,
+            }, { status: 403 });
+          }
+        }
+
+        const resolvedCourseId = targetProfile.locked_course_id || memTarget?.locked_course_id || null;
+
         const token = signUserToken({
           userId: targetProfile.id,
           email: targetProfile.email,
           name: targetProfile.name,
-          lockedCourseId: targetProfile.locked_course_id || null,
+          lockedCourseId: resolvedCourseId,
         });
 
         const response = NextResponse.json({
@@ -49,14 +74,14 @@ export async function POST(req: Request) {
             id: targetProfile.id,
             name: targetProfile.name,
             email: targetProfile.email,
-            lockedCourseId: targetProfile.locked_course_id || null,
+            lockedCourseId: resolvedCourseId,
           },
         });
 
         response.cookies.set('student_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          maxAge: 7 * 24 * 60 * 60,
+          maxAge: 30 * 24 * 60 * 60,
           path: '/',
           sameSite: 'lax',
         });
@@ -68,36 +93,53 @@ export async function POST(req: Request) {
     }
 
     // 2. Shared DB Local Resilience Fallback
-    const db = readSharedDb();
-    const targetProfile = (db.users || []).find((u: any) => String(u._id) === String(profileId) || String(u.id) === String(profileId));
-    if (!targetProfile || targetProfile.status === 'Deleted') {
+    if (!memTarget || memTarget.status === 'Deleted') {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
-    if (targetProfile.status === 'Suspended' || targetProfile.status === 'suspended' || targetProfile.status === 'SUSPENDED') {
+    if (memTarget.status === 'Suspended' || memTarget.status === 'suspended' || memTarget.status === 'SUSPENDED') {
       return NextResponse.json({ error: 'This sub-profile has been suspended by an administrator. Please select an active profile.' }, { status: 403 });
     }
 
+    const expectedPin = memTarget.pin || null;
+    if (expectedPin && String(expectedPin).trim().length === 4) {
+      if (!pin) {
+        return NextResponse.json({
+          error: '4-digit PIN required to unlock this profile',
+          requirePin: true,
+          profileName: memTarget.name,
+        }, { status: 403 });
+      }
+      if (String(pin).trim() !== String(expectedPin).trim()) {
+        return NextResponse.json({
+          error: 'Incorrect 4-digit PIN. Please try again.',
+          requirePin: true,
+        }, { status: 403 });
+      }
+    }
+
+    const resolvedCourseId = memTarget.locked_course_id ? String(memTarget.locked_course_id) : null;
+
     const token = signUserToken({
-      userId: String(targetProfile._id || targetProfile.id),
-      email: targetProfile.email,
-      name: targetProfile.name,
-      lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
+      userId: String(memTarget._id || memTarget.id),
+      email: memTarget.email,
+      name: memTarget.name,
+      lockedCourseId: resolvedCourseId,
     });
 
     const response = NextResponse.json({
       success: true,
       profile: {
-        id: String(targetProfile._id || targetProfile.id),
-        name: targetProfile.name,
-        email: targetProfile.email,
-        lockedCourseId: targetProfile.locked_course_id ? String(targetProfile.locked_course_id) : null,
+        id: String(memTarget._id || memTarget.id),
+        name: memTarget.name,
+        email: memTarget.email,
+        lockedCourseId: resolvedCourseId,
       },
     });
 
     response.cookies.set('student_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
       sameSite: 'lax',
     });

@@ -128,10 +128,10 @@ export async function middleware(request: NextRequest) {
   // Restrict them from entering inside the portal pages until they pick their course track.
   const hasLockedCourse = Boolean(user && user.lockedCourseId && String(user.lockedCourseId).trim().length > 0);
   if (!hasLockedCourse) {
-    const isCourseSelectionPath = pathname === '/course-selection';
-    const isAllowedApi = pathname.startsWith('/api/course') || pathname.startsWith('/api/courses') || pathname.startsWith('/api/auth');
+    const isAllowedPage = pathname === '/course-selection' || pathname === '/profiles';
+    const isAllowedApi = pathname.startsWith('/api/course') || pathname.startsWith('/api/courses') || pathname.startsWith('/api/auth') || pathname.startsWith('/api/profile');
 
-    if (!isCourseSelectionPath && !isAllowedApi && !pathname.startsWith('/api/')) {
+    if (!isAllowedPage && !isAllowedApi && !pathname.startsWith('/api/')) {
       return NextResponse.redirect(new URL('/course-selection', request.url));
     }
   }
