@@ -1711,6 +1711,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                           Q{originalIdx + 1}
                                         </span>
 
+                                        {(q.image_url || q.imageUrl || q.image || q.question_image) && (
+                                          <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-[9px] font-extrabold flex items-center gap-1 shrink-0">
+                                            🖼️ Diagram
+                                          </span>
+                                        )}
+
                                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
                                           {cleanQuestionText(q.question_text)}
                                         </p>
@@ -1770,7 +1776,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                             {cleanQuestionText(q.question_text)}
                                           </div>
 
-                                          <QuestionDiagram src={q.image_url || q.image || q.question_image} />
+                                          <QuestionDiagram
+                                            src={q.image_url || q.imageUrl || q.image || q.question_image}
+                                            alt={cleanQuestionText(q.question_text)}
+                                          />
 
                                           {/* Options Grid */}
                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -2084,7 +2093,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     </div>
 
                     {/* Question Diagram / Image */}
-                    <QuestionDiagram src={currentQ?.image_url || currentQ?.image || currentQ?.question_image} />
+                    <QuestionDiagram
+                      src={currentQ?.image_url || currentQ?.imageUrl || currentQ?.image || currentQ?.question_image}
+                      alt={cleanQuestionText(currentQ?.question_text)}
+                    />
 
                     {/* Options Grid */}
                     <div className="grid grid-cols-1 gap-3 pt-2">

@@ -1319,6 +1319,11 @@ export default function PracticeSetsPage() {
                                                 <span className="px-2.5 py-0.5 rounded-md bg-brand-800 text-white text-[10px] font-black shrink-0 shadow-2xs">
                                                   Q{originalIdx + 1}
                                                 </span>
+                                                {(q.image_url || q.imageUrl || q.image || q.question_image) && (
+                                                  <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900 text-[9px] font-extrabold flex items-center gap-1 shrink-0">
+                                                    🖼️ Diagram
+                                                  </span>
+                                                )}
                                                 <p className="text-xs sm:text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate min-w-0 flex-1">
                                                   {q.question_text}
                                                 </p>
@@ -1377,7 +1382,10 @@ export default function PracticeSetsPage() {
                                                     {q.question_text}
                                                   </p>
 
-                                                  <QuestionDiagram src={q.image_url || q.image || q.question_image} />
+                                                  <QuestionDiagram
+                                                    src={q.image_url || q.imageUrl || q.image || q.question_image}
+                                                    alt={q.question_text}
+                                                  />
 
                                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                     {(q.options || []).map((opt: string, optIdx: number) => {
@@ -1552,7 +1560,10 @@ export default function PracticeSetsPage() {
                         />
                       </div>
 
-                      <QuestionDiagram src={currentQ.image_url || (currentQ as any).image || (currentQ as any).question_image} />
+                      <QuestionDiagram
+                        src={currentQ.image_url || (currentQ as any).imageUrl || (currentQ as any).image || (currentQ as any).question_image}
+                        alt={cleanQuestionText(currentQ.question_text)}
+                      />
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */

@@ -482,7 +482,8 @@
       "explanation": "For an object beyond 2F, a convex lens forms a real, inverted, diminished image between F and 2F.",
       "detailed_explanation": "Step 1: Consider the principal rays from the object through the convex lens.\nStep 2: Their intersection occurs on the opposite side between F and 2F.\nStep 3: The image is real, inverted, and smaller than the object.",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "image_url": "data:image/png;base64,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"
     },
     {
       "_id": "o5ryaayt8mso9r8ot",
@@ -500,7 +501,8 @@
       "explanation": "The angle of incidence equals the angle of reflection when both are measured from the normal.",
       "detailed_explanation": "Step 1: Draw the normal perpendicular to the reflecting surface.\nStep 2: Measure both angles from the normal.\nStep 3: The law of reflection states θi = θr.",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "image_url": "data:image/png;base64,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"
     },
     {
       "_id": "z7niswhfsmso9r8ot",
@@ -518,7 +520,8 @@
       "explanation": "Wave speed is given by v = fλ, so the speed is 100 m/s.",
       "detailed_explanation": "Step 1: Frequency f = 50 Hz and wavelength λ = 2 m.\nStep 2: Use v = fλ.\nStep 3: v = 50 × 2 = 100 m/s.",
       "is_active": true,
-      "created_at": "2026-08-11T06:18:11.261Z"
+      "created_at": "2026-08-11T06:18:11.261Z",
+      "image_url": "data:image/png;base64,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"
     },
     {
       "_id": "up6oo9pztmso9r8ot",
@@ -3428,6 +3431,144 @@
       "explanation": "According to Coulomb's Law, the electrostatic force between two point charges is directly proportional to the product of the charges.",
       "is_active": true,
       "created_at": "2026-07-29T11:43:58.608Z"
+    },
+    {
+      "_id": "optics_q_2_mv596tuh",
+      "id": "optics_q_2_mv596tuh",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "In the given convex lens ray diagram, where is the image formed when the object is placed at 2F1?",
+      "image_url": "data:image/png;base64,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",
+      "options": [
+        "Real, inverted, and of the same size at 2F2",
+        "Virtual, erect, and magnified between F2 and 2F2",
+        "Real, inverted, and diminished at F2",
+        "Virtual, erect, and diminished beyond 2F2"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "When an object is placed at 2F of a convex lens, a real, inverted image of the same size is formed at 2F on the other side.",
+      "detailed_explanation": "Step 1: Ray parallel to principal axis refracts through focus F2.\nStep 2: Ray through optical center passes undeviated.\nStep 3: Rays intersect at 2F2 with magnification m = -1 (real, inverted, same size).",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.569Z"
+    },
+    {
+      "_id": "optics_q_3_mv596tui",
+      "id": "optics_q_3_mv596tui",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "In the given prism dispersion diagram, which color bends the most (maximum angle of deviation)?",
+      "image_url": "data:image/png;base64,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",
+      "options": [
+        "Violet light",
+        "Red light",
+        "Yellow light",
+        "Green light"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Violet light has the shortest wavelength and highest refractive index in glass, causing it to deviate the most.",
+      "detailed_explanation": "Step 1: Refractive index n is inversely proportional to wavelength (Cauchy relation).\nStep 2: Violet wavelength is smallest (~400 nm), so n is largest.\nStep 3: Deviation delta = (n - 1)A is maximum for violet.",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.570Z"
+    },
+    {
+      "_id": "optics_q_4_mv596tui",
+      "id": "optics_q_4_mv596tui",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "Based on the ray diagram shown, what phenomenon occurs when the angle of incidence in the denser medium exceeds the critical angle?",
+      "image_url": "data:image/png;base64,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",
+      "options": [
+        "Total Internal Reflection (TIR)",
+        "Diffraction of light",
+        "Polarization by scattering",
+        "Partial refraction along normal"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "When light travels from an optically denser medium to a rarer medium at an angle greater than the critical angle, 100% of light is reflected back.",
+      "detailed_explanation": "Step 1: Snell's Law: n1 * sin(i) = n2 * sin(r).\nStep 2: When i > critical angle, sin(r) > 1 which is mathematically impossible for refraction.\nStep 3: Thus, all incident energy reflects back into medium 1.",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.570Z"
+    },
+    {
+      "_id": "optics_q_5_mv596tui",
+      "id": "optics_q_5_mv596tui",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "For the concave mirror shown in the ray diagram, where is the image formed when the object is placed beyond the Center of Curvature (C)?",
+      "image_url": "data:image/png;base64,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",
+      "options": [
+        "Between Focus (F) and Center of Curvature (C)",
+        "Beyond Center of Curvature (C)",
+        "At the Focus (F)",
+        "Behind the mirror"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "When an object is placed beyond C in front of a concave mirror, the image forms between F and C (real, inverted, and diminished).",
+      "detailed_explanation": "Step 1: Mirror equation: 1/f = 1/v + 1/u.\nStep 2: For u > 2f, image distance v lies between f and 2f.\nStep 3: Magnification |m| < 1 (diminished, inverted, real).",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.570Z"
+    },
+    {
+      "_id": "optics_q_6_mv596tui",
+      "id": "optics_q_6_mv596tui",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "When light passes through the rectangular glass slab shown, the emergent ray is parallel to the incident ray but laterally displaced. What determines the lateral shift?",
+      "image_url": "data:image/png;base64,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",
+      "options": [
+        "Thickness of slab, angle of incidence, and refractive index",
+        "Only the mass of the glass slab",
+        "Only the atmospheric pressure",
+        "Only the brightness of light source"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "Lateral displacement depends directly on the thickness of the glass slab (t), angle of incidence (i), and refractive index (n).",
+      "detailed_explanation": "Step 1: Lateral displacement d = t * sin(i - r) / cos(r).\nStep 2: Thicker slabs or higher refractive indices produce greater lateral shift.",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.570Z"
+    },
+    {
+      "_id": "optics_q_7_mv596tui",
+      "id": "optics_q_7_mv596tui",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "subject": "Science",
+      "topic_tag": "Physics - Waves and Optics",
+      "question_type": "MCQ",
+      "question_text": "Which of the following optical instruments uses a combination of convex lenses to produce an enlarged image of distant celestial objects?",
+      "image_url": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600",
+      "options": [
+        "Astronomical Refracting Telescope",
+        "Simple Magnifying Glass",
+        "Periscope",
+        "Kaleidoscope"
+      ],
+      "correct_option": 0,
+      "sample_answer": "",
+      "marks": 1,
+      "explanation": "An astronomical refracting telescope uses an objective convex lens of large focal length and an eyepiece of small focal length.",
+      "detailed_explanation": "Step 1: Objective lens forms real, inverted image of distant star/planet at its focal plane.\nStep 2: Eyepiece acts as magnifier to produce enlarged final image.",
+      "is_active": true,
+      "created_at": "2026-10-12T12:53:48.570Z"
     }
   ],
   "mockTests": [

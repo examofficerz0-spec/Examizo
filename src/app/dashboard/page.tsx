@@ -31,6 +31,7 @@ import {
   Layers,
 } from 'lucide-react';
 
+import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 
@@ -412,6 +413,10 @@ export default function StudentDashboardPage() {
                 <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
                   {item.question_text}
                 </p>
+                <QuestionDiagram
+                  src={item.image_url || item.imageUrl || item.image}
+                  alt={item.question_text}
+                />
               </div>
 
               {/* Options Comparison Grid */}
