@@ -287,8 +287,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
-    const course = (db.courses || []).find((c) => c._id === rawTest.course_id || c.id === rawTest.course_id);
-    const rawQuestions = (rawTest.question_ids || []).map((qId: string) => (db.questions || []).find((q) => q._id === qId || q.id === qId)).filter(Boolean);
+    const cIdStr = String(typeof rawTest.course_id === 'object' ? (rawTest.course_id?._id || rawTest.course_id?.id) : rawTest.course_id);
+    const course = (db.courses || []).find((c) => String(c._id || c.id) === cIdStr);
+    const rawQuestions = (rawTest.question_ids || [])
+      .map((qId: any) => {
+        const idStr = typeof qId === 'object' ? String(qId._id || qId.id) : String(qId);
+        return (db.questions || []).find((q) => String(q._id || q.id) === idStr);
+      })
+      .filter(Boolean);
     const question_ids = deduplicateQuestions(rawQuestions);
 
     const userAttempts = (db.attempts || []).filter(

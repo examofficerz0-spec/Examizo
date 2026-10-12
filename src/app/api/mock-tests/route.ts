@@ -108,11 +108,16 @@ export async function GET() {
 
     const tests = (db.mockTests || [])
       .filter((m: any) => {
-        const testCourseId = String(typeof m.course_id === 'object' ? m.course_id?._id : m.course_id);
-        return validCourseIds.includes(testCourseId) && m.is_active !== false;
+        const testCourseId = String(typeof m.course_id === 'object' ? (m.course_id?._id || m.course_id?.id) : m.course_id);
+        return (validCourseIds.includes(testCourseId) || validCourseIds.includes(String(m.course_id))) && m.is_active !== false;
       })
       .map((m: any) => {
-        const qList = (m.question_ids || []).map((qId: string) => (db.questions || []).find((q: any) => q._id === qId || q.id === qId)).filter(Boolean);
+        const qList = (m.question_ids || [])
+          .map((qId: any) => {
+            const idStr = typeof qId === 'object' ? String(qId._id || qId.id) : String(qId);
+            return (db.questions || []).find((q: any) => String(q._id || q.id) === idStr);
+          })
+          .filter(Boolean);
         return { ...m, question_ids: qList };
       });
 

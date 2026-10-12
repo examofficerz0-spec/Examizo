@@ -138,7 +138,7 @@ function getQuestionSubjectAndTopicHelper(q: any, courseSubjects: string[]) {
 
   // 7. Science check
   if (!resolvedSubject && isScienceCourse) {
-    if (/(?:science|physics|chemistry|biology|botany|zoology)/i.test(qSub) || /(?:science|physics|chemistry|biology|botany|zoology)/i.test(tag)) {
+    if (/(?:science|physics|chemistry|biology|botany|zoology|optics|waves|mechanics|light|electricity|force|energy)/i.test(qSub) || /(?:science|physics|chemistry|biology|botany|zoology|optics|waves|mechanics|light|electricity|force|energy)/i.test(tag)) {
       resolvedSubject = 'Science';
     }
   }

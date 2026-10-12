@@ -3573,6 +3573,41 @@
   ],
   "mockTests": [
     {
+      "_id": "mock_test_c7_optics_1",
+      "id": "mock_test_c7_optics_1",
+      "course_id": "rk0cw5w0imso9pyqz",
+      "course_name": "Classs 7th",
+      "title": "Class 7th Science & Optics Comprehensive Mock Test",
+      "type": "full",
+      "duration_minutes": 45,
+      "cutoff_marks": 10,
+      "question_ids": [
+        "xty012unmmso9r8ot",
+        "o5ryaayt8mso9r8ot",
+        "z7niswhfsmso9r8ot",
+        "up6oo9pztmso9r8ot",
+        "2anhmejlfmso9r8ot",
+        "8jruhkh3zmso9r8ot",
+        "5420czqn5mso9r8ot",
+        "297gw6bf1mso9r8ot",
+        "oo23ind6umso9r8ot",
+        "as8y2lw2jmso9r8ot",
+        "optics_q_2_mv596tuh",
+        "optics_q_3_mv596tui",
+        "optics_q_4_mv596tui",
+        "optics_q_5_mv596tui",
+        "optics_q_6_mv596tui",
+        "optics_q_7_mv596tui"
+      ],
+      "preset_id": null,
+      "is_dynamic_reshuffle": false,
+      "subject_allocations": {
+        "Science": 16
+      },
+      "is_active": true,
+      "created_at": "2026-10-12T16:21:34.861Z"
+    },
+    {
       "_id": "7gl0z9umfms66d0j8",
       "course_id": "course_jee_2027",
       "title": "ert",
