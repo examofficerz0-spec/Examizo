@@ -4,5 +4,5 @@ pages_build_output_dir = ".next"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "examofficer"
-database_id = "c6e2248d-7d20-4177-879b-1205b69c818f"
+database_name = "examizo_portal"
+database_id = "4352d30a-1159-4695-beca-eda28c8d4a4f"

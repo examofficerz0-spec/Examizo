@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 
     const { user } = authResult;
     if (!user.locked_course_id) {
-      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+      return NextResponse.json({ questions: [], subjects: [], needsCourseSelection: true }, { status: 200 });
     }
 
     const rawCourseId = user.locked_course_id;

@@ -21,7 +21,7 @@ export async function GET() {
 
     const { user } = authResult;
     if (!user.locked_course_id) {
-      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+      return NextResponse.json({ leaderboard: [], userRank: null, needsCourseSelection: true }, { status: 200 });
     }
 
     const currentUserId = String(user._id || user.id || auth.userId);

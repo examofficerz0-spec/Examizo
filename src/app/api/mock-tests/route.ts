@@ -22,7 +22,7 @@ export async function GET() {
 
     const { user } = authResult;
     if (!user.locked_course_id) {
-      return NextResponse.json({ error: 'No course locked' }, { status: 400 });
+      return NextResponse.json({ tests: [], needsCourseSelection: true }, { status: 200 });
     }
 
     const rawCourseId = user.locked_course_id;

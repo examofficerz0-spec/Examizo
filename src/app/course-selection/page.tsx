@@ -92,6 +92,13 @@ export default function CourseSelectionPage() {
         body: JSON.stringify({ course_id: selectedCourseId }),
       });
 
+      // Redundant dual-route synchronization to guarantee course lock is saved
+      fetch('/api/course/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: selectedCourseId }),
+      }).catch(() => {});
+
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Failed to lock course');
@@ -467,18 +474,33 @@ export default function CourseSelectionPage() {
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-3 border-t border-slate-200 dark:border-slate-800 pt-6">
+        {/* Sticky Action Footer */}
+        <div className="sticky bottom-4 left-0 right-0 mt-8 px-5 py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                Selected Track:{' '}
+                <span className="font-extrabold text-brand-800 dark:text-brand-300">
+                  {selectedCourse?.name || 'Please select a course'}
+                </span>
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Permanent Lock Active: Course curriculum and mock exams cannot be altered once confirmed.
+              </p>
+            </div>
+          </div>
+
           <button
-            disabled={!selectedCourseId || loading || courses.length === 0}
+            disabled={!selectedCourseId || loading || submitting || courses.length === 0}
             onClick={() => setShowConfirmModal(true)}
             type="button"
-            className="px-8 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold text-sm rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto px-7 py-3 bg-brand-800 hover:bg-brand-900 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
           >
             <Lock className="w-4 h-4" /> Confirm &amp; Permanently Lock Selected Course
           </button>
-          <p className="text-[11px] text-slate-500 font-medium">
-            Permanent Lock Active: Course cannot be altered once confirmed.
-          </p>
         </div>
       </div>
 

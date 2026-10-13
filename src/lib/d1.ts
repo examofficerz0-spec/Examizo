@@ -11,10 +11,10 @@ export async function queryD1<T = any>(sql: string, params: any[] = []): Promise
     }
   }
 
-  // 2. Fallback to Cloudflare REST API
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  // 2. Cloudflare REST API with active production credentials
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.HEALTH_CLOUDFLARE_ACCOUNT_ID || '2f740823719b4ab11c6b134a71e7a3b9';
+  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID || '4352d30a-1159-4695-beca-eda28c8d4a4f';
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.HEALTH_CLOUDFLARE_API_TOKEN || '';
 
   if (!apiToken || !databaseId || !accountId) {
     return [];
@@ -55,10 +55,10 @@ export async function executeD1(sql: string, params: any[] = []): Promise<boolea
     }
   }
 
-  // 2. Fallback to Cloudflare REST API
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  // 2. Cloudflare REST API with active production credentials
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.HEALTH_CLOUDFLARE_ACCOUNT_ID || '2f740823719b4ab11c6b134a71e7a3b9';
+  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID || '4352d30a-1159-4695-beca-eda28c8d4a4f';
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.HEALTH_CLOUDFLARE_API_TOKEN || '';
 
   if (!apiToken || !databaseId || !accountId) {
     return false;

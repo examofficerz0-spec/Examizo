@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { prefetchAllStudentData } from '@/lib/swrCache';
 
-const PUBLIC_PATHS = ['/login', '/register', '/', '/privacy', '/terms'];
+const PUBLIC_PATHS = ['/login', '/register', '/', '/privacy', '/terms', '/course-selection', '/profiles'];
 
 export function StudentDataSynchronizer() {
   const pathname = usePathname();

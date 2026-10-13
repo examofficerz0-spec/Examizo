@@ -1,7 +1,7 @@
 -- ====================================================================
 -- Cloudflare D1 SQL Database Schema
--- Database ID: c6e2248d-7d20-4177-879b-1205b69c818f
--- Application: ExamMaster / Ranklytix Learning & Assessment Portal
+-- Database ID: 4352d30a-1159-4695-beca-eda28c8d4a4f (examizo_portal)
+-- Application: ExamMaster / Examizo Learning & Assessment Portal
 -- ====================================================================
 
 -- 1. Users (Students & Sub-profiles)
