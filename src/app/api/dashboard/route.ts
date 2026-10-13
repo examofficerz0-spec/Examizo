@@ -30,11 +30,19 @@ export async function GET() {
         const memDb = readSharedDb();
         const emailLower = (auth.email || '').toLowerCase().trim();
         const uId = String(auth.userId || user._id || user.id);
-        const memMatch = (memDb.users || []).find(
-          (u: any) =>
-            (uId && (String(u._id) === uId || String(u.id) === uId)) ||
-            (emailLower && (u.email?.toLowerCase().trim() === emailLower || u.account_email?.toLowerCase().trim() === emailLower))
+        let memMatch = (memDb.users || []).find(
+          (u: any) => uId && (String(u._id) === uId || String(u.id) === uId)
         );
+        if (!memMatch && emailLower) {
+          memMatch = (memDb.users || []).find(
+            (u: any) => (u.email || '').toLowerCase().trim() === emailLower
+          );
+        }
+        if (!memMatch && emailLower) {
+          memMatch = (memDb.users || []).find(
+            (u: any) => (u.account_email || '').toLowerCase().trim() === emailLower
+          );
+        }
         if (memMatch?.locked_course_id) {
           rawCourseId = memMatch.locked_course_id;
         }
@@ -49,6 +57,7 @@ export async function GET() {
       ? String(rawCourseId._id) 
       : String(rawCourseId).trim();
 
+    user.locked_course_id = courseId;
     const userId = String(user._id || user.id || auth.userId);
 
     // 1. Primary: Cloudflare D1

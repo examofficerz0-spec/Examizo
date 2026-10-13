@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { readSharedDb } from '@/lib/sharedDb';
+import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { queryD1 } from '@/lib/d1';
+import { queryD1, executeD1 } from '@/lib/d1';
 
 export async function GET() {
   const auth = getAuthenticatedUser();
@@ -119,6 +119,21 @@ export async function GET() {
         maxAge: 30 * 24 * 60 * 60,
         path: '/',
       });
+    }
+
+    // Auto-heal database stores if token or fallback holds locked course but user record did not
+    if (rawCourseId && (!user.locked_course_id || String(user.locked_course_id).trim() !== String(rawCourseId).trim())) {
+      const uId = String(user._id || user.id || auth.userId);
+      const uEmail = (user.email || auth.email || '').toLowerCase().trim();
+      executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [String(rawCourseId), 'Active', uId, uEmail]).catch(() => {});
+      try {
+        const db = readSharedDb();
+        const memUser = (db.users || []).find((mu: any) => String(mu._id || mu.id) === uId || (mu.email && mu.email.toLowerCase().trim() === uEmail));
+        if (memUser && (!memUser.locked_course_id || String(memUser.locked_course_id).trim() !== String(rawCourseId).trim())) {
+          memUser.locked_course_id = String(rawCourseId);
+          writeSharedDb(db);
+        }
+      } catch (_) {}
     }
 
     return response;

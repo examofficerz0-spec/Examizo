@@ -1,4 +1,4 @@
-import { readSharedDb } from '@/lib/sharedDb';
+import { readSharedDb, writeSharedDb } from '@/lib/sharedDb';
 import { UserPayload } from '@/lib/auth';
 import { queryD1, executeD1 } from '@/lib/d1';
 
@@ -106,6 +106,27 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
 
       const resolvedCourseId = u.locked_course_id || memCourseId || auth.lockedCourseId || null;
 
+      // Cross-sync back to D1 if memory or JWT had the locked course
+      if (resolvedCourseId && !u.locked_course_id) {
+        executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [resolvedCourseId, 'Active', u.id, u.email]).catch(() => {});
+      }
+
+      // Cross-sync back to memory DB if D1 or JWT had the locked course
+      if (resolvedCourseId && (!memCourseId || String(memCourseId).trim() !== String(resolvedCourseId).trim())) {
+        try {
+          const db = readSharedDb();
+          const memMatch = (db.users || []).find(
+            (mu: any) =>
+              (userIdStr && (String(mu._id) === userIdStr || String(mu.id) === userIdStr)) ||
+              (emailLower && mu.email?.toLowerCase().trim() === emailLower)
+          );
+          if (memMatch && memMatch.locked_course_id !== resolvedCourseId) {
+            memMatch.locked_course_id = resolvedCourseId;
+            writeSharedDb(db);
+          }
+        } catch (_) {}
+      }
+
       const uDigi = parseDigiProfile(u.digilocker_profile_json, u.digilocker_verified);
       return {
         user: {
@@ -175,10 +196,18 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           return null;
         }
         const memDigi = parseDigiProfile(memUser.digilocker_profile_json, memUser.digilocker_verified);
+        const resolvedMemCourse = memUser.locked_course_id || auth.lockedCourseId || null;
+        if (resolvedMemCourse && !memUser.locked_course_id) {
+          memUser.locked_course_id = resolvedMemCourse;
+          try {
+            writeSharedDb(db);
+          } catch (_) {}
+          executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [resolvedMemCourse, 'Active', String(memUser._id || memUser.id), memUser.email]).catch(() => {});
+        }
         return {
           user: {
             ...memUser,
-            locked_course_id: memUser.locked_course_id || auth.lockedCourseId || null,
+            locked_course_id: resolvedMemCourse,
             digilockerProfile: memDigi,
           },
           isMemoryMode: true,

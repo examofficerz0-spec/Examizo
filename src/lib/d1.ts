@@ -114,12 +114,29 @@ export async function ensureD1Tables() {
       )
     `);
 
-    Promise.allSettled([
+    // Ensure all critical columns exist even if table was pre-created with an older schema
+    await Promise.allSettled([
+      executeD1('ALTER TABLE users ADD COLUMN locked_course_id TEXT'),
+      executeD1('ALTER TABLE users ADD COLUMN previous_course_id TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN raw_password TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN auth_provider TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN account_email TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN pin TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN avatar_color TEXT'),
+      executeD1("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'Active'"),
+      executeD1('ALTER TABLE users ADD COLUMN xp_total INTEGER DEFAULT 0'),
+      executeD1("ALTER TABLE users ADD COLUMN friends_json TEXT DEFAULT '[]'"),
+      executeD1("ALTER TABLE users ADD COLUMN friend_requests_json TEXT DEFAULT '[]'"),
+      executeD1('ALTER TABLE users ADD COLUMN digilocker_verified INTEGER DEFAULT 0'),
+      executeD1("ALTER TABLE users ADD COLUMN digilocker_profile_json TEXT DEFAULT '{}'"),
+      executeD1("ALTER TABLE users ADD COLUMN digilocker_raw_response_json TEXT DEFAULT '{}'"),
+      executeD1('ALTER TABLE users ADD COLUMN updated_at TEXT'),
+      executeD1('ALTER TABLE courses ADD COLUMN board TEXT DEFAULT "CBSE"'),
+      executeD1('ALTER TABLE courses ADD COLUMN curriculum TEXT DEFAULT ""'),
+      executeD1('ALTER TABLE courses ADD COLUMN subjects_json TEXT DEFAULT "[]"'),
+      executeD1('ALTER TABLE courses ADD COLUMN marks_per_correct REAL DEFAULT 4.0'),
+      executeD1('ALTER TABLE courses ADD COLUMN penalty_per_incorrect REAL DEFAULT 1.0'),
+      executeD1('ALTER TABLE courses ADD COLUMN is_active INTEGER DEFAULT 1'),
     ]).catch(() => {});
   } catch (_) {}
 }

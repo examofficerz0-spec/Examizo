@@ -24,7 +24,7 @@ export function clearAllClientUserCaches(deletedEmail?: string) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && !key.startsWith('exammaster_theme')) {
+        if (key && !key.startsWith('exammaster_theme') && key !== 'exammaster_saved_accounts') {
           keysToRemove.push(key);
         }
       }

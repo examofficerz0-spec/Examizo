@@ -139,6 +139,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
               id: data.user.id || userEmail,
               email: userEmail,
               name: userName,
+              lockedCourseId: data.user.lockedCourseId || null,
               avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
               lastLogin: new Date().toISOString(),
             });
@@ -260,6 +261,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
               id: data.user.id || userEmail,
               email: userEmail,
               name: userName,
+              lockedCourseId: data.user.lockedCourseId || null,
               avatarColor: colors[saved.length % colors.length] || 'bg-blue-600',
               lastLogin: new Date().toISOString(),
             });

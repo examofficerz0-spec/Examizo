@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser, signUserToken } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 
 export async function POST(req: Request) {
   try {
@@ -46,10 +46,17 @@ export async function POST(req: Request) {
 
     // 2. Cloudflare D1 Update & Upsert
     try {
+      await ensureD1Tables();
       await executeD1(
-        'UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ? OR LOWER(account_email) = ?',
-        [cleanCourseId, 'Active', userId, emailLower, emailLower]
+        'UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?',
+        [cleanCourseId, 'Active', userId, emailLower]
       );
+      try {
+        await executeD1(
+          'UPDATE users SET locked_course_id = ?, status = ? WHERE LOWER(account_email) = ? AND (id = ? OR LOWER(email) = ?)',
+          [cleanCourseId, 'Active', emailLower, userId, emailLower]
+        );
+      } catch (_) {}
       await executeD1(
         'INSERT OR IGNORE INTO users (id, name, email, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?)',
         [userId, name, emailLower, 'Active', 0, cleanCourseId]
@@ -61,11 +68,22 @@ export async function POST(req: Request) {
     // 3. Shared DB Update & Upsert
     try {
       if (!db.users) db.users = [];
-      const userIndex = db.users.findIndex(
-        (u: any) =>
-          (userId && (String(u._id) === userId || String(u.id) === userId)) ||
-          (emailLower && (u.email?.toLowerCase().trim() === emailLower || u.account_email?.toLowerCase().trim() === emailLower))
-      );
+      let userIndex = -1;
+      if (userId) {
+        userIndex = db.users.findIndex(
+          (u: any) => String(u._id) === userId || String(u.id) === userId
+        );
+      }
+      if (userIndex === -1 && emailLower) {
+        userIndex = db.users.findIndex(
+          (u: any) => (u.email || '').toLowerCase().trim() === emailLower
+        );
+      }
+      if (userIndex === -1 && emailLower) {
+        userIndex = db.users.findIndex(
+          (u: any) => (u.account_email || '').toLowerCase().trim() === emailLower
+        );
+      }
 
       if (userIndex !== -1) {
         db.users[userIndex].locked_course_id = cleanCourseId;

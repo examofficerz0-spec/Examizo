@@ -136,15 +136,23 @@ export async function POST(req: Request) {
     const db = readSharedDb();
     if (db && db.users) {
       memUserRow = db.users.find(
-        (u: any) =>
-          (u.email || '').toLowerCase().trim() === lowerEmail ||
-          (u.account_email || '').toLowerCase().trim() === lowerEmail
+        (u: any) => (u.email || '').toLowerCase().trim() === lowerEmail
       );
+      if (!memUserRow) {
+        memUserRow = db.users.find(
+          (u: any) => (u.account_email || '').toLowerCase().trim() === lowerEmail
+        );
+      }
     }
 
     // Check Cloudflare D1
     try {
-      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(account_email) = ? LIMIT 1', [lowerEmail, lowerEmail]);
+      let d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
+      if (!d1Users || d1Users.length === 0) {
+        try {
+          d1Users = await queryD1('SELECT * FROM users WHERE LOWER(account_email) = ? LIMIT 1', [lowerEmail]);
+        } catch (_) {}
+      }
       if (d1Users && d1Users.length > 0) {
         d1UserRow = d1Users[0];
       }

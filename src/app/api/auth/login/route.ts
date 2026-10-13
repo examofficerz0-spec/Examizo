@@ -32,16 +32,27 @@ export async function POST(req: Request) {
 
     // Read sharedDb upfront for cross-referencing and resilience
     const db = readSharedDb();
-    const memUser = (db.users || []).find(
-      (mu) =>
-        (mu.email || '').toLowerCase().trim() === lowerEmail ||
-        (mu.account_email || '').toLowerCase().trim() === lowerEmail
+    // Prioritize exact email match first so primary account is never confused with a sub-profile
+    let memUser = (db.users || []).find(
+      (mu) => (mu.email || '').toLowerCase().trim() === lowerEmail
     );
+    if (!memUser) {
+      memUser = (db.users || []).find(
+        (mu) => (mu.account_email || '').toLowerCase().trim() === lowerEmail
+      );
+    }
 
     // 1. Try Cloudflare D1 lookup first
     try {
       await ensureD1Tables();
-      const d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(account_email) = ? LIMIT 1', [lowerEmail, lowerEmail]);
+      // Prioritize exact email match first
+      let d1Users = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1', [lowerEmail]);
+      if (!d1Users || d1Users.length === 0) {
+        try {
+          d1Users = await queryD1('SELECT * FROM users WHERE LOWER(account_email) = ? LIMIT 1', [lowerEmail]);
+        } catch (_) {}
+      }
+
       if (d1Users && d1Users.length > 0) {
         const u = d1Users[0];
         const isSuspended = u.status === 'Suspended' || u.status === 'suspended' || u.status === 'SUSPENDED';
@@ -72,11 +83,18 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
         }
 
+        // Cross-match memory user by ID if not found by email
+        if (!memUser && db.users) {
+          memUser = db.users.find(
+            (mu) => String(mu._id || mu.id) === String(u.id)
+          );
+        }
+
         // Cross-sync locked course between D1 and sharedDb
         const resolvedCourseId = u.locked_course_id || memUser?.locked_course_id || null;
 
         if (resolvedCourseId && !u.locked_course_id) {
-          executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ?', [resolvedCourseId, 'Active', u.id]).catch(() => {});
+          executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?', [resolvedCourseId, 'Active', u.id, lowerEmail]).catch(() => {});
         }
 
         if (resolvedCourseId && memUser && !memUser.locked_course_id) {
@@ -179,11 +197,18 @@ export async function POST(req: Request) {
     const resolvedCourseId = memUser.locked_course_id || null;
     const userId = String(memUser._id || memUser.id);
 
-    // Asynchronously ensure D1 has the record
+    // Asynchronously ensure D1 has the record and locked_course_id is synced
     executeD1(
       'INSERT OR IGNORE INTO users (id, name, email, password_hash, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [userId, memUser.name, memUser.email, memUser.password_hash, 'Active', memUser.xp_total || 0, resolvedCourseId]
     ).catch(() => {});
+
+    if (resolvedCourseId) {
+      executeD1(
+        'UPDATE users SET locked_course_id = ?, status = ? WHERE id = ? OR LOWER(email) = ?',
+        [resolvedCourseId, 'Active', userId, lowerEmail]
+      ).catch(() => {});
+    }
 
     // Check if account has sub-profiles or PIN configured
     const userPrefixFallback = lowerEmail.split('@')[0];

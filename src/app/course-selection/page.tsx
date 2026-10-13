@@ -103,7 +103,9 @@ export default function CourseSelectionPage() {
           if (savedStr) {
             const saved = JSON.parse(savedStr);
             if (Array.isArray(saved) && saved.length > 0) {
-              saved[0].lockedCourseId = selectedCourseId;
+              saved.forEach((acc: any) => {
+                acc.lockedCourseId = selectedCourseId;
+              });
               localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
             }
           }

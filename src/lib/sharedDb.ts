@@ -114,6 +114,11 @@ export function writeSharedDb(data: SharedDbData): void {
       path.join(process.cwd(), 'shared-db.json'),
       path.join(process.cwd(), '..', 'student-portal', 'shared-db.json'),
       path.join(process.cwd(), '..', 'admin-portal', 'shared-db.json'),
+      path.join(process.cwd(), 'student-portal', 'shared-db.json'),
+      path.join(process.cwd(), 'admin-portal', 'shared-db.json'),
+      'd:/Exam portal/shared-db.json',
+      'd:/Exam portal/student-portal/shared-db.json',
+      'd:/Exam portal/admin-portal/shared-db.json',
       path.join('/tmp', 'shared-db.json'),
     ];
 
