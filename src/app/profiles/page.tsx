@@ -669,6 +669,7 @@ export default function NetflixProfilesPage() {
                 <input
                   type="date"
                   required
+                  suppressHydrationWarning
                   max={new Date().toISOString().split('T')[0]}
                   min="1950-01-01"
                   value={newProfileDob}
@@ -799,15 +800,17 @@ export default function NetflixProfilesPage() {
       )}
 
       {/* Duolingo-style Curriculum Wizard Modal */}
-      <CurriculumPickerModal
-        isOpen={showCurriculumPickerModal}
-        onClose={() => setShowCurriculumPickerModal(false)}
-        availableCourses={availableCourses}
-        onSelectCurriculum={(result) => {
-          setSelectedCurriculum(result);
-          setNewProfileCourseId(result.courseId);
-        }}
-      />
+      {showCurriculumPickerModal && (
+        <CurriculumPickerModal
+          isOpen={showCurriculumPickerModal}
+          onClose={() => setShowCurriculumPickerModal(false)}
+          availableCourses={availableCourses}
+          onSelectCurriculum={(result) => {
+            setSelectedCurriculum(result);
+            setNewProfileCourseId(result.courseId);
+          }}
+        />
+      )}
 
       {/* ── MODAL 3: Manage PIN Dialog (Set/Remove/Change) ── */}
       {pinModalProfile && (

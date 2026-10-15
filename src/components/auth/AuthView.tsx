@@ -746,6 +746,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                       <input
                         type="date"
                         required
+                        suppressHydrationWarning
                         max={new Date().toISOString().split('T')[0]}
                         min="1950-01-01"
                         value={dob}
@@ -1073,15 +1074,17 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       </div>
 
       {/* Duolingo-style Curriculum Wizard Modal for Registration */}
-      <CurriculumPickerModal
-        isOpen={showCurriculumPickerModal}
-        onClose={() => setShowCurriculumPickerModal(false)}
-        availableCourses={courses}
-        onSelectCurriculum={(result) => {
-          setSelectedCurriculum(result);
-          setSelectedCourseId(result.courseId);
-        }}
-      />
+      {showCurriculumPickerModal && (
+        <CurriculumPickerModal
+          isOpen={showCurriculumPickerModal}
+          onClose={() => setShowCurriculumPickerModal(false)}
+          availableCourses={courses}
+          onSelectCurriculum={(result) => {
+            setSelectedCurriculum(result);
+            setSelectedCourseId(result.courseId);
+          }}
+        />
+      )}
     </div>
   );
 };

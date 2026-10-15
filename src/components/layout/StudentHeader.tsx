@@ -915,6 +915,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <input
                   type="date"
                   required
+                  suppressHydrationWarning
                   max={new Date().toISOString().split('T')[0]}
                   min="1950-01-01"
                   value={newProfileDob}
@@ -1044,15 +1045,17 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       )}
 
       {/* Duolingo-style Curriculum Wizard Modal for Header */}
-      <CurriculumPickerModal
-        isOpen={showCurriculumPickerModal}
-        onClose={() => setShowCurriculumPickerModal(false)}
-        availableCourses={availableCourses}
-        onSelectCurriculum={(result) => {
-          setSelectedCurriculumForNewProfile(result);
-          setSelectedCourseForNewProfile(result.courseId);
-        }}
-      />
+      {showCurriculumPickerModal && (
+        <CurriculumPickerModal
+          isOpen={showCurriculumPickerModal}
+          onClose={() => setShowCurriculumPickerModal(false)}
+          availableCourses={availableCourses}
+          onSelectCurriculum={(result) => {
+            setSelectedCurriculumForNewProfile(result);
+            setSelectedCourseForNewProfile(result.courseId);
+          }}
+        />
+      )}
 
       {/* PIN Prompt Modal for Header switching */}
       {profilePinPrompt && (

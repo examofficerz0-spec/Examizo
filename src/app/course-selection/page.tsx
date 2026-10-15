@@ -628,12 +628,14 @@ export default function CourseSelectionPage() {
       )}
 
       {/* Duolingo-style Curriculum Wizard Modal for Course Selection */}
-      <CurriculumPickerModal
-        isOpen={showCurriculumWizard}
-        onClose={() => setShowCurriculumWizard(false)}
-        availableCourses={courses}
-        onSelectCurriculum={handleWizardSelect}
-      />
+      {showCurriculumWizard && (
+        <CurriculumPickerModal
+          isOpen={showCurriculumWizard}
+          onClose={() => setShowCurriculumWizard(false)}
+          availableCourses={courses}
+          onSelectCurriculum={handleWizardSelect}
+        />
+      )}
     </div>
   );
 }

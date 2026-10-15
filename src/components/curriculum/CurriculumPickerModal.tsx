@@ -164,7 +164,8 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   isOpen,
   onClose,
   onSelectCurriculum,
-  availableCourses,
+  availableCourses = [],
+  initialCategory,
 }) => {
   // Wizard Steps:
   // 1 = School or Competitive
@@ -174,13 +175,18 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Selections
-  const [category, setCategory] = useState<'School Exams' | 'Competitive Exams' | null>(null);
+  const [category, setCategory] = useState<'School Exams' | 'Competitive Exams' | null>(initialCategory || null);
   const [selectedBoard, setSelectedBoard] = useState<string>('CBSE');
   const [selectedClass, setSelectedClass] = useState<string>('10');
   const [selectedExam, setSelectedExam] = useState<string>('JEE');
   const [selectedYear, setSelectedYear] = useState<string>('2027');
 
-  if (!isOpen) return null;
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+      if (initialCategory) setCategory(initialCategory);
+    }
+  }, [isOpen, initialCategory]);
 
   const handleSelectCategory = (cat: 'School Exams' | 'Competitive Exams') => {
     setCategory(cat);
@@ -296,6 +302,8 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
 
   // Progress percentage for step indicator
   const progressPercent = step === 1 ? 25 : step === 2 ? 50 : step === 3 ? 75 : 100;
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 z-[80] animate-in fade-in duration-200">
