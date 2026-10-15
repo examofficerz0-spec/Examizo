@@ -3,9 +3,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, ShieldAlert, CheckCircle2, Lock, Trophy, GraduationCap, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import {
+  CurriculumPickerModal,
+  SelectedCurriculumResult,
+} from '@/components/curriculum/CurriculumPickerModal';
 
 export default function CourseSelectionPage() {
   const router = useRouter();
@@ -14,6 +18,7 @@ export default function CourseSelectionPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'competitive' | 'school'>('all');
   const [selectedBoardFilter, setSelectedBoardFilter] = useState<string>('all');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCurriculumWizard, setShowCurriculumWizard] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -137,6 +142,63 @@ export default function CourseSelectionPage() {
     }
   };
 
+  const handleWizardSelect = async (result: SelectedCurriculumResult) => {
+    setSelectedCourseId(result.courseId);
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/courses/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          course_id: result.courseId,
+          courseData: result,
+        }),
+      });
+
+      fetch('/api/course/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: result.courseId }),
+      }).catch(() => {});
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Failed to lock course');
+      } else {
+        clearAllClientUserCaches();
+        try {
+          const savedStr = localStorage.getItem('exammaster_saved_accounts');
+          if (savedStr) {
+            const saved = JSON.parse(savedStr);
+            if (Array.isArray(saved) && saved.length > 0) {
+              saved.forEach((acc: any) => {
+                acc.lockedCourseId = result.courseId;
+              });
+              localStorage.setItem('exammaster_saved_accounts', JSON.stringify(saved));
+            }
+          }
+        } catch (_) {}
+
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const joinCode = urlParams?.get('joinCode');
+        const joinHostId = urlParams?.get('joinHostId');
+        if (joinCode) {
+          window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
+        } else if (joinHostId) {
+          window.location.href = `/leaderboard?joinHostId=${encodeURIComponent(joinHostId)}`;
+        } else {
+          window.location.href = '/dashboard';
+        }
+      }
+    } catch (err: any) {
+      setError('A network error occurred while locking your course');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const selectedCourse = courses.find((c) => String(c._id) === String(selectedCourseId));
 
   // Category classification
@@ -196,6 +258,28 @@ export default function CourseSelectionPage() {
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Choose your academic syllabus track below. Once confirmed, your question bank, mock examinations, and peer leaderboard will be tailored to this track.
           </p>
+        </div>
+
+        {/* Duolingo Wizard Quick Launch Banner */}
+        <div className="flex justify-center mb-6">
+          <button
+            type="button"
+            onClick={() => setShowCurriculumWizard(true)}
+            className="group px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/20 flex items-center gap-3 transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer border border-emerald-400/30"
+          >
+            <span className="text-xl group-hover:scale-125 transition-transform">🎯</span>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span>Launch Interactive Curriculum Wizard</span>
+                <span className="px-2 py-0.5 rounded-full bg-white/20 text-[9px] uppercase font-black tracking-wider">
+                  Duolingo Style
+                </span>
+              </div>
+              <p className="text-[10px] text-emerald-100 font-medium">
+                Step-by-step: School &amp; Board or Competitive &amp; Target Year
+              </p>
+            </div>
+          </button>
         </div>
 
         {error && (
@@ -542,6 +626,14 @@ export default function CourseSelectionPage() {
           </div>
         </div>
       )}
+
+      {/* Duolingo-style Curriculum Wizard Modal for Course Selection */}
+      <CurriculumPickerModal
+        isOpen={showCurriculumWizard}
+        onClose={() => setShowCurriculumWizard(false)}
+        availableCourses={courses}
+        onSelectCurriculum={handleWizardSelect}
+      />
     </div>
   );
 }

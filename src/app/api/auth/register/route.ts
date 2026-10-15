@@ -22,13 +22,27 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password, confirmPassword, courseId, course_id } = await req.json();
+    const body = await req.json();
+    const fullName = body.fullName || body.full_name || body.name;
+    const nickname = body.nickname ? String(body.nickname).trim() : null;
+    const dob = body.dob || body.dateOfBirth || body.date_of_birth;
+    const email = body.email;
+    const password = body.password;
+    const confirmPassword = body.confirmPassword;
+    const courseId = body.courseId || body.course_id;
+    const courseData = body.courseData;
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    if (!fullName || !String(fullName).trim()) {
+      return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
     }
 
-    const targetCourseId = courseId || course_id ? String(courseId || course_id).trim() : null;
+    if (!dob || !String(dob).trim()) {
+      return NextResponse.json({ error: 'Date of birth (DOB) is required' }, { status: 400 });
+    }
+
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
 
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
@@ -38,10 +52,69 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Passwords do not match' }, { status: 400 });
     }
 
-    const lowerEmail = email.toLowerCase().trim();
+    const cleanFullName = String(fullName).trim();
+    const cleanNickname = nickname && nickname.trim() ? nickname.trim() : null;
+    const cleanDob = String(dob).trim();
+    const displayName = cleanNickname || cleanFullName;
+    const lowerEmail = String(email).toLowerCase().trim();
+    const targetCourseId = courseId ? String(courseId).trim() : null;
     const cleanCourseId = targetCourseId || null;
     const newUserId = generateId();
     const password_hash = await bcrypt.hash(password, 10);
+
+    // Auto-create / persist course if new curriculum track metadata is passed
+    if (courseData && courseData.courseName && cleanCourseId) {
+      try {
+        const existingD1Courses = await queryD1(
+          'SELECT id FROM courses WHERE id = ? OR name = ?',
+          [cleanCourseId, String(courseData.courseName).trim()]
+        );
+        if (!existingD1Courses || existingD1Courses.length === 0) {
+          await executeD1(
+            `INSERT OR IGNORE INTO courses (id, name, description, category, board, curriculum, subjects_json, marks_per_correct, penalty_per_incorrect, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 4.0, 1.0, 1, ?)`,
+            [
+              cleanCourseId,
+              String(courseData.courseName).trim(),
+              `${courseData.courseName} preparation and assessment curriculum`,
+              courseData.category === 'School Exams' ? 'School Exams' : 'Competitive Exams',
+              courseData.board || 'CBSE',
+              courseData.classGrade || courseData.examName || '',
+              JSON.stringify(courseData.subjects || []),
+              new Date().toISOString(),
+            ]
+          );
+        }
+      } catch (cErr) {
+        console.warn('[Register D1 auto-create course warning]:', cErr);
+      }
+
+      // Mirror to sharedDb
+      try {
+        const sDb = readSharedDb();
+        if (sDb && Array.isArray(sDb.courses)) {
+          const exists = sDb.courses.some(
+            (c: any) => String(c.id) === cleanCourseId || String(c._id) === cleanCourseId || c.name === courseData.courseName
+          );
+          if (!exists) {
+            sDb.courses.push({
+              _id: cleanCourseId,
+              id: cleanCourseId,
+              name: String(courseData.courseName).trim(),
+              description: `${courseData.courseName} preparation and assessment curriculum`,
+              category: courseData.category === 'School Exams' ? 'School Exams' : 'Competitive Exams',
+              board: courseData.board || 'CBSE',
+              curriculum: courseData.classGrade || courseData.examName || '',
+              subjects: Array.isArray(courseData.subjects) ? courseData.subjects : [],
+              marks_per_correct: 4.0,
+              penalty_per_incorrect: 1.0,
+              is_active: true,
+              created_at: new Date().toISOString(),
+            });
+            writeSharedDb(sDb);
+          }
+        }
+      } catch (_) {}
+    }
 
     // 1. Try Cloudflare D1 registration
     try {
@@ -52,8 +125,8 @@ export async function POST(req: Request) {
       }
 
       const d1Success = await executeD1(
-        'INSERT OR REPLACE INTO users (id, name, email, password_hash, raw_password, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, name, lowerEmail, password_hash, password, 'Active', 0, cleanCourseId]
+        'INSERT OR REPLACE INTO users (id, name, full_name, nickname, dob, email, account_email, password_hash, raw_password, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, cleanFullName, cleanFullName, cleanNickname, cleanDob, lowerEmail, lowerEmail, password_hash, password, 'Active', 0, cleanCourseId]
       );
 
       if (d1Success) {
@@ -64,8 +137,12 @@ export async function POST(req: Request) {
           db.users.push({
             _id: newUserId,
             id: newUserId,
-            name,
+            name: cleanFullName,
+            full_name: cleanFullName,
+            nickname: cleanNickname,
+            dob: cleanDob,
             email: lowerEmail,
+            account_email: lowerEmail,
             password_hash,
             status: 'Active',
             xp_total: 0,
@@ -78,13 +155,21 @@ export async function POST(req: Request) {
         const token = signUserToken({
           userId: newUserId,
           email: lowerEmail,
-          name,
+          name: displayName,
           lockedCourseId: cleanCourseId,
         });
 
         const response = NextResponse.json({
           success: true,
-          user: { id: newUserId, name, email: lowerEmail, lockedCourseId: cleanCourseId },
+          user: {
+            id: newUserId,
+            name: displayName,
+            fullName: cleanFullName,
+            nickname: cleanNickname,
+            dob: cleanDob,
+            email: lowerEmail,
+            lockedCourseId: cleanCourseId,
+          },
         });
 
         response.cookies.set('student_token', token, {
@@ -111,8 +196,12 @@ export async function POST(req: Request) {
     const newUser = {
       _id: newUserId,
       id: newUserId,
-      name,
+      name: cleanFullName,
+      full_name: cleanFullName,
+      nickname: cleanNickname,
+      dob: cleanDob,
       email: lowerEmail,
+      account_email: lowerEmail,
       password_hash,
       status: 'Active',
       xp_total: 0,
@@ -127,7 +216,7 @@ export async function POST(req: Request) {
     const token = signUserToken({
       userId: newUser._id,
       email: newUser.email,
-      name: newUser.name,
+      name: displayName,
       lockedCourseId: cleanCourseId,
     });
 
@@ -135,7 +224,10 @@ export async function POST(req: Request) {
       success: true,
       user: {
         id: newUser._id,
-        name: newUser.name,
+        name: displayName,
+        fullName: cleanFullName,
+        nickname: cleanNickname,
+        dob: cleanDob,
         email: newUser.email,
         lockedCourseId: cleanCourseId,
       },

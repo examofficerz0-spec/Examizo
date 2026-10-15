@@ -4,8 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
-import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff, ShieldAlert, AlertTriangle, Calendar, Sparkles } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import {
+  CurriculumPickerModal,
+  SelectedCurriculumResult,
+} from '@/components/curriculum/CurriculumPickerModal';
 
 interface AuthViewProps {
   initialMode?: 'signin' | 'register';
@@ -30,6 +34,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
   // Common Form States
   const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [dob, setDob] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,6 +43,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [selectedCurriculum, setSelectedCurriculum] = useState<SelectedCurriculumResult | null>(null);
+  const [showCurriculumPickerModal, setShowCurriculumPickerModal] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -170,6 +178,19 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      setError('Full name is required');
+      return;
+    }
+    if (!dob.trim()) {
+      setError('Date of birth (DOB) is required');
+      return;
+    }
+    const finalCourseId = selectedCurriculum?.courseId || selectedCourseId;
+    if (!finalCourseId) {
+      setError('Target curriculum track is required. Please choose your School or Competitive track.');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -184,10 +205,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
+          fullName: name.trim(),
+          name: name.trim(),
+          nickname: nickname.trim() || null,
+          dob: dob.trim(),
+          email: email.trim(),
           password,
           confirmPassword,
+          courseId: finalCourseId,
+          courseData: selectedCurriculum,
         }),
       });
 
@@ -672,9 +698,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                 </form>
               ) : (
                 <form onSubmit={handleRegister} className="space-y-3.5">
+                  {/* Full Name */}
                   <div>
                     <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
-                      Full Name
+                      Full Name *
                     </label>
                     <div className="relative">
                       <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -684,14 +711,54 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
-                        placeholder="e.g. S. Roy"
+                        placeholder="e.g. Ahmad Faraz"
                       />
                     </div>
                   </div>
 
+                  {/* Nickname (Optional) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                        Nickname (Optional)
+                      </label>
+                      <span className="text-[10px] text-blue-500 font-semibold">Netflix Screen</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
+                      placeholder="e.g. Ahmad, Sonu, Champ"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      💡 If not provided, your full name will be listed on your profile card.
+                    </p>
+                  </div>
+
+                  {/* Date of Birth (DOB) */}
                   <div>
                     <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
-                      Email Address
+                      Date of Birth (DOB) *
+                    </label>
+                    <div className="relative">
+                      <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <input
+                        type="date"
+                        required
+                        max={new Date().toISOString().split('T')[0]}
+                        min="1950-01-01"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email Address */}
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
+                      Email Address *
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -706,9 +773,83 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                     </div>
                   </div>
 
+                  {/* Target Curriculum Track (Duolingo Style Popup Trigger) */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-slate-800 dark:text-slate-200 font-extrabold text-xs flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        Target Curriculum Track *
+                      </label>
+                      <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
+                        Interactive Setup
+                      </span>
+                    </div>
+
+                    {selectedCurriculum ? (
+                      <div className="p-3.5 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-between gap-3 shadow-xs">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+                            {selectedCurriculum.category === 'School Exams' ? '🏫' : '🚀'}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                {selectedCurriculum.category === 'School Exams' ? selectedCurriculum.board : 'Competitive'}
+                              </span>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                {selectedCurriculum.classGrade || selectedCurriculum.targetYear}
+                              </span>
+                            </div>
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white truncate mt-0.5">
+                              {selectedCurriculum.courseName}
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              {selectedCurriculum.subjects.join(' • ')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowCurriculumPickerModal(true)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold shrink-0 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+                        >
+                          Change ✏️
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowCurriculumPickerModal(true)}
+                        className="w-full p-3.5 rounded-2xl border-2 border-dashed border-blue-400 dark:border-blue-500/50 hover:border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all text-left flex items-center justify-between gap-3 cursor-pointer group shadow-xs active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                            🎯
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                              Choose Curriculum Track
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                                Duolingo Style
+                              </span>
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              School (Board &amp; Class) or Competitive (Exam &amp; Year)
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 text-white font-black text-xs shadow-xs">
+                          Pick Goal 🚀
+                        </span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Password */}
                   <div>
                     <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
-                      Password
+                      Password *
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -732,9 +873,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                     </div>
                   </div>
 
+                  {/* Confirm Password */}
                   <div>
                     <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1">
-                      Confirm Password
+                      Confirm Password *
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -759,10 +901,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !name.trim() || !dob.trim() || (!selectedCurriculum && !selectedCourseId)}
                     className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2 cursor-pointer"
                   >
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                    {loading ? 'Creating Account & Locking Track...' : 'Create Account & Lock Goal 🚀'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -929,6 +1071,17 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
           </div>
         </div>
       </div>
+
+      {/* Duolingo-style Curriculum Wizard Modal for Registration */}
+      <CurriculumPickerModal
+        isOpen={showCurriculumPickerModal}
+        onClose={() => setShowCurriculumPickerModal(false)}
+        availableCourses={courses}
+        onSelectCurriculum={(result) => {
+          setSelectedCurriculum(result);
+          setSelectedCourseId(result.courseId);
+        }}
+      />
     </div>
   );
 };
