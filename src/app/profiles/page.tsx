@@ -325,17 +325,17 @@ export default function NetflixProfilesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <PageLoader inline title="Loading Student Profiles" subtitle="Syncing multi-profile academic roster..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 sm:p-10 select-none relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between p-6 sm:p-10 select-none relative overflow-hidden font-sans">
       {/* Ambient background glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Top Header */}
       <header className="relative z-10 flex items-center justify-between max-w-6xl w-full mx-auto">
@@ -344,7 +344,7 @@ export default function NetflixProfilesPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 bg-white transition-all cursor-pointer shadow-xs"
           >
             <LogOut className="w-3.5 h-3.5" /> Sign Out
           </button>
@@ -353,14 +353,14 @@ export default function NetflixProfilesPage() {
 
       {/* Main Center Netflix "Who's Studying?" Container */}
       <main className="relative z-10 flex flex-col items-center justify-center my-auto py-12 max-w-5xl mx-auto w-full text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black uppercase tracking-wider mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <Sparkles className="w-3.5 h-3.5" /> Multi-Profile Academic Hub
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider mb-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xs">
+          <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Multi-Profile Academic Hub
         </div>
 
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-3">
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-3">
           Who is studying today?
         </h1>
-        <p className="text-sm text-slate-400 max-w-md mx-auto mb-12 font-medium">
+        <p className="text-sm text-slate-500 max-w-md mx-auto mb-12 font-medium">
           Select your personal profile below to enter your custom examination workspace.
         </p>
 
@@ -381,29 +381,29 @@ export default function NetflixProfilesPage() {
                 <div
                   className={`w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br ${gradientBg} flex items-center justify-center text-4xl sm:text-5xl font-black text-white shadow-xl transition-all duration-300 relative overflow-hidden ${
                     isManaging
-                      ? 'ring-4 ring-slate-700 opacity-90'
-                      : 'group-hover:scale-108 group-hover:ring-4 group-hover:ring-white group-hover:shadow-2xl group-active:scale-98'
+                      ? 'ring-4 ring-slate-400 opacity-90'
+                      : 'group-hover:scale-108 group-hover:ring-4 group-hover:ring-blue-500 group-hover:shadow-2xl group-active:scale-98'
                   }`}
                 >
                   <span>{initialLetter}</span>
 
                   {/* Lock Indicator badge */}
                   {profile.hasPin && (
-                    <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-slate-950/80 backdrop-blur-xs text-amber-400 flex items-center justify-center border border-amber-400/40 shadow-xs">
+                    <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/95 backdrop-blur-xs text-amber-600 flex items-center justify-center border border-amber-300 shadow-sm">
                       <Lock className="w-3 h-3" />
                     </div>
                   )}
 
                   {/* Active Indicator */}
                   {profile.isActive && !isManaging && (
-                    <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-xs">
+                    <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-xs">
                       <Check className="w-2.5 h-2.5" /> Current
                     </div>
                   )}
 
                   {/* Manage Overlay Mode */}
                   {isManaging && (
-                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-2 p-2">
+                    <div className="absolute inset-0 bg-white/85 backdrop-blur-xs flex flex-col items-center justify-center gap-2 p-2">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -412,9 +412,9 @@ export default function NetflixProfilesPage() {
                           setManagePinInput('');
                           setManagePinError('');
                         }}
-                        className="px-2.5 py-1 bg-white text-slate-950 rounded-lg text-[11px] font-extrabold flex items-center gap-1 hover:bg-slate-200 transition-all cursor-pointer shadow-xs"
+                        className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
                       >
-                        <KeyRound className="w-3 h-3 text-blue-600" />
+                        <KeyRound className="w-3 h-3 text-amber-400" />
                         {profile.hasPin ? 'Change PIN' : 'Set PIN'}
                       </button>
 
@@ -425,7 +425,7 @@ export default function NetflixProfilesPage() {
                             e.stopPropagation();
                             handleDeleteProfile(profile.id);
                           }}
-                          className="px-2.5 py-1 bg-rose-600/90 hover:bg-rose-600 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
                         >
                           <Trash2 className="w-3 h-3" /> Delete
                         </button>
@@ -435,7 +435,7 @@ export default function NetflixProfilesPage() {
                 </div>
 
                 {/* Profile Name (Nickname if provided, else Full Name) & Course Label */}
-                <span className="mt-3.5 text-sm sm:text-base font-extrabold text-slate-300 group-hover:text-white transition-colors truncate max-w-[140px]">
+                <span className="mt-3.5 text-sm sm:text-base font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors truncate max-w-[140px]">
                   {displayName}
                 </span>
 
@@ -446,7 +446,7 @@ export default function NetflixProfilesPage() {
                 )}
 
                 {profile.lockedCourseName && (
-                  <span className="mt-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400 group-hover:text-blue-400 group-hover:border-blue-900/60 transition-colors truncate max-w-[140px]">
+                  <span className="mt-1 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-600 group-hover:text-blue-600 group-hover:border-blue-200 transition-colors truncate max-w-[140px]">
                     {profile.lockedCourseName}
                   </span>
                 )}
@@ -460,13 +460,13 @@ export default function NetflixProfilesPage() {
               onClick={openCreateModal}
               className="group flex flex-col items-center cursor-pointer"
             >
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-400 text-slate-500 hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-108 group-active:scale-98">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl border-2 border-dashed border-slate-300 bg-white hover:bg-blue-50/50 hover:border-blue-500 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-all duration-300 group-hover:scale-108 group-active:scale-98 shadow-sm hover:shadow-md">
                 <Plus className="w-10 h-10 sm:w-12 sm:h-12" />
               </div>
-              <span className="mt-3.5 text-sm sm:text-base font-extrabold text-slate-400 group-hover:text-white transition-colors">
+              <span className="mt-3.5 text-sm sm:text-base font-extrabold text-slate-600 group-hover:text-blue-600 transition-colors">
                 Add Profile
               </span>
-              <span className="mt-1 text-[10px] font-medium text-slate-600">
+              <span className="mt-1 text-[10px] font-medium text-slate-400">
                 {profiles.length}/4 Profiles
               </span>
             </div>
@@ -480,8 +480,8 @@ export default function NetflixProfilesPage() {
             onClick={() => setIsManaging(!isManaging)}
             className={`px-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold tracking-wider uppercase transition-all cursor-pointer border ${
               isManaging
-                ? 'bg-white text-slate-950 border-white hover:bg-slate-200 shadow-lg'
-                : 'bg-transparent text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'
+                ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800 shadow-md'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 shadow-xs'
             }`}
           >
             {isManaging ? 'Done Managing' : 'Manage Profiles'}
@@ -498,7 +498,7 @@ export default function NetflixProfilesPage() {
                   window.location.href = '/dashboard';
                 }
               }}
-              className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold tracking-wider bg-blue-600 hover:bg-blue-500 text-white transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+              className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold tracking-wider bg-blue-600 hover:bg-blue-700 text-white transition-all cursor-pointer shadow-md flex items-center gap-1.5"
             >
               Enter Dashboard <ArrowRight className="w-4 h-4" />
             </button>
@@ -507,40 +507,40 @@ export default function NetflixProfilesPage() {
       </main>
 
       {/* Footer copyright */}
-      <footer className="relative z-10 text-center text-xs text-slate-600 pb-2">
+      <footer className="relative z-10 text-center text-xs text-slate-400 pb-2">
         Protected student profiles &copy; {new Date().getFullYear()} Examizo Precision Learning
       </footer>
 
       {/* ── MODAL 1: 4-Digit PIN Unlock Dialog (Netflix Style) ── */}
       {selectedProfileForPin && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div
-            className={`bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative transition-transform ${
+            className={`bg-white border border-slate-200 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative text-slate-900 transition-transform ${
               isShaking ? 'animate-shake' : ''
             }`}
           >
             <button
               type="button"
               onClick={() => setSelectedProfileForPin(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto mb-4 shadow-xs">
               <Lock className="w-8 h-8" />
             </div>
 
-            <h3 className="text-xl font-black text-white mb-1">
+            <h3 className="text-xl font-black text-slate-900 mb-1">
               Profile Lock Active
             </h3>
-            <p className="text-xs text-slate-400 mb-6">
+            <p className="text-xs text-slate-500 mb-6">
               Enter your 4-digit security PIN to access{' '}
-              <strong className="text-white">{selectedProfileForPin.name}</strong>
+              <strong className="text-slate-800">{selectedProfileForPin.name}</strong>
             </p>
 
             {pinError && (
-              <div className="p-2.5 mb-4 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-xs font-bold animate-in fade-in">
+              <div className="p-2.5 mb-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold animate-in fade-in">
                 {pinError}
               </div>
             )}
@@ -560,7 +560,7 @@ export default function NetflixProfilesPage() {
                   disabled={pinSubmitting}
                   onChange={(e) => handlePinDigitChange(idx, e.target.value)}
                   onKeyDown={(e) => handlePinKeyDown(idx, e)}
-                  className="w-14 h-16 text-center text-2xl font-black bg-slate-950 border-2 border-slate-700 focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 rounded-2xl text-white outline-none transition-all shadow-inner"
+                  className="w-14 h-16 text-center text-2xl font-black bg-slate-50 border-2 border-slate-200 focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/15 rounded-2xl text-slate-900 outline-none transition-all shadow-inner"
                 />
               ))}
             </div>
@@ -569,7 +569,7 @@ export default function NetflixProfilesPage() {
               <button
                 type="button"
                 onClick={() => setSelectedProfileForPin(null)}
-                className="flex-1 py-3 rounded-xl border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-bold transition-all cursor-pointer"
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 bg-white text-xs font-bold transition-all cursor-pointer shadow-xs"
               >
                 Cancel
               </button>
@@ -581,7 +581,7 @@ export default function NetflixProfilesPage() {
                     executeSwitch(selectedProfileForPin.id, pinDigits.join(''));
                   }
                 }}
-                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all disabled:opacity-40 cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition-all disabled:opacity-40 cursor-pointer shadow-md flex items-center justify-center gap-1.5"
               >
                 {pinSubmitting ? 'Verifying...' : 'Unlock & Enter'}
               </button>
@@ -592,28 +592,28 @@ export default function NetflixProfilesPage() {
 
       {/* ── MODAL 2: Create Sub-Profile with 4-Digit PIN ── */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-slate-900 max-h-[92vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shadow-xs">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shadow-xs">
                 <Plus className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-white">Create New Sub-Profile</h3>
-                <p className="text-xs text-slate-400">Add an independent study track for this account</p>
+                <h3 className="text-lg font-black text-slate-900">Create New Sub-Profile</h3>
+                <p className="text-xs text-slate-500">Add an independent study track for this account</p>
               </div>
             </div>
 
             {createError && (
-              <div className="p-3 mb-4 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-xs font-bold">
+              <div className="p-3 mb-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold">
                 {createError}
               </div>
             )}
@@ -621,9 +621,9 @@ export default function NetflixProfilesPage() {
             <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs font-medium">
               {/* Full Name Field */}
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-extrabold flex items-center justify-between">
+                <label className="text-slate-800 font-extrabold flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-blue-400" />
+                    <User className="w-3.5 h-3.5 text-blue-600" />
                     Full Name *
                   </span>
                   <span className="text-[10px] text-slate-400 font-normal">Legal / Academic name</span>
@@ -635,22 +635,22 @@ export default function NetflixProfilesPage() {
                   value={newProfileFullName}
                   onChange={(e) => setNewProfileFullName(e.target.value)}
                   placeholder="e.g. Ahmad Faraz"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
                 />
               </div>
 
               {/* Nickname (Optional) Field */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-slate-300 font-extrabold">Nickname (Optional)</label>
-                  <span className="text-[10px] text-blue-400 font-semibold">Shown on Netflix Screen</span>
+                  <label className="text-slate-800 font-extrabold">Nickname (Optional)</label>
+                  <span className="text-[10px] text-blue-600 font-semibold">Shown on Netflix Screen</span>
                 </div>
                 <input
                   type="text"
                   value={newProfileNickname}
                   onChange={(e) => setNewProfileNickname(e.target.value)}
                   placeholder="e.g. Ahmad, Sonu, Champ"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
                 />
                 <p className="text-[11px] text-slate-400">
                   💡 If not provided, your full name will be listed on the profile screen.
@@ -659,9 +659,9 @@ export default function NetflixProfilesPage() {
 
               {/* Date of Birth (DOB) Field */}
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-extrabold flex items-center justify-between">
+                <label className="text-slate-800 font-extrabold flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
                     Date of Birth (DOB) *
                   </span>
                   <span className="text-[10px] text-slate-400 font-normal">Student record</span>
@@ -674,8 +674,8 @@ export default function NetflixProfilesPage() {
                   min="1950-01-01"
                   value={newProfileDob}
                   onChange={(e) => setNewProfileDob(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
-                  style={{ colorScheme: 'dark' }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
+                  style={{ colorScheme: 'light' }}
                 />
                 <p className="text-[11px] text-slate-400">
                   🔒 Saved permanently in your student database record.
@@ -685,34 +685,34 @@ export default function NetflixProfilesPage() {
               {/* Target Course Curriculum Track (Duolingo Style Popup Trigger) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-slate-300 font-extrabold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <label className="text-slate-800 font-extrabold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                     Target Curriculum Track *
                   </label>
-                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
+                  <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">
                     Interactive Setup
                   </span>
                 </div>
 
                 {selectedCurriculum ? (
-                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 flex items-center justify-between gap-3 shadow-lg">
+                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 flex items-center justify-between gap-3 shadow-xs">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                      <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center text-2xl shrink-0 shadow-xs">
                         {selectedCurriculum.category === 'School Exams' ? '🏫' : '🚀'}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                             {selectedCurriculum.category === 'School Exams' ? selectedCurriculum.board : 'Competitive'}
                           </span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
                             {selectedCurriculum.classGrade || selectedCurriculum.targetYear}
                           </span>
                         </div>
-                        <h4 className="text-xs font-black text-white truncate mt-1">
+                        <h4 className="text-xs font-black text-slate-900 truncate mt-1">
                           {selectedCurriculum.courseName}
                         </h4>
-                        <p className="text-[10px] text-slate-400 truncate">
+                        <p className="text-[10px] text-slate-500 truncate">
                           {selectedCurriculum.subjects.join(' • ')}
                         </p>
                       </div>
@@ -721,7 +721,7 @@ export default function NetflixProfilesPage() {
                     <button
                       type="button"
                       onClick={() => setShowCurriculumPickerModal(true)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold shrink-0 transition-colors border border-slate-700 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold shrink-0 transition-colors border border-slate-200 cursor-pointer shadow-xs"
                     >
                       Change ✏️
                     </button>
@@ -730,20 +730,20 @@ export default function NetflixProfilesPage() {
                   <button
                     type="button"
                     onClick={() => setShowCurriculumPickerModal(true)}
-                    className="w-full p-4 rounded-2xl border-2 border-dashed border-blue-500/50 hover:border-blue-400 bg-gradient-to-r from-blue-950/30 to-indigo-950/30 hover:bg-blue-950/50 transition-all text-left flex items-center justify-between gap-3 cursor-pointer group shadow-sm active:scale-[0.99]"
+                    className="w-full p-4 rounded-2xl border-2 border-dashed border-blue-400 hover:border-blue-500 bg-blue-50/60 hover:bg-blue-50 transition-all text-left flex items-center justify-between gap-3 cursor-pointer group shadow-xs active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-inner">
+                      <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-xs">
                         🎯
                       </div>
                       <div>
-                        <h4 className="text-xs font-black text-white group-hover:text-blue-300 transition-colors flex items-center gap-1.5">
+                        <h4 className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
                           Choose Curriculum Track
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800">
                             Duolingo Style
                           </span>
                         </h4>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="text-[10px] text-slate-500">
                           School (Board &amp; Class) or Competitive (Exam &amp; Year)
                         </p>
                       </div>
@@ -753,15 +753,15 @@ export default function NetflixProfilesPage() {
                     </span>
                   </button>
                 )}
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-slate-500">
                   🎯 Tailors question bank, mock test patterns, and syllabus benchmarks for this student.
                 </p>
               </div>
 
               {/* 4-Digit Security PIN */}
               <div className="space-y-1.5 pt-1">
-                <label className="text-slate-300 font-extrabold flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <label className="text-slate-800 font-extrabold flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-amber-600" />
                   Profile Security PIN (4 digits - Optional)
                 </label>
                 <input
@@ -771,25 +771,25 @@ export default function NetflixProfilesPage() {
                   value={newProfilePin}
                   onChange={(e) => setNewProfilePin(e.target.value.replace(/\D/g, ''))}
                   placeholder="e.g. 1234 (Leave blank if not needed)"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-mono tracking-widest text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 font-mono tracking-widest text-xs"
                 />
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-400">
                   🔒 If set, this 4-digit PIN will be asked whenever anyone attempts to access this profile.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-800">
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-white font-bold"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold bg-white shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || (!newProfileCourseId && !selectedCurriculum)}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-md disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-md disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}
                 </button>
@@ -814,36 +814,36 @@ export default function NetflixProfilesPage() {
 
       {/* ── MODAL 3: Manage PIN Dialog (Set/Remove/Change) ── */}
       {pinModalProfile && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative text-center">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative text-center text-slate-900">
             <button
               type="button"
               onClick={() => setPinModalProfile(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto mb-3">
               <ShieldCheck className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-black text-white mb-1">
+            <h3 className="text-lg font-black text-slate-900 mb-1">
               {pinModalProfile.hasPin ? 'Update Security PIN' : 'Set 4-Digit Security PIN'}
             </h3>
-            <p className="text-xs text-slate-400 mb-5">
-              Profile: <strong className="text-white">{pinModalProfile.name}</strong>
+            <p className="text-xs text-slate-500 mb-5">
+              Profile: <strong className="text-slate-800">{pinModalProfile.name}</strong>
             </p>
 
             {managePinError && (
-              <div className="p-2.5 mb-4 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-xs font-bold">
+              <div className="p-2.5 mb-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold">
                 {managePinError}
               </div>
             )}
 
             <form onSubmit={handleSavePin} className="space-y-4">
               <div className="space-y-1.5 text-left">
-                <label className="text-slate-300 text-xs font-extrabold">
+                <label className="text-slate-800 text-xs font-extrabold">
                   {pinModalProfile.hasPin ? 'New 4-Digit PIN (or clear to remove)' : '4-Digit PIN'}
                 </label>
                 <input
@@ -854,7 +854,7 @@ export default function NetflixProfilesPage() {
                   value={managePinInput}
                   onChange={(e) => setManagePinInput(e.target.value.replace(/\D/g, ''))}
                   placeholder="e.g. 1234"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white text-center text-lg font-mono tracking-widest focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 text-center text-lg font-mono tracking-widest focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20"
                 />
               </div>
 
@@ -862,14 +862,14 @@ export default function NetflixProfilesPage() {
                 <button
                   type="button"
                   onClick={() => setPinModalProfile(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-white text-xs font-bold"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold bg-white shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={managePinLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-md cursor-pointer disabled:opacity-40"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-md cursor-pointer disabled:opacity-40"
                 >
                   {managePinLoading ? 'Saving...' : managePinInput ? 'Save PIN' : 'Remove PIN'}
                 </button>
