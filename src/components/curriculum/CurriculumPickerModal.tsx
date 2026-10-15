@@ -1,24 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   ArrowLeft,
   ArrowRight,
   Sparkles,
-  Check,
   CheckCircle2,
   GraduationCap,
-  Rocket,
   Trophy,
   Zap,
   Target,
-  Calendar,
-  BookOpen,
+  Building2,
   Award,
   Globe,
-  Building2,
-  Star,
   Flame,
 } from 'lucide-react';
 
@@ -35,14 +30,16 @@ export interface SelectedCurriculumResult {
 }
 
 interface CurriculumPickerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onSelectCurriculum: (result: SelectedCurriculumResult) => void;
-  availableCourses: any[];
+  availableCourses?: any[];
   initialCategory?: 'School Exams' | 'Competitive Exams' | null;
+  inline?: boolean;
+  isSubmitting?: boolean;
 }
 
-// Pre-defined Board options for School
+// Pre-defined Board options for School (Vibrant Light Mode Tokens)
 const SCHOOL_BOARDS = [
   {
     id: 'CBSE',
@@ -50,8 +47,8 @@ const SCHOOL_BOARDS = [
     fullName: 'Central Board of Secondary Education',
     icon: Building2,
     badge: 'NCERT Aligned',
-    color: 'from-blue-500/20 to-indigo-500/20 text-blue-400 border-blue-500/40',
-    accent: 'bg-blue-600',
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    badgeColor: 'bg-blue-100 text-blue-800',
   },
   {
     id: 'ICSE',
@@ -59,8 +56,8 @@ const SCHOOL_BOARDS = [
     fullName: 'Council for the Indian School Certificate',
     icon: Award,
     badge: 'CISCE Syllabus',
-    color: 'from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/40',
-    accent: 'bg-amber-600',
+    color: 'bg-amber-50 text-amber-600 border-amber-200',
+    badgeColor: 'bg-amber-100 text-amber-800',
   },
   {
     id: 'State Board',
@@ -68,8 +65,8 @@ const SCHOOL_BOARDS = [
     fullName: 'State Government Secondary Education',
     icon: GraduationCap,
     badge: 'State Curriculum',
-    color: 'from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/40',
-    accent: 'bg-emerald-600',
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    badgeColor: 'bg-emerald-100 text-emerald-800',
   },
   {
     id: 'IB / Cambridge',
@@ -77,8 +74,8 @@ const SCHOOL_BOARDS = [
     fullName: 'International Baccalaureate & IGCSE',
     icon: Globe,
     badge: 'Global Curriculum',
-    color: 'from-purple-500/20 to-violet-500/20 text-purple-400 border-purple-500/40',
-    accent: 'bg-purple-600',
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    badgeColor: 'bg-purple-100 text-purple-800',
   },
 ];
 
@@ -102,8 +99,8 @@ const COMPETITIVE_EXAMS = [
     badge: 'Engineering Entrance',
     desc: 'Physics, Chemistry & Mathematics for IITs & NITs',
     icon: Zap,
-    color: 'from-blue-600/20 to-cyan-600/20 text-cyan-400 border-cyan-500/40',
-    accent: 'bg-cyan-600',
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    badgeColor: 'bg-blue-100 text-blue-800',
     subjects: ['Physics', 'Chemistry', 'Mathematics'],
   },
   {
@@ -113,8 +110,8 @@ const COMPETITIVE_EXAMS = [
     badge: 'Medical Entrance',
     desc: 'Biology (Botany & Zoology), Physics & Chemistry',
     icon: Flame,
-    color: 'from-emerald-600/20 to-teal-600/20 text-emerald-400 border-emerald-500/40',
-    accent: 'bg-emerald-600',
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    badgeColor: 'bg-emerald-100 text-emerald-800',
     subjects: ['Biology', 'Physics', 'Chemistry'],
   },
   {
@@ -124,8 +121,8 @@ const COMPETITIVE_EXAMS = [
     badge: 'Class 8-10 Talent',
     desc: 'NTSE, Science & Math Olympiads, Pre-JEE/NEET skills',
     icon: Trophy,
-    color: 'from-amber-600/20 to-orange-600/20 text-amber-400 border-amber-500/40',
-    accent: 'bg-amber-600',
+    color: 'bg-amber-50 text-amber-600 border-amber-200',
+    badgeColor: 'bg-amber-100 text-amber-800',
     subjects: ['Science', 'Mathematics', 'Mental Ability'],
   },
   {
@@ -135,8 +132,8 @@ const COMPETITIVE_EXAMS = [
     badge: 'Central Universities',
     desc: 'Domain Subjects & General Aptitude Test',
     icon: Building2,
-    color: 'from-purple-600/20 to-pink-600/20 text-purple-400 border-purple-500/40',
-    accent: 'bg-purple-600',
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    badgeColor: 'bg-purple-100 text-purple-800',
     subjects: ['General Test', 'Domain Subjects', 'English'],
   },
   {
@@ -146,8 +143,8 @@ const COMPETITIVE_EXAMS = [
     badge: 'National Defence',
     desc: 'Mathematics, General Ability Test & English',
     icon: Target,
-    color: 'from-rose-600/20 to-red-600/20 text-rose-400 border-rose-500/40',
-    accent: 'bg-rose-600',
+    color: 'bg-rose-50 text-rose-600 border-rose-200',
+    badgeColor: 'bg-rose-100 text-rose-800',
     subjects: ['Mathematics', 'General Ability', 'English'],
   },
 ];
@@ -161,11 +158,13 @@ const TARGET_YEARS = [
 ];
 
 export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
-  isOpen,
+  isOpen = true,
   onClose,
   onSelectCurriculum,
   availableCourses = [],
   initialCategory,
+  inline = false,
+  isSubmitting = false,
 }) => {
   // Wizard Steps:
   // 1 = School or Competitive
@@ -181,7 +180,7 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   const [selectedExam, setSelectedExam] = useState<string>('JEE');
   const [selectedYear, setSelectedYear] = useState<string>('2027');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setStep(1);
       if (initialCategory) setCategory(initialCategory);
@@ -297,399 +296,425 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   const handleConfirmTrack = () => {
     if (!resolvedCourseInfo) return;
     onSelectCurriculum(resolvedCourseInfo);
-    onClose();
+    if (onClose) onClose();
   };
 
   // Progress percentage for step indicator
   const progressPercent = step === 1 ? 25 : step === 2 ? 50 : step === 3 ? 75 : 100;
 
-  if (!isOpen) return null;
+  if (!isOpen && !inline) return null;
 
-  return (
-    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 z-[80] animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl relative text-white flex flex-col max-h-[92vh] overflow-hidden">
-        {/* Top Duolingo-Style Progress Bar */}
-        <div className="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden relative">
-          <div
-            className="bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500 h-full rounded-full transition-all duration-300 ease-out shadow-xs"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+  const cardContent = (
+    <div className={`bg-white border-2 border-slate-200/90 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl relative text-slate-900 flex flex-col ${inline ? 'my-3 border-slate-200' : 'max-h-[92vh] overflow-hidden'}`}>
+      {/* Top Duolingo-Style Progress Bar */}
+      <div className="w-full bg-slate-100 rounded-full h-2.5 mb-4 overflow-hidden relative border border-slate-200/50">
+        <div
+          className="bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300 ease-out shadow-xs"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
 
-        {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
-          <div className="flex items-center gap-2.5">
-            {step > 1 ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                title="Back to previous step"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            ) : (
-              <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
-                <Target className="w-4 h-4" />
-              </div>
-            )}
-
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 block">
-                Step {step} of 4 • Curriculum Wizard
-              </span>
-              <h3 className="text-base sm:text-lg font-black text-white leading-tight">
-                {step === 1 && 'What is your study goal? 🎯'}
-                {step === 2 && category === 'School Exams' && 'Which Board do you follow? 🏛️'}
-                {step === 2 && category === 'Competitive Exams' && 'Which Exam are you targeting? ⚡'}
-                {step === 3 && category === 'School Exams' && 'Which Class are you in? 🎒'}
-                {step === 3 && category === 'Competitive Exams' && 'What is your Target Year? 🗓️'}
-                {step === 4 && "You're Ready to Learn! 🚀"}
-              </h3>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Scrollable Body */}
-        <div className="py-4 overflow-y-auto flex-1 pr-1 space-y-4">
-          {/* ══════ STEP 1: School or Competitive ══════ */}
-          {step === 1 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <p className="text-xs text-slate-400">
-                Choose the academic preparation track for this profile. We will tailor your revision tests, daily DPPs, and subjects accordingly.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                {/* 1. School Exams Card */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('School Exams')}
-                  className="group relative p-5 rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 hover:border-emerald-400 hover:bg-emerald-950/60 transition-all text-left flex flex-col justify-between cursor-pointer shadow-lg hover:shadow-emerald-500/10 active:translate-y-0.5"
-                >
-                  <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
-                      🏫
-                    </div>
-                    <div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] uppercase tracking-wider">
-                        Class 6 to 12
-                      </span>
-                      <h4 className="text-base font-black text-white mt-1 group-hover:text-emerald-300 transition-colors">
-                        School / Board Exams
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                        CBSE, ICSE &amp; State Boards. Textbook NCERT exercises, daily practice papers &amp; school exams.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-400">
-                    <span>Select School Track</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
-
-                {/* 2. Competitive Exams Card */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectCategory('Competitive Exams')}
-                  className="group relative p-5 rounded-2xl border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 hover:border-indigo-400 hover:bg-indigo-950/60 transition-all text-left flex flex-col justify-between cursor-pointer shadow-lg hover:shadow-indigo-500/10 active:translate-y-0.5"
-                >
-                  <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
-                      🚀
-                    </div>
-                    <div>
-                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
-                        Entrance &amp; Ranks
-                      </span>
-                      <h4 className="text-base font-black text-white mt-1 group-hover:text-indigo-300 transition-colors">
-                        Competitive Exams
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                        JEE Main, NEET UG, Foundation Olympiads, CUET &amp; Defence. High-speed mock tests with negative marking.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-indigo-400">
-                    <span>Select Entrance Track</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ══════ STEP 2 (School): Pick Board ══════ */}
-          {step === 2 && category === 'School Exams' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <p className="text-xs text-slate-400">
-                Select your education board to align curriculum chapters, marking scheme, and board questions:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {SCHOOL_BOARDS.map((b) => {
-                  const Icon = b.icon;
-                  const isSelected = selectedBoard === b.id;
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedBoard(b.id);
-                        setStep(3);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
-                        isSelected
-                          ? 'border-blue-500 bg-blue-950/40 shadow-lg shadow-blue-500/20'
-                          : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/50'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${b.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <h4 className="font-extrabold text-sm text-white">{b.name}</h4>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                            {b.badge}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">{b.fullName}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ══════ STEP 3 (School): Pick Class / Grade ══════ */}
-          {step === 3 && category === 'School Exams' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <p className="text-xs text-slate-400">
-                Board selected: <strong className="text-blue-400 font-extrabold">{selectedBoard}</strong>. Now pick your grade level:
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                {SCHOOL_CLASSES.map((cl) => {
-                  const isSelected = selectedClass === cl.grade;
-                  return (
-                    <button
-                      key={cl.grade}
-                      type="button"
-                      onClick={() => {
-                        setSelectedClass(cl.grade);
-                        setStep(4);
-                      }}
-                      className={`p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 active:translate-y-0.5 relative overflow-hidden ${
-                        isSelected
-                          ? 'border-emerald-500 bg-emerald-950/40 shadow-md shadow-emerald-500/20'
-                          : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/60'
-                      }`}
-                    >
-                      {cl.isBoard && (
-                        <span className="absolute top-1.5 right-1.5 px-1.5 py-0.2 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[8px] font-black uppercase">
-                          Board
-                        </span>
-                      )}
-                      <span className="text-2xl">{cl.icon}</span>
-                      <h4 className="font-black text-sm text-white">{cl.label}</h4>
-                      <span className="text-[10px] text-slate-400 font-medium">{cl.tag}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ══════ STEP 2 (Competitive): Pick Exam Name ══════ */}
-          {step === 2 && category === 'Competitive Exams' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <p className="text-xs text-slate-400">
-                Select your targeted competitive entrance examination track:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {COMPETITIVE_EXAMS.map((ex) => {
-                  const Icon = ex.icon;
-                  const isSelected = selectedExam === ex.id;
-                  return (
-                    <button
-                      key={ex.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedExam(ex.id);
-                        setStep(3);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
-                        isSelected
-                          ? 'border-cyan-500 bg-cyan-950/40 shadow-lg shadow-cyan-500/20'
-                          : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/50'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${ex.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <h4 className="font-extrabold text-sm text-white">{ex.name}</h4>
-                        </div>
-                        <span className="inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300">
-                          {ex.badge}
-                        </span>
-                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">{ex.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ══════ STEP 3 (Competitive): Pick Target Year ══════ */}
-          {step === 3 && category === 'Competitive Exams' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              <p className="text-xs text-slate-400">
-                Exam chosen: <strong className="text-cyan-400 font-extrabold">{COMPETITIVE_EXAMS.find((e) => e.id === selectedExam)?.name}</strong>. Now pick your target exam year:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {TARGET_YEARS.map((ty) => {
-                  const isSelected = selectedYear === ty.year;
-                  return (
-                    <button
-                      key={ty.year}
-                      type="button"
-                      onClick={() => {
-                        setSelectedYear(ty.year);
-                        setStep(4);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
-                        isSelected
-                          ? 'border-indigo-500 bg-indigo-950/40 shadow-lg shadow-indigo-500/20'
-                          : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-black text-sm shrink-0">
-                        {ty.year.slice(-2)}'
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-black text-base text-white">{ty.year}</h4>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300">
-                            {ty.badge}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1">{ty.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ══════ STEP 4: Celebratory Confirmation Preview ══════ */}
-          {step === 4 && resolvedCourseInfo && (
-            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200 text-center py-2">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-3xl mx-auto shadow-xl shadow-emerald-500/20 animate-bounce">
-                🎉
-              </div>
-
-              <div>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[11px] uppercase tracking-wider inline-flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Perfect Curriculum Match
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-white mt-2">
-                  {resolvedCourseInfo.courseName}
-                </h3>
-                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-                  Your academic questions, DPPs, and benchmark leaderboards will be customized for this track.
-                </p>
-              </div>
-
-              {/* Course Detail Card */}
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Preparation Track</span>
-                    <span className="font-extrabold text-white text-xs block mt-0.5">
-                      {resolvedCourseInfo.category === 'School Exams' ? '🏫 School / Board' : '🚀 Competitive Entrance'}
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">
-                      {resolvedCourseInfo.category === 'School Exams' ? 'Board & Class' : 'Exam & Year'}
-                    </span>
-                    <span className="font-extrabold text-white text-xs block mt-0.5">
-                      {resolvedCourseInfo.category === 'School Exams'
-                        ? `${resolvedCourseInfo.board} • ${resolvedCourseInfo.classGrade}`
-                        : `${resolvedCourseInfo.examName} • Target ${resolvedCourseInfo.targetYear}`}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1.5">Curriculum Subjects</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {resolvedCourseInfo.subjects.map((sub: string, i: number) => (
-                      <span key={i} className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-bold">
-                        {sub}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="pt-4 border-t border-slate-800 flex items-center justify-between shrink-0">
+      {/* Modal Header */}
+      <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
+        <div className="flex items-center gap-2.5">
           {step > 1 ? (
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-white font-bold text-xs cursor-pointer flex items-center gap-1.5"
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+              title="Back to previous step"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
+              <ArrowLeft className="w-4 h-4" />
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-800 text-slate-400 hover:text-white font-bold text-xs cursor-pointer"
-            >
-              Cancel
-            </button>
-          )}
-
-          {step === 4 ? (
-            <button
-              type="button"
-              onClick={handleConfirmTrack}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
-            >
-              <CheckCircle2 className="w-4 h-4" /> Lock This Curriculum Track 🚀
-            </button>
-          ) : (
-            <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-              Select an option above to continue
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shadow-xs">
+              <Target className="w-4 h-4" />
             </div>
           )}
+
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 block">
+              Step {step} of 4 • Curriculum Setup
+            </span>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+              {step === 1 && 'What is your study goal? 🎯'}
+              {step === 2 && category === 'School Exams' && 'Which Board do you follow? 🏛️'}
+              {step === 2 && category === 'Competitive Exams' && 'Which Exam are you targeting? ⚡'}
+              {step === 3 && category === 'School Exams' && 'Which Class are you in? 🎒'}
+              {step === 3 && category === 'Competitive Exams' && 'What is your Target Year? 🗓️'}
+              {step === 4 && "You're Ready to Learn! 🚀"}
+            </h3>
+          </div>
         </div>
+
+        {!inline && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
+
+      {/* Modal Scrollable Body */}
+      <div className="py-4 overflow-y-auto flex-1 pr-1 space-y-4">
+        {/* ══════ STEP 1: School or Competitive ══════ */}
+        {step === 1 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Choose the academic track for your account. We will customize your topic tests, daily practice papers (DPPs), syllabus progress, and leaderboard benchmarks.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {/* 1. School Exams Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('School Exams')}
+                className="group relative p-5 rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-emerald-50/30 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/10 transition-all text-left flex flex-col justify-between cursor-pointer active:translate-y-0.5"
+              >
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                    🏫
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] uppercase tracking-wider">
+                      Class 6 to 12
+                    </span>
+                    <h4 className="text-base font-black text-slate-900 mt-1.5 group-hover:text-emerald-700 transition-colors">
+                      School / Board Exams
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      CBSE, ICSE &amp; State Boards. NCERT exercises, chapter-wise practice tests &amp; school exam milestones.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-3 border-t border-emerald-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                  <span>Select School Track</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+              {/* 2. Competitive Exams Card */}
+              <button
+                type="button"
+                onClick={() => handleSelectCategory('Competitive Exams')}
+                className="group relative p-5 rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/80 via-white to-indigo-50/30 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10 transition-all text-left flex flex-col justify-between cursor-pointer active:translate-y-0.5"
+              >
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                    🚀
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] uppercase tracking-wider">
+                      Entrance &amp; Ranks
+                    </span>
+                    <h4 className="text-base font-black text-slate-900 mt-1.5 group-hover:text-indigo-700 transition-colors">
+                      Competitive Exams
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      JEE Main, NEET UG, Foundation Olympiads, CUET &amp; Defence. High-speed full mock tests with negative marking.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-3 border-t border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-700">
+                  <span>Select Entrance Track</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 2 (School): Pick Board ══════ */}
+        {step === 2 && category === 'School Exams' && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <p className="text-xs text-slate-600 font-medium">
+              Select your education board to align curriculum chapters, marking scheme, and board questions:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {SCHOOL_BOARDS.map((b) => {
+                const Icon = b.icon;
+                const isSelected = selectedBoard === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedBoard(b.id);
+                      setStep(3);
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
+                        : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50/80 shadow-xs'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${b.color}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-extrabold text-sm text-slate-900">{b.name}</h4>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${b.badgeColor}`}>
+                          {b.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-snug">{b.fullName}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 3 (School): Pick Class / Grade ══════ */}
+        {step === 3 && category === 'School Exams' && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <p className="text-xs text-slate-600 font-medium">
+              Board selected: <strong className="text-blue-600 font-extrabold">{selectedBoard}</strong>. Now pick your grade level:
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+              {SCHOOL_CLASSES.map((cl) => {
+                const isSelected = selectedClass === cl.grade;
+                return (
+                  <button
+                    key={cl.grade}
+                    type="button"
+                    onClick={() => {
+                      setSelectedClass(cl.grade);
+                      setStep(4);
+                    }}
+                    className={`p-3.5 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 active:translate-y-0.5 relative overflow-hidden ${
+                      isSelected
+                        ? 'border-emerald-600 bg-emerald-50/70 shadow-md ring-2 ring-emerald-500/20'
+                        : 'border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/30 shadow-xs'
+                    }`}
+                  >
+                    {cl.isBoard && (
+                      <span className="absolute top-1.5 right-1.5 px-1.5 py-0.2 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[8px] font-black uppercase">
+                        Board
+                      </span>
+                    )}
+                    <span className="text-2xl">{cl.icon}</span>
+                    <h4 className="font-black text-sm text-slate-900">{cl.label}</h4>
+                    <span className="text-[10px] text-slate-500 font-semibold">{cl.tag}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 2 (Competitive): Pick Exam Name ══════ */}
+        {step === 2 && category === 'Competitive Exams' && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <p className="text-xs text-slate-600 font-medium">
+              Select your targeted competitive entrance examination track:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {COMPETITIVE_EXAMS.map((ex) => {
+                const Icon = ex.icon;
+                const isSelected = selectedExam === ex.id;
+                return (
+                  <button
+                    key={ex.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedExam(ex.id);
+                      setStep(3);
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
+                        : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-slate-50 shadow-xs'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${ex.color}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-extrabold text-sm text-slate-900">{ex.name}</h4>
+                      </div>
+                      <span className={`inline-block mt-1 text-[9px] font-bold px-1.5 py-0.2 rounded ${ex.badgeColor}`}>
+                        {ex.badge}
+                      </span>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-snug">{ex.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 3 (Competitive): Pick Target Year ══════ */}
+        {step === 3 && category === 'Competitive Exams' && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <p className="text-xs text-slate-600 font-medium">
+              Exam chosen: <strong className="text-blue-600 font-extrabold">{COMPETITIVE_EXAMS.find((e) => e.id === selectedExam)?.name}</strong>. Now pick your target exam year:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {TARGET_YEARS.map((ty) => {
+                const isSelected = selectedYear === ty.year;
+                return (
+                  <button
+                    key={ty.year}
+                    type="button"
+                    onClick={() => {
+                      setSelectedYear(ty.year);
+                      setStep(4);
+                    }}
+                    className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
+                      isSelected
+                        ? 'border-indigo-600 bg-indigo-50/70 shadow-md ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 bg-white hover:border-indigo-400 hover:bg-slate-50 shadow-xs'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-black text-sm shrink-0">
+                      {ty.year.slice(-2)}'
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-black text-base text-slate-900">{ty.year}</h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                          {ty.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">{ty.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 4: Celebratory Confirmation Preview ══════ */}
+        {step === 4 && resolvedCourseInfo && (
+          <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200 text-center py-2">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-3xl mx-auto shadow-xl shadow-emerald-500/25 animate-bounce">
+              🎉
+            </div>
+
+            <div>
+              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-black text-[11px] uppercase tracking-wider inline-flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Perfect Curriculum Match
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                {resolvedCourseInfo.courseName}
+              </h3>
+              <p className="text-xs text-slate-600 max-w-md mx-auto mt-1">
+                Your question banks, full mock exams, DPPs, and benchmark leaderboards will be locked to this syllabus.
+              </p>
+            </div>
+
+            {/* Course Detail Card */}
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 text-left space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Preparation Track</span>
+                  <span className="font-extrabold text-slate-900 text-xs block mt-0.5">
+                    {resolvedCourseInfo.category === 'School Exams' ? '🏫 School / Board' : '🚀 Competitive Entrance'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">
+                    {resolvedCourseInfo.category === 'School Exams' ? 'Board & Class' : 'Exam & Year'}
+                  </span>
+                  <span className="font-extrabold text-slate-900 text-xs block mt-0.5">
+                    {resolvedCourseInfo.category === 'School Exams'
+                      ? `${resolvedCourseInfo.board} • ${resolvedCourseInfo.classGrade}`
+                      : `${resolvedCourseInfo.examName} • Target ${resolvedCourseInfo.targetYear}`}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1.5">Curriculum Subjects</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {resolvedCourseInfo.subjects.map((sub: string, i: number) => (
+                    <span key={i} className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+                      {sub}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Footer */}
+      <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
+        {step > 1 ? (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-xs"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
+        ) : (
+          <div>
+            {!inline && onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+            ) : (
+              <span className="text-[11px] text-slate-400 font-medium">Select an option above</span>
+            )}
+          </div>
+        )}
+
+        {step === 4 ? (
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={handleConfirmTrack}
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Locking Curriculum Track...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4" /> Lock Curriculum Track &amp; Start Learning 🚀
+              </>
+            )}
+          </button>
+        ) : (
+          <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+            Tap a card above to continue →
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (inline) {
+    return <div className="w-full flex justify-center">{cardContent}</div>;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 z-[80] animate-in fade-in duration-200">
+      {cardContent}
     </div>
   );
 };
