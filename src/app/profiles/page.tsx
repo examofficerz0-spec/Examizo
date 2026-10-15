@@ -21,6 +21,10 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import {
+  CurriculumPickerModal,
+  SelectedCurriculumResult,
+} from '@/components/curriculum/CurriculumPickerModal';
 
 interface ProfileItem {
   id: string;
@@ -67,6 +71,8 @@ export default function NetflixProfilesPage() {
 
   // Create Sub-Profile Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCurriculumPickerModal, setShowCurriculumPickerModal] = useState(false);
+  const [selectedCurriculum, setSelectedCurriculum] = useState<SelectedCurriculumResult | null>(null);
   const [newProfileFullName, setNewProfileFullName] = useState('');
   const [newProfileNickname, setNewProfileNickname] = useState('');
   const [newProfileDob, setNewProfileDob] = useState('');
@@ -110,6 +116,7 @@ export default function NetflixProfilesPage() {
     setNewProfileNickname('');
     setNewProfileDob('');
     setNewProfileCourseId('');
+    setSelectedCurriculum(null);
     setNewProfilePin('');
     setCreateError('');
     setShowCreateModal(true);
@@ -119,9 +126,6 @@ export default function NetflixProfilesPage() {
         if (data && Array.isArray(data.courses)) {
           const active = data.courses.filter((c: any) => c.is_active !== false);
           setAvailableCourses(active);
-          if (active.length > 0) {
-            setNewProfileCourseId(String(active[0]._id || active[0].id));
-          }
         }
       })
       .catch(console.error);
@@ -217,8 +221,9 @@ export default function NetflixProfilesPage() {
       setCreateError('Date of birth (DOB) is required');
       return;
     }
-    if (!newProfileCourseId) {
-      setCreateError('Target course curriculum track is required');
+    const finalCourseId = selectedCurriculum?.courseId || newProfileCourseId;
+    if (!finalCourseId) {
+      setCreateError('Target course curriculum track is required. Please choose your School or Competitive track.');
       return;
     }
     if (newProfilePin && !/^\d{4}$/.test(newProfilePin.trim())) {
@@ -237,7 +242,8 @@ export default function NetflixProfilesPage() {
           name: newProfileFullName.trim(),
           nickname: newProfileNickname.trim() || null,
           dob: newProfileDob.trim(),
-          courseId: newProfileCourseId,
+          courseId: finalCourseId,
+          courseData: selectedCurriculum,
           pin: newProfilePin.trim() || null,
         }),
       });
@@ -675,24 +681,80 @@ export default function NetflixProfilesPage() {
                 </p>
               </div>
 
+              {/* Target Course Curriculum Track (Duolingo Style Popup Trigger) */}
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-extrabold">Target Course Curriculum *</label>
-                <select
-                  required
-                  value={newProfileCourseId}
-                  onChange={(e) => setNewProfileCourseId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
-                >
-                  {availableCourses.length === 0 ? (
-                    <option value="">Loading courses...</option>
-                  ) : (
-                    availableCourses.map((c: any) => (
-                      <option key={c._id || c.id} value={c._id || c.id}>
-                        {c.name} {c.category ? `(${c.category})` : ''}
-                      </option>
-                    ))
-                  )}
-                </select>
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-300 font-extrabold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    Target Curriculum Track *
+                  </label>
+                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
+                    Interactive Setup
+                  </span>
+                </div>
+
+                {selectedCurriculum ? (
+                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 flex items-center justify-between gap-3 shadow-lg">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                        {selectedCurriculum.category === 'School Exams' ? '🏫' : '🚀'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            {selectedCurriculum.category === 'School Exams' ? selectedCurriculum.board : 'Competitive'}
+                          </span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                            {selectedCurriculum.classGrade || selectedCurriculum.targetYear}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-black text-white truncate mt-1">
+                          {selectedCurriculum.courseName}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {selectedCurriculum.subjects.join(' • ')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCurriculumPickerModal(true)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold shrink-0 transition-colors border border-slate-700 cursor-pointer"
+                    >
+                      Change ✏️
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCurriculumPickerModal(true)}
+                    className="w-full p-4 rounded-2xl border-2 border-dashed border-blue-500/50 hover:border-blue-400 bg-gradient-to-r from-blue-950/30 to-indigo-950/30 hover:bg-blue-950/50 transition-all text-left flex items-center justify-between gap-3 cursor-pointer group shadow-sm active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-inner">
+                        🎯
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-white group-hover:text-blue-300 transition-colors flex items-center gap-1.5">
+                          Choose Curriculum Track
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300">
+                            Duolingo Style
+                          </span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          School (Board &amp; Class) or Competitive (Exam &amp; Year)
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 text-white font-black text-xs shadow-md">
+                      Pick Goal 🚀
+                    </span>
+                  </button>
+                )}
+                <p className="text-[10px] text-slate-400">
+                  🎯 Tailors question bank, mock test patterns, and syllabus benchmarks for this student.
+                </p>
               </div>
 
               {/* 4-Digit Security PIN */}
@@ -725,7 +787,7 @@ export default function NetflixProfilesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || !newProfileCourseId}
+                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || (!newProfileCourseId && !selectedCurriculum)}
                   className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-md disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}
@@ -735,6 +797,17 @@ export default function NetflixProfilesPage() {
           </div>
         </div>
       )}
+
+      {/* Duolingo-style Curriculum Wizard Modal */}
+      <CurriculumPickerModal
+        isOpen={showCurriculumPickerModal}
+        onClose={() => setShowCurriculumPickerModal(false)}
+        availableCourses={availableCourses}
+        onSelectCurriculum={(result) => {
+          setSelectedCurriculum(result);
+          setNewProfileCourseId(result.courseId);
+        }}
+      />
 
       {/* ── MODAL 3: Manage PIN Dialog (Set/Remove/Change) ── */}
       {pinModalProfile && (

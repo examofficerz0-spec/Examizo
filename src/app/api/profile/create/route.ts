@@ -51,6 +51,61 @@ export async function POST(req: Request) {
     const displayName = cleanNickname || cleanFullName;
     const cleanCourseId = String(courseId).trim();
 
+    // Auto-create / persist course if new curriculum track metadata is passed
+    const courseData = body.courseData;
+    if (courseData && courseData.courseName) {
+      try {
+        const existingD1Courses = await queryD1(
+          'SELECT id FROM courses WHERE id = ? OR name = ?',
+          [cleanCourseId, String(courseData.courseName).trim()]
+        );
+        if (!existingD1Courses || existingD1Courses.length === 0) {
+          await executeD1(
+            `INSERT OR IGNORE INTO courses (id, name, description, category, board, curriculum, subjects_json, marks_per_correct, penalty_per_incorrect, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 4.0, 1.0, 1, ?)`,
+            [
+              cleanCourseId,
+              String(courseData.courseName).trim(),
+              `${courseData.courseName} preparation and assessment curriculum`,
+              courseData.category === 'School Exams' ? 'School Exams' : 'Competitive Exams',
+              courseData.board || 'CBSE',
+              courseData.classGrade || courseData.examName || '',
+              JSON.stringify(courseData.subjects || []),
+              new Date().toISOString(),
+            ]
+          );
+        }
+      } catch (cErr) {
+        console.warn('[api/profile/create] auto-create course D1 err:', cErr);
+      }
+
+      // Mirror to sharedDb
+      try {
+        const sDb = readSharedDb();
+        if (sDb && Array.isArray(sDb.courses)) {
+          const exists = sDb.courses.some(
+            (c: any) => String(c.id) === cleanCourseId || String(c._id) === cleanCourseId || c.name === courseData.courseName
+          );
+          if (!exists) {
+            sDb.courses.push({
+              _id: cleanCourseId,
+              id: cleanCourseId,
+              name: String(courseData.courseName).trim(),
+              description: `${courseData.courseName} preparation and assessment curriculum`,
+              category: courseData.category === 'School Exams' ? 'School Exams' : 'Competitive Exams',
+              board: courseData.board || 'CBSE',
+              curriculum: courseData.classGrade || courseData.examName || '',
+              subjects: Array.isArray(courseData.subjects) ? courseData.subjects : [],
+              marks_per_correct: 4.0,
+              penalty_per_incorrect: 1.0,
+              is_active: true,
+              created_at: new Date().toISOString(),
+            });
+            writeSharedDb(sDb);
+          }
+        }
+      } catch (_) {}
+    }
+
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

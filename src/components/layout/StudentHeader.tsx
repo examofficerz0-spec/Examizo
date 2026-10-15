@@ -38,6 +38,10 @@ import {
   Calendar,
 } from 'lucide-react';
 import { DigiLockerModal, getDigiLockerStatus, isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
+import {
+  CurriculumPickerModal,
+  SelectedCurriculumResult,
+} from '@/components/curriculum/CurriculumPickerModal';
 
 interface StudentHeaderProps {
   userName?: string;
@@ -83,6 +87,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   // Netflix-style Multi-Profile State
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
+  const [showCurriculumPickerModal, setShowCurriculumPickerModal] = useState(false);
+  const [selectedCurriculumForNewProfile, setSelectedCurriculumForNewProfile] = useState<SelectedCurriculumResult | null>(null);
   const [newProfileFullName, setNewProfileFullName] = useState('');
   const [newProfileNickname, setNewProfileNickname] = useState('');
   const [newProfileDob, setNewProfileDob] = useState('');
@@ -358,6 +364,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     setNewProfileDob('');
     setNewProfilePin('');
     setSelectedCourseForNewProfile('');
+    setSelectedCurriculumForNewProfile(null);
     setCreateError('');
     setShowAddProfileModal(true);
     fetch('/api/courses')
@@ -365,9 +372,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       .then((data) => {
         if (data && Array.isArray(data.courses)) {
           setAvailableCourses(data.courses);
-          if (data.courses.length > 0) {
-            setSelectedCourseForNewProfile(String(data.courses[0]._id || data.courses[0].id));
-          }
         }
       })
       .catch(console.error);
@@ -383,7 +387,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       setCreateError('Please enter the date of birth (DOB).');
       return;
     }
-    if (!selectedCourseForNewProfile) {
+    const finalCourseId = selectedCurriculumForNewProfile?.courseId || selectedCourseForNewProfile;
+    if (!finalCourseId) {
       setCreateError('Please choose a target course curriculum track.');
       return;
     }
@@ -405,7 +410,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           name: newProfileFullName.trim(),
           nickname: newProfileNickname.trim() || null,
           dob: newProfileDob.trim(),
-          courseId: selectedCourseForNewProfile,
+          courseId: finalCourseId,
+          courseData: selectedCurriculumForNewProfile,
           pin: newProfilePin.trim() || null,
         }),
       });
@@ -920,24 +926,77 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </p>
               </div>
 
+              {/* Target Course Curriculum Track (Duolingo Style) */}
               <div className="space-y-1.5">
-                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Target Course Curriculum *</label>
-                <select
-                  required
-                  value={selectedCourseForNewProfile}
-                  onChange={(e) => setSelectedCourseForNewProfile(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
-                >
-                  {availableCourses.length === 0 ? (
-                    <option value="">Loading courses...</option>
-                  ) : (
-                    availableCourses.map((c: any) => (
-                      <option key={c._id || c.id} value={c._id || c.id}>
-                        {c.name} {c.category ? `(${c.category})` : ''}
-                      </option>
-                    ))
-                  )}
-                </select>
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    Target Curriculum Track *
+                  </label>
+                  <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
+                    Interactive Setup
+                  </span>
+                </div>
+
+                {selectedCurriculumForNewProfile ? (
+                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+                        {selectedCurriculumForNewProfile.category === 'School Exams' ? '🏫' : '🚀'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                            {selectedCurriculumForNewProfile.category === 'School Exams' ? selectedCurriculumForNewProfile.board : 'Competitive'}
+                          </span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {selectedCurriculumForNewProfile.classGrade || selectedCurriculumForNewProfile.targetYear}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white truncate mt-0.5">
+                          {selectedCurriculumForNewProfile.courseName}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          {selectedCurriculumForNewProfile.subjects.join(' • ')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCurriculumPickerModal(true)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold shrink-0 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+                    >
+                      Change ✏️
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCurriculumPickerModal(true)}
+                    className="w-full p-3.5 rounded-2xl border-2 border-dashed border-blue-400 dark:border-blue-500/50 hover:border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all text-left flex items-center justify-between gap-3 cursor-pointer group shadow-xs active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        🎯
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                          Choose Curriculum Track
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                            Duolingo Style
+                          </span>
+                        </h4>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                          School (Board &amp; Class) or Competitive (Exam &amp; Year)
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 text-white font-black text-xs shadow-xs">
+                      Pick Goal 🚀
+                    </span>
+                  </button>
+                )}
                 <p className="text-[10px] text-slate-400 leading-normal pt-1">
                   🔒 The profile will only be registered once the target course curriculum is selected.
                 </p>
@@ -973,7 +1032,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || !selectedCourseForNewProfile}
+                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || (!selectedCourseForNewProfile && !selectedCurriculumForNewProfile)}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}
@@ -983,6 +1042,17 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           </div>
         </div>
       )}
+
+      {/* Duolingo-style Curriculum Wizard Modal for Header */}
+      <CurriculumPickerModal
+        isOpen={showCurriculumPickerModal}
+        onClose={() => setShowCurriculumPickerModal(false)}
+        availableCourses={availableCourses}
+        onSelectCurriculum={(result) => {
+          setSelectedCurriculumForNewProfile(result);
+          setSelectedCourseForNewProfile(result.courseId);
+        }}
+      />
 
       {/* PIN Prompt Modal for Header switching */}
       {profilePinPrompt && (
