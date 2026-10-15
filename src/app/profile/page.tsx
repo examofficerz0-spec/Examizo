@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2 } from 'lucide-react';
+import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2, Calendar } from 'lucide-react';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { DigiLockerModal, isAbove10thClass, getDigiLockerStatus } from '@/components/ui/DigiLockerModal';
 import { PageLoader } from '@/components/common/PageLoader';
@@ -453,29 +453,60 @@ export default function ProfilePage() {
         {/* Profile Info Form */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
           <form onSubmit={handleSaveProfile} className="space-y-5">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Student Name (Editable)
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+                  Full Legal / Academic Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={userData?.fullName || userData?.full_name || name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Profile Nickname (Optional)</span>
+                  <span className="text-[10px] text-blue-600 font-bold">Netflix Screen</span>
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={userData?.nickname || 'None (Showing Full Name)'}
+                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold cursor-not-allowed"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
-                Email Address <span className="text-[10px] text-amber-600 font-extrabold uppercase">(Read-Only)</span>
-              </label>
-              <input
-                type="email"
-                disabled
-                value={userData?.email || ''}
-                className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono cursor-not-allowed font-medium"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                  Date of Birth (DOB)
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={userData?.dob || 'Not provided'}
+                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold font-mono cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
+                  Email Address <span className="text-[10px] text-amber-600 font-extrabold uppercase">(Read-Only)</span>
+                </label>
+                <input
+                  type="email"
+                  disabled
+                  value={userData?.email || ''}
+                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono cursor-not-allowed font-medium"
+                />
+              </div>
             </div>
 
             <div>

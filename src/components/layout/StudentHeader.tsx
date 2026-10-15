@@ -35,6 +35,7 @@ import {
   ShieldCheck,
   Sparkles,
   KeyRound,
+  Calendar,
 } from 'lucide-react';
 import { DigiLockerModal, getDigiLockerStatus, isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
 
@@ -47,6 +48,10 @@ interface StudentHeaderProps {
 interface ProfileItem {
   id: string;
   name: string;
+  fullName?: string;
+  nickname?: string | null;
+  dob?: string | null;
+  displayName?: string;
   email: string;
   accountEmail: string;
   lockedCourseId?: string | null;
@@ -78,7 +83,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   // Netflix-style Multi-Profile State
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
-  const [newProfileName, setNewProfileName] = useState('');
+  const [newProfileFullName, setNewProfileFullName] = useState('');
+  const [newProfileNickname, setNewProfileNickname] = useState('');
+  const [newProfileDob, setNewProfileDob] = useState('');
   const [newProfilePin, setNewProfilePin] = useState('');
   const [availableCourses, setAvailableCourses] = useState<any[]>([]);
   const [selectedCourseForNewProfile, setSelectedCourseForNewProfile] = useState<string>('');
@@ -346,7 +353,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   };
 
   const openAddProfileModal = () => {
-    setNewProfileName('');
+    setNewProfileFullName('');
+    setNewProfileNickname('');
+    setNewProfileDob('');
     setNewProfilePin('');
     setSelectedCourseForNewProfile('');
     setCreateError('');
@@ -366,8 +375,16 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   const handleCreateProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProfileName.trim() || !selectedCourseForNewProfile) {
-      setCreateError('Please enter a profile name and choose a target course curriculum.');
+    if (!newProfileFullName.trim()) {
+      setCreateError('Please enter the full name.');
+      return;
+    }
+    if (!newProfileDob.trim()) {
+      setCreateError('Please enter the date of birth (DOB).');
+      return;
+    }
+    if (!selectedCourseForNewProfile) {
+      setCreateError('Please choose a target course curriculum track.');
       return;
     }
 
@@ -384,7 +401,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newProfileName.trim(),
+          fullName: newProfileFullName.trim(),
+          name: newProfileFullName.trim(),
+          nickname: newProfileNickname.trim() || null,
+          dob: newProfileDob.trim(),
           courseId: selectedCourseForNewProfile,
           pin: newProfilePin.trim() || null,
         }),
@@ -395,7 +415,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         setCreateError(data.error || 'Failed to create new profile');
       } else {
         setShowAddProfileModal(false);
-        setNewProfileName('');
+        setNewProfileFullName('');
+        setNewProfileNickname('');
+        setNewProfileDob('');
         setNewProfilePin('');
         setSelectedCourseForNewProfile('');
         // Sub-profile is registered with course locked -> reload or go directly to dashboard!
@@ -704,20 +726,31 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                             : 'hover:bg-slate-100 dark:hover:bg-slate-800/70'
                         }`}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-8 h-8 rounded-full ${avatarBg} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-2xs`}>
-                            {prof.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate flex items-center gap-1">
-                              {prof.name}
-                              {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-medium truncate">
-                              {prof.lockedCourseName ? `Course: ${prof.lockedCourseName}` : '⚠️ Needs Course Lock'}
-                            </p>
-                          </div>
-                        </div>
+                        {(() => {
+                          const pDisplayName = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : (prof.fullName || prof.name);
+                          return (
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className={`w-8 h-8 rounded-full ${avatarBg} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-2xs`}>
+                                {pDisplayName.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate flex items-center gap-1">
+                                  {pDisplayName}
+                                  {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
+                                </p>
+                                {prof.nickname && prof.fullName && prof.nickname !== prof.fullName ? (
+                                  <p className="text-[10px] text-slate-400 font-medium truncate">
+                                    {prof.fullName}
+                                  </p>
+                                ) : (
+                                  <p className="text-[10px] text-slate-400 font-medium truncate">
+                                    {prof.lockedCourseName ? `Course: ${prof.lockedCourseName}` : '⚠️ Needs Course Lock'}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         <div className="flex items-center gap-1 shrink-0 ml-2">
                           {prof.isActive ? (
@@ -826,17 +859,65 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             )}
 
             <form onSubmit={handleCreateProfileSubmit} className="space-y-4 text-xs font-medium">
+              {/* Full Name Field */}
               <div className="space-y-1.5">
-                <label className="text-slate-700 dark:text-slate-300 font-extrabold">Profile Name *</label>
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-blue-500" />
+                    Full Name *
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">Student's legal / academic name</span>
+                </label>
                 <input
                   type="text"
                   required
                   autoFocus
-                  value={newProfileName}
-                  onChange={(e) => setNewProfileName(e.target.value)}
-                  placeholder="e.g. Ram, Student 2, Grade 7"
+                  value={newProfileFullName}
+                  onChange={(e) => setNewProfileFullName(e.target.value)}
+                  placeholder="e.g. Ahmad Faraz"
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
                 />
+              </div>
+
+              {/* Nickname (Optional) Field */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-700 dark:text-slate-300 font-extrabold">Nickname (Optional)</label>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Shown on Netflix Screen</span>
+                </div>
+                <input
+                  type="text"
+                  value={newProfileNickname}
+                  onChange={(e) => setNewProfileNickname(e.target.value)}
+                  placeholder="e.g. Ahmad, Sonu, Champ"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
+                />
+                <p className="text-[10px] text-slate-400">
+                  💡 If not provided, your full name will be listed on the profile screen.
+                </p>
+              </div>
+
+              {/* Date of Birth (DOB) Field */}
+              <div className="space-y-1.5">
+                <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    Date of Birth (DOB) *
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">Student record</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1950-01-01"
+                  value={newProfileDob}
+                  onChange={(e) => setNewProfileDob(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
+                />
+                <p className="text-[10px] text-slate-400">
+                  🔒 Saved permanently in your student database record.
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -892,7 +973,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || !newProfileName.trim() || !selectedCourseForNewProfile}
+                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || !selectedCourseForNewProfile}
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}

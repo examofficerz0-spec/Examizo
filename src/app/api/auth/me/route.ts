@@ -86,11 +86,19 @@ export async function GET() {
       }
     }
 
+    const effectiveFullName = user.full_name || user.name || auth.name;
+    const effectiveNickname = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : null;
+    const displayName = effectiveNickname || effectiveFullName;
+
     const response = NextResponse.json({
       authenticated: true,
       user: {
         id: user._id ? String(user._id) : auth.userId,
-        name: user.name,
+        name: displayName,
+        fullName: effectiveFullName,
+        nickname: effectiveNickname,
+        dob: user.dob || null,
+        displayName,
         email: user.email,
         lockedCourse,
         lockedCourseId: rawCourseId ? String(rawCourseId) : null,
@@ -108,7 +116,7 @@ export async function GET() {
       const refreshedToken = signUserToken({
         userId: user._id ? String(user._id) : auth.userId,
         email: user.email,
-        name: user.name,
+        name: displayName,
         lockedCourseId: String(rawCourseId),
       });
 

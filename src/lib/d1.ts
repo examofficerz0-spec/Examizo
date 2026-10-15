@@ -119,6 +119,9 @@ export async function ensureD1Tables() {
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT,
         raw_password TEXT,
+        full_name TEXT,
+        nickname TEXT,
+        dob TEXT,
         status TEXT DEFAULT 'Active',
         xp_total INTEGER DEFAULT 0,
         locked_course_id TEXT,
@@ -139,6 +142,9 @@ export async function ensureD1Tables() {
 
     // Ensure all critical columns exist even if table was pre-created with an older schema
     await Promise.allSettled([
+      executeD1('ALTER TABLE users ADD COLUMN full_name TEXT'),
+      executeD1('ALTER TABLE users ADD COLUMN nickname TEXT'),
+      executeD1('ALTER TABLE users ADD COLUMN dob TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN locked_course_id TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN previous_course_id TEXT'),
       executeD1('ALTER TABLE users ADD COLUMN raw_password TEXT'),

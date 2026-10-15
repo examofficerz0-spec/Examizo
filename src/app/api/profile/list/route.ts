@@ -65,9 +65,17 @@ export async function GET() {
 
         const profiles = validD1Users.map((u: any, idx: number) => {
           const isPrimary = !u.email.includes('+');
+          const effectiveFullName = u.full_name || u.name;
+          const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
+          const displayName = effectiveNickname || effectiveFullName;
+
           return {
             id: u.id,
-            name: u.name,
+            name: displayName,
+            fullName: effectiveFullName,
+            nickname: effectiveNickname,
+            dob: u.dob || null,
+            displayName,
             email: u.email,
             accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
             lockedCourseId: u.locked_course_id || null,
@@ -105,9 +113,17 @@ export async function GET() {
     const profiles = family.map((u: any, idx: number) => {
       const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id) || String(c.id) === String(u.locked_course_id)) || null;
       const isPrimary = !(u.email || '').includes('+');
+      const effectiveFullName = u.full_name || u.name;
+      const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
+      const displayName = effectiveNickname || effectiveFullName;
+
       return {
         id: String(u._id || u.id),
-        name: u.name,
+        name: displayName,
+        fullName: effectiveFullName,
+        nickname: effectiveNickname,
+        dob: u.dob || null,
+        displayName,
         email: u.email,
         accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
         lockedCourseId: u.locked_course_id || null,
@@ -121,9 +137,17 @@ export async function GET() {
     });
 
     if (!profiles || profiles.length === 0) {
+      const effectiveFullName = currentUser.full_name || currentUser.name || auth.name || 'Student';
+      const effectiveNickname = currentUser.nickname && String(currentUser.nickname).trim() ? String(currentUser.nickname).trim() : null;
+      const displayName = effectiveNickname || effectiveFullName;
+
       const defaultProfile = {
         id: String(currentUser._id || currentUser.id || auth.userId),
-        name: currentUser.name || auth.name || 'Student',
+        name: displayName,
+        fullName: effectiveFullName,
+        nickname: effectiveNickname,
+        dob: currentUser.dob || null,
+        displayName,
         email: currentUser.email || auth.email,
         accountEmail: accountEmail || currentEmail,
         lockedCourseId: currentUser.locked_course_id || auth.lockedCourseId || null,

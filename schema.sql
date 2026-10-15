@@ -8,6 +8,9 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  full_name TEXT,
+  nickname TEXT,
+  dob TEXT,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   raw_password TEXT,
@@ -30,6 +33,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Safe migration ALTER statements (for existing databases)
 -- Cloudflare D1 / SQLite migration additions:
+-- ALTER TABLE users ADD COLUMN full_name TEXT;
+-- ALTER TABLE users ADD COLUMN nickname TEXT;
+-- ALTER TABLE users ADD COLUMN dob TEXT;
 -- ALTER TABLE users ADD COLUMN raw_password TEXT;
 -- ALTER TABLE users ADD COLUMN locked_course_id TEXT;
 -- ALTER TABLE users ADD COLUMN previous_course_id TEXT;

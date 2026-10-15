@@ -60,11 +60,14 @@ export async function POST(req: Request) {
         }
 
         const resolvedCourseId = targetProfile.locked_course_id || memTarget?.locked_course_id || null;
+        const effectiveFullName = targetProfile.full_name || targetProfile.name;
+        const effectiveNickname = targetProfile.nickname && String(targetProfile.nickname).trim() ? String(targetProfile.nickname).trim() : null;
+        const displayName = effectiveNickname || effectiveFullName;
 
         const token = signUserToken({
           userId: targetProfile.id,
           email: targetProfile.email,
-          name: targetProfile.name,
+          name: displayName,
           lockedCourseId: resolvedCourseId,
         });
 
@@ -72,7 +75,11 @@ export async function POST(req: Request) {
           success: true,
           profile: {
             id: targetProfile.id,
-            name: targetProfile.name,
+            name: displayName,
+            fullName: effectiveFullName,
+            nickname: effectiveNickname,
+            dob: targetProfile.dob || null,
+            displayName,
             email: targetProfile.email,
             lockedCourseId: resolvedCourseId,
           },
@@ -118,11 +125,14 @@ export async function POST(req: Request) {
     }
 
     const resolvedCourseId = memTarget.locked_course_id ? String(memTarget.locked_course_id) : null;
+    const effectiveFullName = memTarget.full_name || memTarget.name;
+    const effectiveNickname = memTarget.nickname && String(memTarget.nickname).trim() ? String(memTarget.nickname).trim() : null;
+    const displayName = effectiveNickname || effectiveFullName;
 
     const token = signUserToken({
       userId: String(memTarget._id || memTarget.id),
       email: memTarget.email,
-      name: memTarget.name,
+      name: displayName,
       lockedCourseId: resolvedCourseId,
     });
 
@@ -130,7 +140,11 @@ export async function POST(req: Request) {
       success: true,
       profile: {
         id: String(memTarget._id || memTarget.id),
-        name: memTarget.name,
+        name: displayName,
+        fullName: effectiveFullName,
+        nickname: effectiveNickname,
+        dob: memTarget.dob || null,
+        displayName,
         email: memTarget.email,
         lockedCourseId: resolvedCourseId,
       },

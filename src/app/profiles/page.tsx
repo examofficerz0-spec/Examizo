@@ -16,6 +16,8 @@ import {
   ArrowRight,
   Sparkles,
   BookOpen,
+  Calendar,
+  User,
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
@@ -23,6 +25,9 @@ import { clearAllClientUserCaches } from '@/lib/clientCache';
 interface ProfileItem {
   id: string;
   name: string;
+  fullName?: string;
+  nickname?: string | null;
+  dob?: string | null;
   email: string;
   accountEmail: string;
   lockedCourseId: string | null;
@@ -62,7 +67,9 @@ export default function NetflixProfilesPage() {
 
   // Create Sub-Profile Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newProfileName, setNewProfileName] = useState('');
+  const [newProfileFullName, setNewProfileFullName] = useState('');
+  const [newProfileNickname, setNewProfileNickname] = useState('');
+  const [newProfileDob, setNewProfileDob] = useState('');
   const [newProfileCourseId, setNewProfileCourseId] = useState('');
   const [newProfilePin, setNewProfilePin] = useState('');
   const [availableCourses, setAvailableCourses] = useState<any[]>([]);
@@ -99,7 +106,9 @@ export default function NetflixProfilesPage() {
 
   // Fetch courses when create modal opens
   const openCreateModal = () => {
-    setNewProfileName('');
+    setNewProfileFullName('');
+    setNewProfileNickname('');
+    setNewProfileDob('');
     setNewProfileCourseId('');
     setNewProfilePin('');
     setCreateError('');
@@ -200,8 +209,16 @@ export default function NetflixProfilesPage() {
   // Handle Sub-Profile Creation
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProfileName.trim() || !newProfileCourseId) {
-      setCreateError('Profile name and course track are required');
+    if (!newProfileFullName.trim()) {
+      setCreateError('Full name is required');
+      return;
+    }
+    if (!newProfileDob.trim()) {
+      setCreateError('Date of birth (DOB) is required');
+      return;
+    }
+    if (!newProfileCourseId) {
+      setCreateError('Target course curriculum track is required');
       return;
     }
     if (newProfilePin && !/^\d{4}$/.test(newProfilePin.trim())) {
@@ -216,7 +233,10 @@ export default function NetflixProfilesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newProfileName.trim(),
+          fullName: newProfileFullName.trim(),
+          name: newProfileFullName.trim(),
+          nickname: newProfileNickname.trim() || null,
+          dob: newProfileDob.trim(),
           courseId: newProfileCourseId,
           pin: newProfilePin.trim() || null,
         }),
@@ -342,6 +362,9 @@ export default function NetflixProfilesPage() {
         <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 max-w-4xl w-full mb-12">
           {profiles.map((profile, idx) => {
             const gradientBg = AVATAR_PALETTES[idx % AVATAR_PALETTES.length];
+            const displayName = profile.nickname && profile.nickname.trim() ? profile.nickname.trim() : (profile.fullName || profile.name);
+            const initialLetter = displayName.charAt(0).toUpperCase();
+
             return (
               <div
                 key={profile.id}
@@ -356,7 +379,7 @@ export default function NetflixProfilesPage() {
                       : 'group-hover:scale-108 group-hover:ring-4 group-hover:ring-white group-hover:shadow-2xl group-active:scale-98'
                   }`}
                 >
-                  <span>{profile.name.charAt(0).toUpperCase()}</span>
+                  <span>{initialLetter}</span>
 
                   {/* Lock Indicator badge */}
                   {profile.hasPin && (
@@ -405,10 +428,16 @@ export default function NetflixProfilesPage() {
                   )}
                 </div>
 
-                {/* Profile Name & Course Label */}
+                {/* Profile Name (Nickname if provided, else Full Name) & Course Label */}
                 <span className="mt-3.5 text-sm sm:text-base font-extrabold text-slate-300 group-hover:text-white transition-colors truncate max-w-[140px]">
-                  {profile.name}
+                  {displayName}
                 </span>
+
+                {profile.nickname && profile.fullName && profile.nickname !== profile.fullName && (
+                  <span className="text-[11px] text-slate-500 font-medium truncate max-w-[140px]">
+                    {profile.fullName}
+                  </span>
+                )}
 
                 {profile.lockedCourseName && (
                   <span className="mt-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400 group-hover:text-blue-400 group-hover:border-blue-900/60 transition-colors truncate max-w-[140px]">
@@ -584,17 +613,66 @@ export default function NetflixProfilesPage() {
             )}
 
             <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs font-medium">
+              {/* Full Name Field */}
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-extrabold">Profile Name *</label>
+                <label className="text-slate-300 font-extrabold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-blue-400" />
+                    Full Name *
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">Legal / Academic name</span>
+                </label>
                 <input
                   type="text"
                   required
                   autoFocus
-                  value={newProfileName}
-                  onChange={(e) => setNewProfileName(e.target.value)}
-                  placeholder="e.g. Ram, Student 2, Grade 7"
+                  value={newProfileFullName}
+                  onChange={(e) => setNewProfileFullName(e.target.value)}
+                  placeholder="e.g. Ahmad Faraz"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
                 />
+              </div>
+
+              {/* Nickname (Optional) Field */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-300 font-extrabold">Nickname (Optional)</label>
+                  <span className="text-[10px] text-blue-400 font-semibold">Shown on Netflix Screen</span>
+                </div>
+                <input
+                  type="text"
+                  value={newProfileNickname}
+                  onChange={(e) => setNewProfileNickname(e.target.value)}
+                  placeholder="e.g. Ahmad, Sonu, Champ"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
+                />
+                <p className="text-[11px] text-slate-400">
+                  💡 If not provided, your full name will be listed on the profile screen.
+                </p>
+              </div>
+
+              {/* Date of Birth (DOB) Field */}
+              <div className="space-y-1.5">
+                <label className="text-slate-300 font-extrabold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                    Date of Birth (DOB) *
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">Student record</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1950-01-01"
+                  value={newProfileDob}
+                  onChange={(e) => setNewProfileDob(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
+                  style={{ colorScheme: 'dark' }}
+                />
+                <p className="text-[11px] text-slate-400">
+                  🔒 Saved permanently in your student database record.
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -647,7 +725,7 @@ export default function NetflixProfilesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createLoading || !newProfileName.trim() || !newProfileCourseId}
+                  disabled={createLoading || !newProfileFullName.trim() || !newProfileDob.trim() || !newProfileCourseId}
                   className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-md disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
                 >
                   {createLoading ? 'Registering...' : 'Create & Lock Course'}

@@ -15,11 +15,17 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const name = body.name;
+    const fullName = body.fullName || body.full_name || body.name;
+    const nickname = body.nickname ? String(body.nickname).trim() : null;
+    const dob = body.dob || body.dateOfBirth || body.date_of_birth;
     const courseId = body.courseId || body.course_id || body.locked_course_id;
 
-    if (!name || !name.trim()) {
-      return NextResponse.json({ error: 'Profile name is required' }, { status: 400 });
+    if (!fullName || !String(fullName).trim()) {
+      return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
+    }
+
+    if (!dob || !String(dob).trim()) {
+      return NextResponse.json({ error: 'Date of birth (DOB) is required' }, { status: 400 });
     }
 
     if (!courseId || !String(courseId).trim()) {
@@ -39,7 +45,10 @@ export async function POST(req: Request) {
     }
     const cleanAvatarColor = body.avatarColor ? String(body.avatarColor).trim() : null;
 
-    const cleanName = name.trim();
+    const cleanFullName = String(fullName).trim();
+    const cleanNickname = nickname && nickname.trim() ? nickname.trim() : null;
+    const cleanDob = String(dob).trim();
+    const displayName = cleanNickname || cleanFullName;
     const cleanCourseId = String(courseId).trim();
 
     const authResult = await getUserFromAuth(auth);
@@ -69,10 +78,13 @@ export async function POST(req: Request) {
         const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@exammaster.internal`;
 
         await executeD1(
-          `INSERT INTO users (id, name, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO users (id, name, full_name, nickname, dob, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             profileId,
-            cleanName,
+            cleanFullName,
+            cleanFullName,
+            cleanNickname,
+            cleanDob,
             profileEmail,
             currentUser.password_hash || 'profile_nopass',
             'Active',
@@ -93,7 +105,10 @@ export async function POST(req: Request) {
             db.users.push({
               _id: profileId,
               id: profileId,
-              name: cleanName,
+              name: cleanFullName,
+              full_name: cleanFullName,
+              nickname: cleanNickname,
+              dob: cleanDob,
               email: profileEmail,
               password_hash: currentUser.password_hash || 'profile_nopass',
               account_email: mainEmail,
@@ -111,7 +126,7 @@ export async function POST(req: Request) {
         const token = signUserToken({
           userId: profileId,
           email: profileEmail,
-          name: cleanName,
+          name: displayName,
           lockedCourseId: cleanCourseId,
         });
 
@@ -119,7 +134,11 @@ export async function POST(req: Request) {
           success: true,
           profile: {
             id: profileId,
-            name: cleanName,
+            name: displayName,
+            fullName: cleanFullName,
+            nickname: cleanNickname,
+            dob: cleanDob,
+            displayName,
             email: profileEmail,
             lockedCourseId: cleanCourseId,
             hasPin: Boolean(cleanPin),
@@ -164,7 +183,10 @@ export async function POST(req: Request) {
     const newProfile = {
       _id: profileId,
       id: profileId,
-      name: cleanName,
+      name: cleanFullName,
+      full_name: cleanFullName,
+      nickname: cleanNickname,
+      dob: cleanDob,
       email: profileEmail,
       password_hash: currentUser.password_hash || 'profile_nopass',
       account_email: mainEmail,
@@ -186,7 +208,7 @@ export async function POST(req: Request) {
     const token = signUserToken({
       userId: String(newProfile._id),
       email: newProfile.email,
-      name: newProfile.name,
+      name: displayName,
       lockedCourseId: cleanCourseId,
     });
 
@@ -194,7 +216,11 @@ export async function POST(req: Request) {
       success: true,
       profile: {
         id: String(newProfile._id),
-        name: newProfile.name,
+        name: displayName,
+        fullName: cleanFullName,
+        nickname: cleanNickname,
+        dob: cleanDob,
+        displayName,
         email: newProfile.email,
         lockedCourseId: cleanCourseId,
         hasPin: Boolean(cleanPin),
