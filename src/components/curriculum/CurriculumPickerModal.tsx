@@ -15,6 +15,9 @@ import {
   Award,
   Globe,
   Flame,
+  Search,
+  Check,
+  MapPin,
 } from 'lucide-react';
 
 export interface SelectedCurriculumResult {
@@ -22,12 +25,326 @@ export interface SelectedCurriculumResult {
   courseName: string;
   category: 'School Exams' | 'Competitive Exams';
   board?: string;
+  state?: string;
+  stateCode?: string;
   classGrade?: string;
   examName?: string;
   targetYear?: string;
   subjects: string[];
   isNewCourse?: boolean;
 }
+
+export interface StateBoardOption {
+  id: string;
+  state: string;
+  name: string;
+  code: string;
+  tag: string;
+  fullName: string;
+  region: 'North' | 'South' | 'East' | 'West' | 'Central' | 'North-East' | 'All';
+  isPopular?: boolean;
+}
+
+// Comprehensive List of Indian State Boards across all 28 States & UTs
+export const INDIAN_STATE_BOARDS: StateBoardOption[] = [
+  // ── High Enrollment / Popular State Boards ──
+  {
+    id: 'maharashtra',
+    state: 'Maharashtra',
+    name: 'Maharashtra State Board',
+    code: 'MSBSHSE',
+    tag: 'SSC & HSC',
+    fullName: 'Maharashtra State Board of Secondary and Higher Secondary Education, Pune',
+    region: 'West',
+    isPopular: true,
+  },
+  {
+    id: 'uttar_pradesh',
+    state: 'Uttar Pradesh',
+    name: 'UP Board',
+    code: 'UPMSP',
+    tag: 'High School & Inter',
+    fullName: 'Uttar Pradesh Madhyamik Shiksha Parishad, Prayagraj',
+    region: 'North',
+    isPopular: true,
+  },
+  {
+    id: 'bihar',
+    state: 'Bihar',
+    name: 'Bihar Board',
+    code: 'BSEB',
+    tag: 'Matric & Inter',
+    fullName: 'Bihar School Examination Board, Patna',
+    region: 'East',
+    isPopular: true,
+  },
+  {
+    id: 'tamil_nadu',
+    state: 'Tamil Nadu',
+    name: 'Tamil Nadu State Board',
+    code: 'TNBSE',
+    tag: 'SSLC & HSC (+2)',
+    fullName: 'Tamil Nadu Directorate of Government Examinations (DGE / TNBSE)',
+    region: 'South',
+    isPopular: true,
+  },
+  {
+    id: 'karnataka',
+    state: 'Karnataka',
+    name: 'Karnataka State Board',
+    code: 'KSEAB',
+    tag: 'SSLC & 2nd PUC',
+    fullName: 'Karnataka School Examination and Assessment Board (KSEAB / KSEEB)',
+    region: 'South',
+    isPopular: true,
+  },
+  {
+    id: 'west_bengal',
+    state: 'West Bengal',
+    name: 'West Bengal Board',
+    code: 'WBBSE / WBCHSE',
+    tag: 'Madhyamik & HS',
+    fullName: 'West Bengal Board of Secondary Education & Higher Secondary Council',
+    region: 'East',
+    isPopular: true,
+  },
+  {
+    id: 'rajasthan',
+    state: 'Rajasthan',
+    name: 'Rajasthan Board',
+    code: 'RBSE',
+    tag: 'Secondary & Sr. Sec',
+    fullName: 'Board of Secondary Education Rajasthan, Ajmer (BSER / RBSE)',
+    region: 'North',
+    isPopular: true,
+  },
+  {
+    id: 'andhra_pradesh',
+    state: 'Andhra Pradesh',
+    name: 'Andhra Pradesh Board',
+    code: 'BSEAP / BIEAP',
+    tag: 'SSC & Intermediate',
+    fullName: 'Board of Secondary Education & Intermediate Education Andhra Pradesh',
+    region: 'South',
+    isPopular: true,
+  },
+  {
+    id: 'telangana',
+    state: 'Telangana',
+    name: 'Telangana State Board',
+    code: 'TSBIE / BSE',
+    tag: 'SSC & Inter',
+    fullName: 'Telangana State Board of Intermediate & Secondary Education, Hyderabad',
+    region: 'South',
+    isPopular: true,
+  },
+  {
+    id: 'kerala',
+    state: 'Kerala',
+    name: 'Kerala State Board',
+    code: 'KBPE / DHSE',
+    tag: 'SSLC & Plus Two',
+    fullName: 'Kerala Directorate of Higher Secondary Education & Pareeksha Bhavan',
+    region: 'South',
+    isPopular: true,
+  },
+  {
+    id: 'madhya_pradesh',
+    state: 'Madhya Pradesh',
+    name: 'MP Board',
+    code: 'MPBSE',
+    tag: 'High School & Higher Sec',
+    fullName: 'Madhya Pradesh Board of Secondary Education, Bhopal',
+    region: 'Central',
+    isPopular: true,
+  },
+  {
+    id: 'gujarat',
+    state: 'Gujarat',
+    name: 'Gujarat Board',
+    code: 'GSEB',
+    tag: 'SSC & HSC',
+    fullName: 'Gujarat Secondary and Higher Secondary Education Board, Gandhinagar',
+    region: 'West',
+    isPopular: true,
+  },
+  {
+    id: 'punjab',
+    state: 'Punjab',
+    name: 'Punjab Board',
+    code: 'PSEB',
+    tag: 'Matric & Sr. Secondary',
+    fullName: 'Punjab School Education Board, Mohali',
+    region: 'North',
+    isPopular: true,
+  },
+  {
+    id: 'odisha',
+    state: 'Odisha',
+    name: 'Odisha Board',
+    code: 'BSE / CHSE',
+    tag: 'HSC & +2',
+    fullName: 'Board of Secondary Education & Council of Higher Secondary Education Odisha',
+    region: 'East',
+    isPopular: true,
+  },
+  // ── North & Central India ──
+  {
+    id: 'haryana',
+    state: 'Haryana',
+    name: 'Haryana Board',
+    code: 'BSEH / HBSE',
+    tag: 'Secondary & Sr. Sec',
+    fullName: 'Board of School Education Haryana, Bhiwani',
+    region: 'North',
+  },
+  {
+    id: 'jharkhand',
+    state: 'Jharkhand',
+    name: 'Jharkhand Board',
+    code: 'JAC',
+    tag: 'Matric & Intermediate',
+    fullName: 'Jharkhand Academic Council, Ranchi',
+    region: 'East',
+  },
+  {
+    id: 'chhattisgarh',
+    state: 'Chhattisgarh',
+    name: 'Chhattisgarh Board',
+    code: 'CGBSE',
+    tag: 'High School & Higher Sec',
+    fullName: 'Chhattisgarh Board of Secondary Education, Raipur',
+    region: 'Central',
+  },
+  {
+    id: 'uttarakhand',
+    state: 'Uttarakhand',
+    name: 'Uttarakhand Board',
+    code: 'UBSE',
+    tag: 'High School & Intermediate',
+    fullName: 'Uttarakhand Board of School Education, Ramnagar',
+    region: 'North',
+  },
+  {
+    id: 'himachal_pradesh',
+    state: 'Himachal Pradesh',
+    name: 'Himachal Pradesh Board',
+    code: 'HPBOSE',
+    tag: 'Matric & 10+2',
+    fullName: 'Himachal Pradesh Board of School Education, Dharamshala',
+    region: 'North',
+  },
+  {
+    id: 'jammu_kashmir',
+    state: 'Jammu & Kashmir',
+    name: 'J&K State Board',
+    code: 'JKBOSE',
+    tag: 'Secondary & Higher Sec',
+    fullName: 'Jammu and Kashmir State Board of School Education',
+    region: 'North',
+  },
+  {
+    id: 'delhi',
+    state: 'Delhi (NCT)',
+    name: 'Delhi Board',
+    code: 'DBSE',
+    tag: 'Secondary & Sr. Sec',
+    fullName: 'Delhi Board of School Education, Government of NCT of Delhi',
+    region: 'North',
+  },
+  // ── West & South India ──
+  {
+    id: 'goa',
+    state: 'Goa',
+    name: 'Goa Board',
+    code: 'GBSHSE',
+    tag: 'SSC & HSSC',
+    fullName: 'Goa Board of Secondary and Higher Secondary Education, Porvorim',
+    region: 'West',
+  },
+  // ── North-East India ──
+  {
+    id: 'assam',
+    state: 'Assam',
+    name: 'Assam State Board',
+    code: 'SEBA / AHSEC',
+    tag: 'HSLC & HS (10+2)',
+    fullName: 'Secondary Education Board of Assam & Higher Secondary Education Council',
+    region: 'North-East',
+  },
+  {
+    id: 'tripura',
+    state: 'Tripura',
+    name: 'Tripura Board',
+    code: 'TBSE',
+    tag: 'Madhyamik & Higher Sec',
+    fullName: 'Tripura Board of Secondary Education, Agartala',
+    region: 'North-East',
+  },
+  {
+    id: 'manipur',
+    state: 'Manipur',
+    name: 'Manipur Board',
+    code: 'BSEM / COHSEM',
+    tag: 'HSLC & HSE',
+    fullName: 'Board of Secondary Education & Higher Secondary Council Manipur',
+    region: 'North-East',
+  },
+  {
+    id: 'meghalaya',
+    state: 'Meghalaya',
+    name: 'Meghalaya Board',
+    code: 'MBOSE',
+    tag: 'SSLC & HSSLC',
+    fullName: 'Meghalaya Board of School Education, Tura',
+    region: 'North-East',
+  },
+  {
+    id: 'mizoram',
+    state: 'Mizoram',
+    name: 'Mizoram Board',
+    code: 'MBSE',
+    tag: 'HSLC & HSSLC',
+    fullName: 'Mizoram Board of School Education, Aizawl',
+    region: 'North-East',
+  },
+  {
+    id: 'nagaland',
+    state: 'Nagaland',
+    name: 'Nagaland Board',
+    code: 'NBSE',
+    tag: 'HSLC & HSSLC',
+    fullName: 'Nagaland Board of School Education, Kohima',
+    region: 'North-East',
+  },
+  {
+    id: 'sikkim',
+    state: 'Sikkim',
+    name: 'Sikkim State Board',
+    code: 'SBSE',
+    tag: 'State Curriculum',
+    fullName: 'Directorate of School Education, Government of Sikkim',
+    region: 'North-East',
+  },
+  {
+    id: 'arunachal_pradesh',
+    state: 'Arunachal Pradesh',
+    name: 'Arunachal Pradesh Board',
+    code: 'APBSE',
+    tag: 'Secondary Education',
+    fullName: 'Department of School Education, Government of Arunachal Pradesh',
+    region: 'North-East',
+  },
+  {
+    id: 'other_state',
+    state: 'Other Indian States',
+    name: 'General State Board',
+    code: 'State Board',
+    tag: 'State Curriculum',
+    fullName: 'State Government Secondary & Higher Secondary Education',
+    region: 'All',
+  },
+];
 
 interface CurriculumPickerModalProps {
   isOpen?: boolean;
@@ -62,9 +379,9 @@ const SCHOOL_BOARDS = [
   {
     id: 'State Board',
     name: 'State Board',
-    fullName: 'State Government Secondary Education',
+    fullName: 'State Government Secondary Education (All 28 Indian States & UTs)',
     icon: GraduationCap,
-    badge: 'State Curriculum',
+    badge: '28 States & UTs',
     color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     badgeColor: 'bg-emerald-100 text-emerald-800',
   },
@@ -176,6 +493,10 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   // Selections
   const [category, setCategory] = useState<'School Exams' | 'Competitive Exams' | null>(initialCategory || null);
   const [selectedBoard, setSelectedBoard] = useState<string>('CBSE');
+  const [selectedStateBoard, setSelectedStateBoard] = useState<StateBoardOption | null>(null);
+  const [isPickingStateBoard, setIsPickingStateBoard] = useState<boolean>(false);
+  const [stateBoardSearch, setStateBoardSearch] = useState<string>('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedClass, setSelectedClass] = useState<string>('10');
   const [selectedExam, setSelectedExam] = useState<string>('JEE');
   const [selectedYear, setSelectedYear] = useState<string>('2027');
@@ -183,6 +504,9 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setIsPickingStateBoard(false);
+      setStateBoardSearch('');
+      setSelectedRegion('All');
       if (initialCategory) setCategory(initialCategory);
     }
   }, [isOpen, initialCategory]);
@@ -193,17 +517,52 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
   };
 
   const handleBack = () => {
-    if (step === 4) setStep(3);
-    else if (step === 3) setStep(2);
-    else if (step === 2) setStep(1);
+    if (step === 4) {
+      setStep(3);
+    } else if (step === 3) {
+      if (selectedStateBoard) {
+        setIsPickingStateBoard(true);
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (isPickingStateBoard) {
+        setIsPickingStateBoard(false);
+      } else {
+        setStep(1);
+      }
+    }
   };
+
+  // Filtered State Boards based on search query and region chip
+  const filteredStateBoards = useMemo(() => {
+    const q = stateBoardSearch.trim().toLowerCase();
+    return INDIAN_STATE_BOARDS.filter((sb) => {
+      // Region filter
+      if (selectedRegion === 'Popular' && !sb.isPopular) return false;
+      if (selectedRegion !== 'All' && selectedRegion !== 'Popular' && sb.region !== selectedRegion) return false;
+
+      // Text search
+      if (!q) return true;
+      return (
+        sb.state.toLowerCase().includes(q) ||
+        sb.name.toLowerCase().includes(q) ||
+        sb.code.toLowerCase().includes(q) ||
+        sb.tag.toLowerCase().includes(q) ||
+        sb.fullName.toLowerCase().includes(q)
+      );
+    });
+  }, [stateBoardSearch, selectedRegion]);
 
   // Find or resolve best matching course from existing courses
   const resolvedCourseInfo = useMemo(() => {
     if (!category) return null;
 
     if (category === 'School Exams') {
-      const generatedName = `Class ${selectedClass} ${selectedBoard} Board Exam`;
+      const boardLabel = selectedStateBoard ? selectedStateBoard.name : selectedBoard;
+      const boardForCourse = selectedStateBoard
+        ? `${selectedStateBoard.name} (${selectedStateBoard.code})`
+        : selectedBoard;
+      const generatedName = `Class ${selectedClass} ${boardLabel} Exam`;
       const fallbackSubjects =
         selectedClass === '11' || selectedClass === '12'
           ? ['Physics', 'Chemistry', 'Mathematics', 'Biology']
@@ -224,7 +583,14 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
           cName.includes(`grade ${selectedClass}`) ||
           cName.includes(`${selectedClass}th`);
 
-        const boardMatch = !selectedBoard || cBoard.includes(selectedBoard.toLowerCase()) || cName.includes(selectedBoard.toLowerCase());
+        const searchTerms = [
+          selectedBoard.toLowerCase(),
+          boardLabel.toLowerCase(),
+          selectedStateBoard?.code?.toLowerCase() || '',
+          selectedStateBoard?.state?.toLowerCase() || '',
+        ].filter(Boolean);
+
+        const boardMatch = searchTerms.some((t) => cBoard.includes(t) || cName.includes(t));
 
         return gradeMatch && (boardMatch || cName.includes(selectedClass));
       });
@@ -234,18 +600,26 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
           courseId: String(match._id || match.id),
           courseName: match.name,
           category: 'School Exams' as const,
-          board: match.board || selectedBoard,
+          board: match.board || boardForCourse,
+          state: selectedStateBoard?.state,
+          stateCode: selectedStateBoard?.code,
           classGrade: `Class ${selectedClass}`,
           subjects: Array.isArray(match.subjects) && match.subjects.length > 0 ? match.subjects : fallbackSubjects,
           isNewCourse: false,
         };
       }
 
+      const idSlug = (selectedStateBoard ? selectedStateBoard.id : selectedBoard)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+
       return {
-        courseId: `course_school_${selectedBoard.toLowerCase().replace(/[^a-z0-9]/g, '')}_class_${selectedClass}`,
+        courseId: `course_school_${idSlug}_class_${selectedClass}`,
         courseName: generatedName,
         category: 'School Exams' as const,
-        board: selectedBoard,
+        board: boardForCourse,
+        state: selectedStateBoard?.state,
+        stateCode: selectedStateBoard?.code,
         classGrade: `Class ${selectedClass}`,
         subjects: fallbackSubjects,
         isNewCourse: true,
@@ -317,7 +691,7 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
       {/* Modal Header */}
       <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2.5">
-          {step > 1 ? (
+          {step > 1 || isPickingStateBoard ? (
             <button
               type="button"
               onClick={handleBack}
@@ -338,7 +712,7 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
             </span>
             <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
               {step === 1 && 'What is your study goal? 🎯'}
-              {step === 2 && category === 'School Exams' && 'Which Board do you follow? 🏛️'}
+              {step === 2 && category === 'School Exams' && (isPickingStateBoard ? 'Select Your State Board 🏛️' : 'Which Board do you follow? 🏛️')}
               {step === 2 && category === 'Competitive Exams' && 'Which Exam are you targeting? ⚡'}
               {step === 3 && category === 'School Exams' && 'Which Class are you in? 🎒'}
               {step === 3 && category === 'Competitive Exams' && 'What is your Target Year? 🗓️'}
@@ -429,8 +803,8 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
           </div>
         )}
 
-        {/* ══════ STEP 2 (School): Pick Board ══════ */}
-        {step === 2 && category === 'School Exams' && (
+        {/* ══════ STEP 2 (School): Pick Board (Main 4 Boards) ══════ */}
+        {step === 2 && category === 'School Exams' && !isPickingStateBoard && (
           <div className="space-y-3 animate-in fade-in duration-200">
             <p className="text-xs text-slate-600 font-medium">
               Select your education board to align curriculum chapters, marking scheme, and board questions:
@@ -439,16 +813,21 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {SCHOOL_BOARDS.map((b) => {
                 const Icon = b.icon;
-                const isSelected = selectedBoard === b.id;
+                const isSelected = selectedBoard === b.id || (b.id === 'State Board' && selectedStateBoard !== null);
                 return (
                   <button
                     key={b.id}
                     type="button"
                     onClick={() => {
-                      setSelectedBoard(b.id);
-                      setStep(3);
+                      if (b.id === 'State Board') {
+                        setIsPickingStateBoard(true);
+                      } else {
+                        setSelectedStateBoard(null);
+                        setSelectedBoard(b.id);
+                        setStep(3);
+                      }
                     }}
-                    className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 ${
+                    className={`p-4 rounded-2xl border-2 text-left flex items-start gap-3 transition-all cursor-pointer active:translate-y-0.5 relative group ${
                       isSelected
                         ? 'border-blue-600 bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
                         : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50/80 shadow-xs'
@@ -465,10 +844,142 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-1 leading-snug">{b.fullName}</p>
+                      {b.id === 'State Board' && selectedStateBoard && (
+                        <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md">
+                          <Check className="w-3 h-3 text-emerald-700" />
+                          <span>Selected: {selectedStateBoard.state} ({selectedStateBoard.code})</span>
+                        </div>
+                      )}
                     </div>
+                    {b.id === 'State Board' && (
+                      <div className="self-center text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    )}
                   </button>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════ STEP 2 (School): Pick State Board (Nested Selection View) ══════ */}
+        {step === 2 && category === 'School Exams' && isPickingStateBoard && (
+          <div className="space-y-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block">
+                  Indian State Curriculum
+                </span>
+                <h4 className="text-sm font-extrabold text-slate-900">
+                  Select Your State Board 🏛️
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPickingStateBoard(false)}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 px-2.5 py-1.5 rounded-xl hover:bg-blue-50 transition-colors border border-blue-200 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> All Boards
+              </button>
+            </div>
+
+            {/* Sticky Search & Region Filters */}
+            <div className="space-y-2 sticky top-0 bg-white z-10 pt-1 pb-2">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={stateBoardSearch}
+                  onChange={(e) => setStateBoardSearch(e.target.value)}
+                  placeholder="Search state or board (e.g. Maharashtra, UP, Bihar, Tamil Nadu)..."
+                  className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                />
+                {stateBoardSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setStateBoardSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Region Filter Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+                {['All', 'Popular', 'North', 'South', 'East', 'West', 'Central', 'North-East'].map((reg) => (
+                  <button
+                    key={reg}
+                    type="button"
+                    onClick={() => setSelectedRegion(reg)}
+                    className={`px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer ${
+                      selectedRegion === reg
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {reg}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* State Boards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[44vh] overflow-y-auto pr-1">
+              {filteredStateBoards.length === 0 ? (
+                <div className="col-span-full py-8 text-center text-slate-400 text-xs">
+                  No state board matches "{stateBoardSearch}". Try searching by state name or board acronym.
+                </div>
+              ) : (
+                filteredStateBoards.map((sb) => {
+                  const isSelected = selectedStateBoard?.id === sb.id;
+                  return (
+                    <button
+                      key={sb.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStateBoard(sb);
+                        setSelectedBoard(`${sb.name} (${sb.code})`);
+                        setStep(3);
+                      }}
+                      className={`p-3 rounded-2xl border-2 text-left flex items-start gap-2.5 transition-all cursor-pointer active:translate-y-0.5 relative group ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-50/80 shadow-md ring-2 ring-emerald-500/20'
+                          : 'border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/30 shadow-xs'
+                      }`}
+                    >
+                      {/* State Code Badge */}
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 border border-emerald-200 text-emerald-800 flex flex-col items-center justify-center shrink-0 font-black text-xs shadow-xs group-hover:scale-105 transition-transform">
+                        <span>{sb.code.slice(0, 4)}</span>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="font-extrabold text-xs text-slate-900 group-hover:text-emerald-700 transition-colors truncate">
+                            {sb.state}
+                          </h4>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
+                            {sb.tag}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-semibold text-slate-700 mt-0.5 truncate">
+                          {sb.name}
+                        </p>
+                        <p className="text-[10px] text-slate-400 leading-snug line-clamp-1 mt-0.5">
+                          {sb.fullName}
+                        </p>
+                      </div>
+
+                      {isSelected && (
+                        <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 self-center">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
@@ -477,7 +988,11 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
         {step === 3 && category === 'School Exams' && (
           <div className="space-y-3 animate-in fade-in duration-200">
             <p className="text-xs text-slate-600 font-medium">
-              Board selected: <strong className="text-blue-600 font-extrabold">{selectedBoard}</strong>. Now pick your grade level:
+              Board selected:{' '}
+              <strong className="text-blue-600 font-extrabold">
+                {selectedStateBoard ? `${selectedStateBoard.name} (${selectedStateBoard.code})` : selectedBoard}
+              </strong>
+              . Now pick your grade level:
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
