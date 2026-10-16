@@ -50,6 +50,29 @@ export default function LandingPage() {
   // Scroll position state for dynamic navbar color transition
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Check if student is already logged in; if so, redirect immediately to dashboard or course-selection
+  useEffect(() => {
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data && data.authenticated && data.user) {
+          const courseId = data.user.locked_course_id || data.user.lockedCourseId;
+          const joinCode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('joinCode') : null;
+          if (joinCode) {
+            window.location.replace(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`);
+          } else if (courseId) {
+            window.location.replace('/dashboard');
+          } else {
+            window.location.replace('/course-selection');
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     const heroTimer = setInterval(() => {
       setHeroImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);

@@ -94,7 +94,27 @@ export async function middleware(request: NextRequest) {
   const user = token ? await verifyToken(token) : null;
   const isAuthenticated = !!user;
 
-  // 2. Check if path is public
+  // 2. Root path handling: If logged in -> go to dashboard (or course selection), if not -> show homepage
+  if (pathname === '/') {
+    if (isAuthenticated) {
+      const joinCode = request.nextUrl.searchParams.get('joinCode');
+      if (joinCode) {
+        return NextResponse.redirect(new URL(`/leaderboard?joinCode=${encodeURIComponent(joinCode)}`, request.url));
+      }
+      const hasLockedCourse = Boolean(user && user.lockedCourseId && String(user.lockedCourseId).trim().length > 0);
+      const destination = hasLockedCourse ? '/dashboard' : '/course-selection';
+      const redirectUrl = new URL(destination, request.url);
+      if (request.nextUrl.search) {
+        redirectUrl.search = request.nextUrl.search;
+      }
+      return NextResponse.redirect(redirectUrl);
+    }
+    const response = NextResponse.next();
+    applySecurityHeaders(response);
+    return response;
+  }
+
+  // 3. Check if path is public
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
   const isPublicApi = PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
