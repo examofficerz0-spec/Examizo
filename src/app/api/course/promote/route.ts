@@ -232,6 +232,12 @@ export async function POST(request: Request) {
             nextCourse.id,
             currentUser.id,
           ]);
+          try {
+            await executeD1('UPDATE sub_profiles SET locked_course_id = ? WHERE id = ?', [
+              nextCourse.id,
+              currentUser.id,
+            ]);
+          } catch (_) {}
 
           return NextResponse.json({
             success: true,
@@ -254,6 +260,12 @@ export async function POST(request: Request) {
             currentUser.previous_course_id,
             currentUser.id,
           ]);
+          try {
+            await executeD1('UPDATE sub_profiles SET locked_course_id = ? WHERE id = ?', [
+              currentUser.previous_course_id,
+              currentUser.id,
+            ]);
+          } catch (_) {}
 
           return NextResponse.json({
             success: true,
@@ -309,6 +321,12 @@ export async function POST(request: Request) {
 
       db.users[userIndex].previous_course_id = currentUser.locked_course_id;
       db.users[userIndex].locked_course_id = nextCourse._id || nextCourse.id;
+      if (db.sub_profiles) {
+        const spIdx = db.sub_profiles.findIndex((s: any) => String(s.id || s._id) === String(currentUser._id || currentUser.id));
+        if (spIdx !== -1) {
+          db.sub_profiles[spIdx].locked_course_id = nextCourse._id || nextCourse.id;
+        }
+      }
       writeSharedDb(db);
 
       return NextResponse.json({
@@ -332,6 +350,12 @@ export async function POST(request: Request) {
 
       db.users[userIndex].locked_course_id = currentUser.previous_course_id;
       db.users[userIndex].previous_course_id = null;
+      if (db.sub_profiles) {
+        const spIdx = db.sub_profiles.findIndex((s: any) => String(s.id || s._id) === String(currentUser._id || currentUser.id));
+        if (spIdx !== -1) {
+          db.sub_profiles[spIdx].locked_course_id = currentUser.previous_course_id;
+        }
+      }
       writeSharedDb(db);
 
       return NextResponse.json({

@@ -14,6 +14,7 @@ function getDbPath(): string {
 
 export interface SharedDbData {
   users: any[];
+  sub_profiles?: any[];
   courses: any[];
   questions: any[];
   mockTests: any[];
@@ -29,6 +30,7 @@ export interface SharedDbData {
 
 const initialDb: SharedDbData = {
   users: [],
+  sub_profiles: [],
   courses: [],
   questions: [],
   mockTests: [],

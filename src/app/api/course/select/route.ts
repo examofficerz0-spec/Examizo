@@ -57,6 +57,12 @@ export async function POST(req: Request) {
           [cleanCourseId, 'Active', emailLower, userId, emailLower]
         );
       } catch (_) {}
+      try {
+        await executeD1(
+          'UPDATE sub_profiles SET locked_course_id = ?, status = ? WHERE id = ? OR (parent_user_id = ? AND is_primary = 1)',
+          [cleanCourseId, 'Active', userId, userId]
+        );
+      } catch (_) {}
       await executeD1(
         'INSERT OR IGNORE INTO users (id, name, email, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?)',
         [userId, name, emailLower, 'Active', 0, cleanCourseId]
@@ -101,6 +107,17 @@ export async function POST(req: Request) {
           created_at: new Date().toISOString(),
         });
       }
+
+      if (db.sub_profiles) {
+        const subIndex = db.sub_profiles.findIndex(
+          (sp: any) => String(sp.id || sp._id) === userId || (String(sp.parent_user_id) === userId && sp.is_primary === 1)
+        );
+        if (subIndex !== -1) {
+          db.sub_profiles[subIndex].locked_course_id = cleanCourseId;
+          db.sub_profiles[subIndex].status = 'Active';
+        }
+      }
+
       writeSharedDb(db);
     } catch (dbErr) {
       console.error('[course/select] sharedDb error:', dbErr);

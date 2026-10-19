@@ -130,6 +130,18 @@ export async function POST(req: Request) {
       );
 
       if (d1Success) {
+        // Also ensure primary profile in sub_profiles
+        try {
+          await executeD1(
+            `INSERT OR REPLACE INTO sub_profiles (
+              id, parent_user_id, parent_email, name, full_name, nickname, dob, pin, avatar_color, locked_course_id, xp_total, status, is_primary
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'bg-blue-600', ?, 0, 'Active', 1)`,
+            [newUserId, newUserId, lowerEmail, displayName, cleanFullName, cleanNickname, cleanDob, cleanCourseId]
+          );
+        } catch (subErr) {
+          console.warn('[Register SubProfile D1 Warning]:', subErr);
+        }
+
         // Also sync memory store
         try {
           const db = readSharedDb();
@@ -147,6 +159,24 @@ export async function POST(req: Request) {
             status: 'Active',
             xp_total: 0,
             locked_course_id: cleanCourseId,
+            created_at: new Date().toISOString(),
+          });
+          if (!db.sub_profiles) db.sub_profiles = [];
+          db.sub_profiles.push({
+            id: newUserId,
+            _id: newUserId,
+            parent_user_id: newUserId,
+            parent_email: lowerEmail,
+            name: displayName,
+            full_name: cleanFullName,
+            nickname: cleanNickname,
+            dob: cleanDob,
+            pin: null,
+            avatar_color: 'bg-blue-600',
+            locked_course_id: cleanCourseId,
+            xp_total: 0,
+            status: 'Active',
+            is_primary: 1,
             created_at: new Date().toISOString(),
           });
           writeSharedDb(db);
@@ -211,6 +241,24 @@ export async function POST(req: Request) {
 
     if (!db.users) db.users = [];
     db.users.push(newUser);
+    if (!db.sub_profiles) db.sub_profiles = [];
+    db.sub_profiles.push({
+      id: newUserId,
+      _id: newUserId,
+      parent_user_id: newUserId,
+      parent_email: lowerEmail,
+      name: displayName,
+      full_name: cleanFullName,
+      nickname: cleanNickname,
+      dob: cleanDob,
+      pin: null,
+      avatar_color: 'bg-blue-600',
+      locked_course_id: cleanCourseId,
+      xp_total: 0,
+      status: 'Active',
+      is_primary: 1,
+      created_at: new Date().toISOString(),
+    });
     writeSharedDb(db);
 
     const token = signUserToken({

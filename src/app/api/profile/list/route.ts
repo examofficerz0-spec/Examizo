@@ -38,50 +38,82 @@ export async function GET() {
     // 1. Primary: Cloudflare D1
     try {
       const parentEmailTarget = (accountEmail || currentEmail).toLowerCase().trim();
+      const parentUserId = String(currentUser._id || currentUser.id || auth.userId);
       const d1Users = await queryD1(
         "SELECT * FROM users WHERE (LOWER(email) LIKE ? OR LOWER(email) LIKE ? OR LOWER(account_email) = ? OR LOWER(account_email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended' AND status != 'suspended'",
-        [`${baseHandle}@%`, `${baseHandle}+%`, parentEmailTarget, `${baseHandle}@%`, String(currentUser._id || currentUser.id || auth.userId)]
+        [`${baseHandle}@%`, `${baseHandle}+%`, parentEmailTarget, `${baseHandle}@%`, parentUserId]
       );
 
-      if (d1Users && d1Users.length > 0) {
+      let d1SubProfiles: any[] = [];
+      try {
+        d1SubProfiles = await queryD1(
+          "SELECT * FROM sub_profiles WHERE (parent_user_id = ? OR LOWER(parent_email) = ?) AND status != 'Deleted' AND status != 'Suspended'",
+          [parentUserId, parentEmailTarget]
+        );
+      } catch (_) {}
+
+      // Map and merge profiles uniquely by ID
+      const profileMap = new Map<string, any>();
+      (d1Users || []).forEach((u: any) => {
+        profileMap.set(String(u.id), u);
+      });
+      (d1SubProfiles || []).forEach((sp: any) => {
+        const id = String(sp.id);
+        if (!profileMap.has(id)) {
+          profileMap.set(id, {
+            ...sp,
+            email: sp.email || `${baseHandle}+sub_${id.slice(-4)}@examizo.com`,
+            account_email: parentEmailTarget,
+          });
+        } else {
+          // Merge metadata
+          const existing = profileMap.get(id);
+          profileMap.set(id, {
+            ...existing,
+            ...sp,
+            locked_course_id: sp.locked_course_id || existing.locked_course_id,
+            pin: sp.pin ?? existing.pin,
+            avatar_color: sp.avatar_color || existing.avatar_color,
+          });
+        }
+      });
+
+      const combinedProfiles = Array.from(profileMap.values());
+
+      if (combinedProfiles.length > 0) {
         const d1Courses = await queryD1('SELECT id, name FROM courses');
         const courseMap = new Map((d1Courses || []).map((c: any) => [c.id, c.name]));
 
         const currentIdStr = String(currentUser._id || currentUser.id || auth.userId);
         
-        const sortedD1Users = [...d1Users].sort((a: any, b: any) => {
-          const aIsPrimary = !a.email.includes('+');
-          const bIsPrimary = !b.email.includes('+');
+        const sortedD1Users = [...combinedProfiles].sort((a: any, b: any) => {
+          const aIsPrimary = Boolean(a.is_primary === 1 || a.is_primary === true || (a.email && !a.email.includes('+')));
+          const bIsPrimary = Boolean(b.is_primary === 1 || b.is_primary === true || (b.email && !b.email.includes('+')));
           if (aIsPrimary && !bIsPrimary) return -1;
           if (!aIsPrimary && bIsPrimary) return 1;
           return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
         });
 
-        const validD1Users = sortedD1Users.filter((u: any) => {
-          const isPrimary = !u.email.includes('+');
-          return isPrimary || (u.locked_course_id && String(u.locked_course_id).trim().length > 0);
-        });
-
         const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
-        const profiles = validD1Users.map((u: any, idx: number) => {
-          const isPrimary = !u.email.includes('+');
+        const profiles = sortedD1Users.map((u: any, idx: number) => {
+          const isPrimary = Boolean(u.is_primary === 1 || u.is_primary === true || (u.email && !u.email.includes('+')));
           const effectiveFullName = u.full_name || u.name;
           const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
           const displayName = effectiveNickname || effectiveFullName;
 
           return {
-            id: u.id,
+            id: String(u.id),
             name: displayName,
             fullName: effectiveFullName,
             nickname: effectiveNickname,
             dob: u.dob || null,
             displayName,
-            email: u.email,
-            accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
+            email: u.email || `${baseHandle}@examizo.com`,
+            accountEmail: `${baseHandle}@${((u.email || '').split('@')[1] || 'examizo.com')}`,
             lockedCourseId: u.locked_course_id || null,
             lockedCourseName: u.locked_course_id ? (courseMap.get(u.locked_course_id) || null) : null,
-            isActive: u.id === currentIdStr,
+            isActive: String(u.id) === currentIdStr,
             isPrimary,
             hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
             avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],
@@ -97,23 +129,44 @@ export async function GET() {
 
     // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
-    const family = (db.users || []).filter((u: any) => {
-      if (u.status === 'Deleted' || u.name === 'Deleted User') return false;
+    const currentIdStr = String(currentUser._id || currentUser.id || auth.userId);
+    const parentEmailTarget = (accountEmail || currentEmail).toLowerCase().trim();
+
+    const memProfileMap = new Map<string, any>();
+    (db.users || []).forEach((u: any) => {
+      if (u.status === 'Deleted' || u.name === 'Deleted User') return;
       const uEmail = (u.email || '').toLowerCase().trim();
-      const isPrimary = !uEmail.includes('+');
-      if (!isPrimary && (!u.locked_course_id || !String(u.locked_course_id).trim())) {
-        return false;
-      }
       const uAcct = (u.account_email || '').toLowerCase().trim();
       const uHandle = (uAcct || uEmail).split('@')[0].split('+')[0].trim();
-      return uHandle === baseHandle || String(u._id || u.id) === String(currentUser._id || currentUser.id);
+      if (uHandle === baseHandle || String(u._id || u.id) === currentIdStr) {
+        memProfileMap.set(String(u._id || u.id), u);
+      }
     });
 
+    (db.sub_profiles || []).forEach((sp: any) => {
+      if (sp.status === 'Deleted') return;
+      const id = String(sp._id || sp.id);
+      const isFamily = String(sp.parent_user_id) === currentIdStr || (sp.parent_email && sp.parent_email.toLowerCase().trim() === parentEmailTarget);
+      if (isFamily) {
+        if (!memProfileMap.has(id)) {
+          memProfileMap.set(id, {
+            ...sp,
+            email: sp.email || `${baseHandle}+sub_${id.slice(-4)}@examizo.com`,
+            account_email: parentEmailTarget,
+          });
+        } else {
+          const ex = memProfileMap.get(id);
+          memProfileMap.set(id, { ...ex, ...sp });
+        }
+      }
+    });
+
+    const family = Array.from(memProfileMap.values());
     const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
     const profiles = family.map((u: any, idx: number) => {
       const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id) || String(c.id) === String(u.locked_course_id)) || null;
-      const isPrimary = !(u.email || '').includes('+');
+      const isPrimary = Boolean(u.is_primary === 1 || u.is_primary === true || !(u.email || '').includes('+'));
       const effectiveFullName = u.full_name || u.name;
       const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
       const displayName = effectiveNickname || effectiveFullName;
@@ -126,10 +179,10 @@ export async function GET() {
         dob: u.dob || null,
         displayName,
         email: u.email,
-        accountEmail: `${baseHandle}@${(u.email.split('@')[1] || 'examizo.com')}`,
+        accountEmail: `${baseHandle}@${((u.email || '').split('@')[1] || 'examizo.com')}`,
         lockedCourseId: u.locked_course_id || null,
         lockedCourseName: lockedCourse?.name || null,
-        isActive: String(u._id || u.id) === String(currentUser._id || currentUser.id),
+        isActive: String(u._id || u.id) === currentIdStr,
         isPrimary,
         hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
         avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],

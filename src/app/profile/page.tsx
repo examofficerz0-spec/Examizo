@@ -119,7 +119,7 @@ export default function ProfilePage() {
       .then((data) => {
         if (data.user) {
           setUserData(data.user);
-          setName(data.user.name);
+          setName(data.user.fullName || data.user.full_name || data.user.name || '');
           if (data.user.digilocker_verified || data.user.digilockerProfile?.verified) {
             setIsDigiLockerVerified(true);
             setDigilockerProfile(data.user.digilockerProfile);
@@ -157,16 +157,43 @@ export default function ProfilePage() {
     }
   };
 
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage('');
+    setMessageType('');
 
     try {
-      setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          password: password ? password : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+
+      setMessageType('success');
+      setMessage(data.message || 'Profile updated successfully!');
+      setPassword('');
+      if (data.user) {
+        setUserData(data.user);
+        setName(data.user.fullName || data.user.name || name);
+      }
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 4000);
+    } catch (err: any) {
       console.error(err);
+      setMessageType('error');
+      setMessage(err.message || 'Error updating profile');
     } finally {
       setSaving(false);
     }
@@ -195,7 +222,11 @@ export default function ProfilePage() {
         </div>
 
         {message && (
-          <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs rounded-xl font-bold transition-all animate-fadeIn">
+          <div className={`p-4 border text-xs rounded-xl font-bold transition-all animate-fadeIn ${
+            messageType === 'error'
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
+              : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+          }`}>
             {message}
           </div>
         )}
@@ -462,7 +493,7 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   required
-                  value={userData?.fullName || userData?.full_name || name}
+                  value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold"
                 />

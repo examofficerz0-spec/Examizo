@@ -181,8 +181,8 @@ export async function POST(req: Request) {
         executeD1('UPDATE users SET locked_course_id = ?, status = ? WHERE id = ?', [resolvedCourseId, 'Active', d1UserRow.id]).catch(() => {});
       } else if (!d1UserRow) {
         executeD1(
-          'INSERT OR IGNORE INTO users (id, name, email, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [resolvedId, resolvedName, lowerEmail, 'google', 'Active', resolvedXp, resolvedCourseId]
+          'INSERT OR IGNORE INTO users (id, name, full_name, email, account_email, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [resolvedId, resolvedName, resolvedName, lowerEmail, lowerEmail, 'google', 'Active', resolvedXp, resolvedCourseId]
         ).catch(() => {});
       }
 
@@ -199,7 +199,9 @@ export async function POST(req: Request) {
             _id: resolvedId,
             id: resolvedId,
             name: resolvedName,
+            full_name: resolvedName,
             email: lowerEmail,
+            account_email: lowerEmail,
             auth_provider: 'google',
             status: 'Active',
             xp_total: resolvedXp,
@@ -299,8 +301,14 @@ export async function POST(req: Request) {
     // 1. Insert into Cloudflare D1
     try {
       await executeD1(
-        'INSERT OR REPLACE INTO users (id, name, email, password_hash, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, cleanName, lowerEmail, dummyPasswordHash, 'google', 'Active', 0, null]
+        'INSERT OR REPLACE INTO users (id, name, full_name, email, account_email, password_hash, auth_provider, status, xp_total, locked_course_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, cleanName, cleanName, lowerEmail, lowerEmail, dummyPasswordHash, 'google', 'Active', 0, null]
+      );
+      await executeD1(
+        `INSERT OR REPLACE INTO sub_profiles (
+          id, parent_user_id, parent_email, name, full_name, nickname, dob, pin, avatar_color, locked_course_id, xp_total, status, is_primary
+        ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 'bg-blue-600', NULL, 0, 'Active', 1)`,
+        [newUserId, newUserId, lowerEmail, cleanName, cleanName]
       );
     } catch (d1Err) {
       console.warn('[Google D1 User Insert Warning]:', d1Err);
@@ -314,12 +322,32 @@ export async function POST(req: Request) {
         _id: newUserId,
         id: newUserId,
         name: cleanName,
+        full_name: cleanName,
         email: lowerEmail,
+        account_email: lowerEmail,
         password_hash: dummyPasswordHash,
         auth_provider: 'google',
         status: 'Active',
         xp_total: 0,
         locked_course_id: null,
+        created_at: new Date().toISOString(),
+      });
+      if (!db.sub_profiles) db.sub_profiles = [];
+      db.sub_profiles.push({
+        id: newUserId,
+        _id: newUserId,
+        parent_user_id: newUserId,
+        parent_email: lowerEmail,
+        name: cleanName,
+        full_name: cleanName,
+        nickname: null,
+        dob: null,
+        pin: null,
+        avatar_color: 'bg-blue-600',
+        locked_course_id: null,
+        xp_total: 0,
+        status: 'Active',
+        is_primary: 1,
         created_at: new Date().toISOString(),
       });
       writeSharedDb(db);
