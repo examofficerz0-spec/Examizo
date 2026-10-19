@@ -178,7 +178,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const routeParams = useParams();
   const searchParams = useSearchParams();
   const initialLangParam = searchParams?.get('lang') || 'en';
-  const isRetakeRequested = searchParams?.get('retake') === 'true';
   const testId = (params?.id || routeParams?.id) as string;
 
   const [test, setTest] = useState<any>(null);
@@ -235,13 +234,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   // Check sessionStorage on initial load for completed test results
   useEffect(() => {
     if (!testId) return;
-    if (isRetakeRequested) {
-      try {
-        sessionStorage.removeItem(`mock_result_${testId}`);
-        localStorage.removeItem(`examizo_mock_session_${testId}`);
-      } catch (_) {}
-      return;
-    }
     try {
       const saved = sessionStorage.getItem(`mock_result_${testId}`);
       if (saved) {
@@ -252,7 +244,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         }
       }
     } catch (_) {}
-  }, [testId, isRetakeRequested]);
+  }, [testId]);
 
   // Post-Test Completion Window & Feedback State
   const [showCompletionWindow, setShowCompletionWindow] = useState(false);
@@ -298,12 +290,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         setAttemptsCount(currentAttempts);
         setMaxAttempts(Number(data.maxAttempts || 3));
 
-        if (isRetakeRequested && currentAttempts >= 3) {
-          alert('Maximum attempts reached: You have already completed all 3 permitted tries for this mock examination.');
-          router.push(`/mock-tests/${testId}`);
-          return;
-        }
-
         const rawQuestions = Array.isArray(data.test?.question_ids) ? data.test.question_ids : [];
         const courseSubjectsList: string[] = data.test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Botany', 'Zoology'];
 
@@ -331,17 +317,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
         // Check if an in-progress session exists in localStorage for recovery
         let sessionToRestore: any = null;
-        if (!isRetakeRequested) {
-          try {
-            const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
-            if (rawSession) {
-              const parsed = JSON.parse(rawSession);
-              if (parsed && String(parsed.testId) === String(testId) && parsed.isExamStarted) {
-                sessionToRestore = parsed;
-              }
+        try {
+          const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
+          if (rawSession) {
+            const parsed = JSON.parse(rawSession);
+            if (parsed && String(parsed.testId) === String(testId) && parsed.isExamStarted) {
+              sessionToRestore = parsed;
             }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
 
         let finalReshuffledQuestions: any[] = [];
         let isSessionRestored = false;
@@ -421,8 +405,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           } else {
             setRestoredSessionNotification('⚡ Active Exam Resumed! Your answers and remaining time have been safely recovered.');
           }
-        } else if (!isRetakeRequested && data.latestAttempt) {
-          // Restore latest completed attempt from server if available and not explicitly retaking
+        } else if (data.latestAttempt) {
+          // Restore latest completed attempt from server if available
           setResult((prev: any) => {
             if (prev) return prev;
             return {
@@ -463,7 +447,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         console.error(err);
       })
       .finally(() => setLoading(false));
-  }, [testId, router, isRetakeRequested]);
+  }, [testId, router]);
 
   // Fullscreen Lockdown & Exam Start State
   const [isExamStarted, setIsExamStarted] = useState(false);
@@ -1030,22 +1014,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     }
   };
 
-  const handleRetakeTest = () => {
-    if (attemptsCount >= 3) {
-      alert('You have reached the maximum limit of 3 tries for this examination. You cannot retake it again.');
-      return;
-    }
-    try {
-      sessionStorage.removeItem(`mock_result_${testId}`);
-      localStorage.removeItem(`examizo_mock_session_${testId}`);
-    } catch (_) {}
-    setRestoredSessionNotification(null);
-    setResult(null);
-    setIsExamStarted(false);
-    setHasAcceptedRules(false);
-    router.push(`/mock-tests/${testId}?retake=true`);
-  };
-
   // Format Timer MM:SS or HH:MM:SS
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -1223,20 +1191,26 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
             {/* Action Buttons */}
             <div className="space-y-2 pt-1">
-              {attemptsCount >= 3 ? (
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center space-y-2">
-                  <div className="text-xs font-black text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1.5">
-                    <Lock className="w-4 h-4" /> Maximum Attempts Limit Reached
+              {attemptsCount > 0 ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center space-y-2">
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Examination Completed &amp; Saved
                   </div>
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-                    You have completed all 3 permitted tries for this mock examination.
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    This mock test has already been completed and submitted. Your performance analysis, score, and solutions are saved.
                   </p>
                   <button
                     type="button"
-                    onClick={() => router.push('/mock-tests')}
+                    onClick={() => {
+                      if (result) {
+                        setIsExamStarted(false);
+                      } else {
+                        router.push('/dashboard');
+                      }
+                    }}
                     className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors cursor-pointer"
                   >
-                    Return to Mock Tests Catalog
+                    View Examination Results
                   </button>
                 </div>
               ) : (
@@ -1254,12 +1228,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     {hasAcceptedRules ? (
                       <>
                         <ShieldCheck className="w-5 h-5" />
-                        Lock Screen &amp; Start Examination (Try {attemptsCount + 1} of 3)
+                        Lock Screen &amp; Start Examination
                       </>
                     ) : (
                       <>
                         <Lock className="w-5 h-5" />
-                        Check the box above to unlock examination (Try {attemptsCount + 1} of 3)
+                        Check the box above to unlock examination
                       </>
                     )}
                   </button>
@@ -1399,10 +1373,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               {/* Score Tile */}
               <div className="bg-slate-50 dark:bg-[#181622] border border-slate-200/80 dark:border-[#242033] rounded-2xl p-4 text-center transition-all hover:border-blue-300 dark:hover:border-purple-500">
                 <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block tracking-wider">Total Score</span>
-                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white block mt-0.5">
+                <span className={`text-2xl sm:text-3xl font-black block mt-0.5 ${Number(result.score) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
                   {result.score} <span className="text-xs text-slate-400 font-bold">/ {maxPossibleMarks}</span>
                 </span>
-                <span className="text-[10px] font-bold text-blue-600 dark:text-purple-400 mt-1 block">
+                <span className={`text-[10px] font-bold mt-1 block ${Number(result.score) < 0 ? 'text-rose-500 dark:text-rose-400 font-black' : 'text-blue-600 dark:text-purple-400'}`}>
                   {Math.round((result.score / Math.max(1, maxPossibleMarks)) * 100)}% Marks
                 </span>
               </div>
@@ -1459,19 +1433,6 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <span>Responses recorded and synced with student ranking engine.</span>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                {attemptsCount >= 3 ? (
-                  <div className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-black text-slate-500 bg-slate-100 dark:bg-[#181622] border border-slate-200 dark:border-[#242033] flex items-center justify-center gap-1.5 select-none">
-                    <Lock className="w-3.5 h-3.5" /> 3/3 Tries Completed (Limit Reached)
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleRetakeTest}
-                    className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#181622] border border-slate-200 dark:border-[#242033] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Retake Test ({attemptsCount}/3 Tries)
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={() => {

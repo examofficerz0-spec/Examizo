@@ -851,7 +851,7 @@ export default function StudentDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Track your scores, completion accuracy, time benchmarks, and try limits (3 tries maximum per test).
+                  Track your scores, completion accuracy, time benchmarks, and test performance history.
                 </p>
               </div>
             </div>
@@ -872,7 +872,7 @@ export default function StudentDashboardPage() {
               <div>
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No mock examinations attempted yet</h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Complete any full-length mock test to see your chronological history, scores, and try breakdown here.
+                  Complete any full-length mock test to see your chronological history, scores, and answer review here.
                 </p>
               </div>
               <Link
@@ -886,16 +886,7 @@ export default function StudentDashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {mockTestHistory.map((item: any, idx: number) => {
-                const tryNum = item.tryNumber || 1;
-                const canRetake = tryNum < 3;
                 const isPassed = (item.percentage || 0) >= 60;
-
-                let tryBadgeStyle = 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900';
-                if (tryNum === 2) {
-                  tryBadgeStyle = 'bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900';
-                } else if (tryNum >= 3) {
-                  tryBadgeStyle = 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900';
-                }
 
                 return (
                   <div
@@ -903,15 +894,13 @@ export default function StudentDashboardPage() {
                     className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between gap-3 shadow-2xs group"
                   >
                     <div>
-                      {/* Top Row: Title + Try Badge */}
+                      {/* Top Row: Title + Completed Badge */}
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {item.title}
                         </h4>
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase shrink-0 border ${tryBadgeStyle}`}
-                        >
-                          Try {tryNum}/3
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase shrink-0 border bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900">
+                          Completed
                         </span>
                       </div>
 
@@ -934,7 +923,9 @@ export default function StudentDashboardPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-bold text-slate-500">Score Achieved</span>
                         <span className="text-xs font-black text-slate-900 dark:text-white">
-                          <strong className="text-blue-600 dark:text-blue-400">{item.score}</strong> / {item.totalMarks}
+                          <strong className={Number(item.score) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}>
+                            {item.score}
+                          </strong> / {item.totalMarks}
                           <span className="ml-1 text-[10px] text-slate-400 font-bold">({item.percentage}%)</span>
                         </span>
                       </div>
@@ -942,9 +933,9 @@ export default function StudentDashboardPage() {
                       <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            isPassed ? 'bg-emerald-500' : 'bg-blue-600'
+                            isPassed ? 'bg-emerald-500' : Number(item.score) < 0 ? 'bg-rose-500' : 'bg-blue-600'
                           }`}
-                          style={{ width: `${Math.min(100, Math.max(5, item.percentage || 0))}%` }}
+                          style={{ width: `${Math.min(100, Math.max(0, item.percentage || 0))}%` }}
                         />
                       </div>
 
@@ -957,7 +948,7 @@ export default function StudentDashboardPage() {
                               : 'text-amber-700 dark:text-amber-300'
                           }`}
                         >
-                          {isPassed ? 'Passed' : 'Needs Practice'}
+                          {isPassed ? 'Passed' : 'Completed'}
                         </span>
                       </div>
                     </div>
@@ -965,19 +956,13 @@ export default function StudentDashboardPage() {
                     {/* Bottom Actions */}
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
                       {item.test_id ? (
-                        canRetake ? (
-                          <Link
-                            href={`/mock-tests/${item.test_id}`}
-                            className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                          >
-                            <span>Retake ({3 - tryNum} left)</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </Link>
-                        ) : (
-                          <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-800/90 px-2 py-0.5 rounded-md">
-                            3/3 Tries Maxed
-                          </span>
-                        )
+                        <Link
+                          href={`/mock-tests/${item.test_id}`}
+                          className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                        >
+                          <span>View Result</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
                       ) : (
                         <span className="text-[10px] font-medium text-slate-400">Completed</span>
                       )}

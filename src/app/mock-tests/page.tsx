@@ -210,17 +210,13 @@ export default function MockTestsListPage() {
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse flex items-center gap-1">
                             <Zap className="w-3 h-3 text-amber-500" /> In-Progress Active Session
                           </span>
-                        ) : isMaxed ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700 flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> Completed (3/3 Tries Maxed)
-                          </span>
                         ) : testItem.is_attempted ? (
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                            ✓ Attempted ({attemptsUsed}/3 Tries) • Best: {testItem.highest_score} Marks
+                            ✓ Completed • Score: {testItem.highest_score} Marks
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                            Unattempted (0/3 Tries)
+                            Unattempted
                           </span>
                         )}
                       </div>
@@ -254,33 +250,21 @@ export default function MockTestsListPage() {
                       >
                         <Zap className="w-4 h-4" /> Resume Test
                       </button>
-                    ) : isMaxed ? (
+                    ) : testItem.is_attempted ? (
                       <button
                         type="button"
                         onClick={() => router.push(`/mock-tests/${testId}`)}
                         className="px-4 py-2 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer"
                       >
-                        <FileText className="w-4 h-4 text-blue-500" /> Review (3/3 Tries)
+                        <FileText className="w-4 h-4 text-emerald-500" /> Completed (View Result)
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleStartTest(testId)}
-                        className={`px-4 py-2 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-1.5 group-hover:scale-105 cursor-pointer ${
-                          testItem.is_attempted
-                            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
-                        }`}
+                        className="px-4 py-2 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-1.5 group-hover:scale-105 cursor-pointer bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
                       >
-                        {testItem.is_attempted ? (
-                          <>
-                            <RotateCcw className="w-4 h-4" /> Retake ({attemptsUsed}/3)
-                          </>
-                        ) : (
-                          <>
-                            <PlayCircle className="w-4 h-4" /> Start
-                          </>
-                        )}
+                        <PlayCircle className="w-4 h-4" /> Start
                       </button>
                     )}
                   </div>

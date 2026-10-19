@@ -142,7 +142,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         }
 
         const attemptId = generateId();
-        const finalScore = Math.max(0, totalScore);
+        const finalScore = totalScore;
 
         await executeD1(
           `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, test_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
@@ -384,7 +384,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       type: 'mock',
       topic_tag: test.title || 'Mock Test',
       responses: processedResponses,
-      score: Math.max(0, totalScore),
+      score: totalScore,
       accuracy: accuracyPercent,
       time_spent_seconds: actualTimeSpent,
       submission_type: submissionType || 'manual',
@@ -474,7 +474,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({
       success: true,
       result: {
-        score: Math.max(0, totalScore),
+        score: totalScore,
         accuracyPercent,
         correctCount,
         incorrectCount,
