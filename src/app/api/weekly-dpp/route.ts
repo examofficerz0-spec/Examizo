@@ -72,8 +72,8 @@ export async function GET() {
 
             let questions: any[] = [];
             if (qIds.length > 0) {
-              const quoted = qIds.map((id) => `'${id}'`).join(',');
-              const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quoted})`);
+              const placeholders = qIds.map(() => '?').join(',');
+              const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${placeholders})`, qIds);
               const loaded = (d1Qs || []).map((q: any) => {
                 let opts: string[] = [];
                 try {

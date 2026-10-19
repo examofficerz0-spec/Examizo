@@ -75,69 +75,38 @@ export async function GET() {
       );
 
       if (d1Tests && d1Tests.length > 0) {
-        const tests = await Promise.all(
-          d1Tests.map(async (m: any) => {
-            let qIds: string[] = [];
-            try {
-              qIds = typeof m.question_ids_json === 'string' ? JSON.parse(m.question_ids_json) : (m.question_ids_json || []);
-            } catch (e) {
-              qIds = [];
-            }
+        const tests = d1Tests.map((m: any) => {
+          let qIds: string[] = [];
+          try {
+            qIds = typeof m.question_ids_json === 'string' ? JSON.parse(m.question_ids_json) : (m.question_ids_json || []);
+          } catch (e) {
+            qIds = [];
+          }
 
-            let qs: any[] = [];
-            if (qIds.length > 0) {
-              try {
-                const quotedIds = qIds.map((id) => `'${id}'`).join(',');
-                const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
-                qs = (d1Qs || []).map((q: any) => {
-                  let opts: string[] = [];
-                  try {
-                    opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
-                  } catch (e) {
-                    opts = [];
-                  }
-                  return {
-                    _id: q.id,
-                    id: q.id,
-                    question_text: q.question_text,
-                    image_url: q.image_url || '',
-                    options: opts,
-                    correct_option: Number(q.correct_option || 0),
-                    explanation: q.explanation || '',
-                    detailed_explanation: q.detailed_explanation || '',
-                    topic_tag: q.topic_tag || 'General',
-                  };
-                });
-              } catch (qErr) {
-                console.warn('[api/mock-tests] Question fetch error:', qErr);
-              }
-            }
+          const testAttempts = d1UserAttempts.filter((a: any) => String(a.test_id) === String(m.id));
+          const attemptsCount = testAttempts.length;
+          const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
+          const isAttempted = attemptsCount > 0;
 
-            const testAttempts = d1UserAttempts.filter((a: any) => String(a.test_id) === String(m.id));
-            const attemptsCount = testAttempts.length;
-            const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
-            const isAttempted = attemptsCount > 0;
-
-            return {
-              _id: m.id,
-              id: m.id,
-              course_id: m.course_id,
-              title: m.title,
-              type: m.type || 'full',
-              duration_minutes: Number(m.duration_minutes || 60),
-              cutoff_marks: Number(m.cutoff_marks || 0),
-              question_ids: qs,
-              questions_count: qIds.length,
-              attempts_count: attemptsCount,
-              attemptsCount,
-              max_attempts: 3,
-              maxAttempts: 3,
-              highest_score: highestScore,
-              is_attempted: isAttempted,
-              is_active: m.is_active !== 0,
-            };
-          })
-        );
+          return {
+            _id: m.id,
+            id: m.id,
+            course_id: m.course_id,
+            title: m.title,
+            type: m.type || 'full',
+            duration_minutes: Number(m.duration_minutes || 60),
+            cutoff_marks: Number(m.cutoff_marks || 0),
+            question_ids: [],
+            questions_count: qIds.length,
+            attempts_count: attemptsCount,
+            attemptsCount,
+            max_attempts: 3,
+            maxAttempts: 3,
+            highest_score: highestScore,
+            is_attempted: isAttempted,
+            is_active: m.is_active !== 0,
+          };
+        });
 
         return NextResponse.json({ tests });
       }
@@ -163,13 +132,7 @@ export async function GET() {
         return (validCourseIds.includes(testCourseId) || validCourseIds.includes(String(m.course_id))) && m.is_active !== false;
       })
       .map((m: any) => {
-        const qList = (m.question_ids || [])
-          .map((qId: any) => {
-            const idStr = typeof qId === 'object' ? String(qId._id || qId.id) : String(qId);
-            return (db.questions || []).find((q: any) => String(q._id || q.id) === idStr);
-          })
-          .filter(Boolean);
-
+        const qCount = Array.isArray(m.question_ids) ? m.question_ids.length : 0;
         const testAttempts = userAttempts.filter((a: any) => String(a.test_id || a.mock_test_id) === String(m._id || m.id));
         const attemptsCount = testAttempts.length;
         const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
@@ -177,7 +140,8 @@ export async function GET() {
 
         return {
           ...m,
-          question_ids: qList,
+          question_ids: [],
+          questions_count: qCount,
           attempts_count: attemptsCount,
           attemptsCount,
           max_attempts: 3,

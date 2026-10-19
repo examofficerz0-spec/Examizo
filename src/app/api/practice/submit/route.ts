@@ -34,10 +34,11 @@ export async function POST(req: Request) {
 
     // 1. Primary: Cloudflare D1
     try {
-      const qIds = (answers || []).map((a: any) => `'${a.questionId}'`).filter(Boolean);
+      const rawQIds = (answers || []).map((a: any) => String(a.questionId || '').trim()).filter(Boolean);
       let d1Questions: any[] = [];
-      if (qIds.length > 0) {
-        d1Questions = await queryD1(`SELECT id, correct_option FROM questions WHERE id IN (${qIds.join(',')})`);
+      if (rawQIds.length > 0) {
+        const placeholders = rawQIds.map(() => '?').join(',');
+        d1Questions = await queryD1(`SELECT id, correct_option FROM questions WHERE id IN (${placeholders})`, rawQIds);
       }
 
       if (d1Questions && d1Questions.length > 0) {

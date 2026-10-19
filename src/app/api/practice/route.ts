@@ -77,11 +77,14 @@ export async function GET(req: Request) {
           configuredSubjects = [];
         }
 
-        const d1Questions = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseRow.id]);
-        let d1Attempts = await queryD1(
-          'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?',
-          [String(user._id || auth.userId), String(user._id || auth.userId), String(auth.email || ''), String(user.account_email || '')]
-        );
+        const [d1Questions, rawAttempts] = await Promise.all([
+          queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseRow.id]),
+          queryD1(
+            'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?',
+            [String(user._id || auth.userId), String(user._id || auth.userId), String(auth.email || ''), String(user.account_email || '')]
+          ),
+        ]);
+        let d1Attempts = rawAttempts || [];
         if (!d1Attempts || d1Attempts.length === 0) {
           try {
             const db = readSharedDb();

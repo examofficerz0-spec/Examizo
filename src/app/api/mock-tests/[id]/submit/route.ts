@@ -84,8 +84,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         let d1Questions: any[] = [];
         if (qIds.length > 0) {
-          const quoted = qIds.map((id) => `'${id}'`).join(',');
-          d1Questions = await queryD1(`SELECT id, correct_option, marks, topic_tag, subject FROM questions WHERE id IN (${quoted}) OR course_id = '${courseId}'`);
+          const placeholders = qIds.map(() => '?').join(',');
+          d1Questions = await queryD1(
+            `SELECT id, correct_option, marks, topic_tag, subject FROM questions WHERE id IN (${placeholders}) OR course_id = ?`,
+            [...qIds, courseId]
+          );
         } else {
           d1Questions = await queryD1(`SELECT id, correct_option, marks, topic_tag, subject FROM questions WHERE course_id = ?`, [courseId]);
           if (d1Questions.length > 0 && qIds.length === 0) {

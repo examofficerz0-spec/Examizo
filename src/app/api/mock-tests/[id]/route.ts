@@ -206,8 +206,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           }
 
           if (qIds.length > 0) {
-            const quotedIds = qIds.map((id) => `'${id}'`).join(',');
-            const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quotedIds})`);
+            const placeholders = qIds.map(() => '?').join(',');
+            const d1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${placeholders})`, qIds);
             const loadedQs = qIds
               .map((qId) => {
                 const q = (d1Qs || []).find((item: any) => item.id === qId || String(item.id) === String(qId));
@@ -276,6 +276,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           }
         } catch (_) {}
 
+        const sanitizedOrderedQs = attemptsCount > 0
+          ? orderedQs
+          : orderedQs.map((q: any) => {
+              const { correct_option, explanation, detailed_explanation, ...rest } = q;
+              return rest;
+            });
+
         const test = {
           _id: rawTest.id,
           id: rawTest.id,
@@ -286,7 +293,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           is_dynamic_reshuffle: isDynamic,
           subject_allocations: subjectAllocations,
           course_id: courseRow ? { _id: courseRow.id, name: courseRow.name, subjects } : { name: 'Locked Course' },
-          question_ids: orderedQs,
+          question_ids: sanitizedOrderedQs,
         };
 
         return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });
@@ -341,10 +348,17 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       };
     }
 
+    const sanitizedFallbackQs = attemptsCount > 0
+      ? question_ids
+      : question_ids.map((q: any) => {
+          const { correct_option, explanation, detailed_explanation, ...rest } = q;
+          return rest;
+        });
+
     const test = {
       ...rawTest,
       course_id: course ? { _id: course._id, name: course.name } : { name: 'Locked Course' },
-      question_ids,
+      question_ids: sanitizedFallbackQs,
     };
 
     return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });

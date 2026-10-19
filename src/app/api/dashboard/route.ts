@@ -88,11 +88,20 @@ export async function GET() {
       };
 
       const courseDbId = courseRow ? courseRow.id : courseId;
-      const d1Qs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
-      let d1Attempts = (await queryD1(
-        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY submitted_at DESC, started_at DESC',
-        [userId, userId, String(auth.email || ''), String(user.email || ''), String(user.account_email || '')]
-      )) || [];
+      const [d1Qs, rawAttempts, rawMockTests, d1Leaderboard] = await Promise.all([
+        queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]),
+        queryD1(
+          'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY submitted_at DESC, started_at DESC',
+          [userId, userId, String(auth.email || ''), String(user.email || ''), String(user.account_email || '')]
+        ),
+        queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]),
+        queryD1(
+          "SELECT id, name, nickname, full_name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
+          [courseDbId]
+        ),
+      ]);
+
+      let d1Attempts = rawAttempts || [];
 
       try {
         const db = readSharedDb();
@@ -127,7 +136,7 @@ export async function GET() {
         });
       } catch (_) {}
 
-      let d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
+      let d1MockTests = rawMockTests;
       if (!d1MockTests || d1MockTests.length === 0) {
         try {
           const db = readSharedDb();
@@ -144,10 +153,6 @@ export async function GET() {
           }
         } catch (_) {}
       }
-      const d1Leaderboard = await queryD1(
-        "SELECT id, name, nickname, full_name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
-        [courseDbId]
-      );
 
       const formattedQs = (d1Qs || []).map((q: any) => {
         let opts: string[] = [];
@@ -205,8 +210,8 @@ export async function GET() {
       const missingQIds = Array.from(attemptedQIds).filter((id) => !knownQMap.has(id));
       if (missingQIds.length > 0) {
         try {
-          const quoted = missingQIds.map((id) => `'${id}'`).join(',');
-          const extraD1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quoted})`);
+          const placeholders = missingQIds.map(() => '?').join(',');
+          const extraD1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${placeholders})`, missingQIds);
           (extraD1Qs || []).forEach((q: any) => {
             let opts: string[] = [];
             try {

@@ -333,6 +333,19 @@ export async function ensureD1Tables() {
       executeD1('ALTER TABLE questions ADD COLUMN subject TEXT'),
       executeD1('ALTER TABLE questions ADD COLUMN image_url TEXT'),
       executeD1('ALTER TABLE questions ADD COLUMN detailed_explanation TEXT'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_questions_course_active ON questions(course_id, is_active)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_mock_tests_course_active ON mock_tests(course_id, is_active)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_attempts_student ON attempts(student_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_attempts_sub_profile_id ON attempts(sub_profile_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_attempts_submitted ON attempts(submitted_at DESC)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_sub_profiles_parent_user ON sub_profiles(parent_user_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_sub_profiles_parent_email ON sub_profiles(parent_email)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_mistake_logs_student ON mistake_logs(student_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_mistake_logs_sub_profile ON mistake_logs(sub_profile_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_mistake_logs_test ON mistake_logs(test_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_weekly_dpps_course ON weekly_dpps(course_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_resources_course ON resources(course_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_users_locked_course ON users(locked_course_id)'),
     ]).catch(() => {});
   } catch (_) {}
 }
