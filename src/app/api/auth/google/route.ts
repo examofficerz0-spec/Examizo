@@ -232,6 +232,27 @@ export async function POST(req: Request) {
       });
 
       const baseHandle = lowerEmail.split('@')[0].split('+')[0].trim();
+      let d1ProfilesCount = 0;
+      try {
+        const d1Family = await queryD1(
+          "SELECT id, pin FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR LOWER(account_email) = ?) AND status != 'Deleted' AND name != 'Deleted User'",
+          [lowerEmail, `${baseHandle}+%`, lowerEmail]
+        );
+        if (d1Family && Array.isArray(d1Family)) {
+          d1ProfilesCount = d1Family.length;
+        }
+      } catch (_) {}
+
+      try {
+        const subRows = await queryD1(
+          "SELECT id, pin FROM sub_profiles WHERE (LOWER(parent_email) = ? OR parent_user_id = ?) AND status != 'Deleted'",
+          [lowerEmail, existingUser.id]
+        );
+        if (subRows && Array.isArray(subRows) && subRows.length > 0) {
+          d1ProfilesCount = Math.max(d1ProfilesCount, subRows.length + 1);
+        }
+      } catch (_) {}
+
       const familyProfiles = (db.users || []).filter((fu: any) => {
         if (fu.status === 'Deleted' || fu.name === 'Deleted User') return false;
         const fuEmail = (fu.email || '').toLowerCase().trim();
@@ -240,7 +261,8 @@ export async function POST(req: Request) {
         return fuHandle === baseHandle;
       });
 
-      const hasSubProfiles = familyProfiles.length > 1;
+      const totalProfilesCount = Math.max(d1ProfilesCount, familyProfiles.length);
+      const hasSubProfiles = totalProfilesCount > 1;
       const activeProfileHasPin = Boolean((d1UserRow?.pin || memUserRow?.pin) && String(d1UserRow?.pin || memUserRow?.pin).trim().length === 4);
       const requireProfileSelection = hasSubProfiles || activeProfileHasPin;
 
@@ -248,7 +270,8 @@ export async function POST(req: Request) {
         success: true,
         needsCourseSelection: !existingUser.locked_course_id,
         requireProfileSelection,
-        profilesCount: familyProfiles.length,
+        hasMultipleProfiles: hasSubProfiles,
+        profilesCount: totalProfilesCount,
         user: {
           id: existingUser.id,
           name: existingUser.name,

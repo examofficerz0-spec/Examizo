@@ -139,7 +139,13 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
 
-        if (data.requireProfileSelection || data.hasMultipleProfiles) {
+        const shouldShowProfiles = Boolean(
+          data.requireProfileSelection ||
+          data.hasMultipleProfiles ||
+          (data.profilesCount && data.profilesCount > 1)
+        );
+
+        if (shouldShowProfiles) {
           window.location.href = '/profiles';
         } else if (joinCode) {
           window.location.href = `/leaderboard?joinCode=${encodeURIComponent(joinCode)}`;
@@ -272,8 +278,13 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
+        const shouldShowProfiles = Boolean(
+          data.requireProfileSelection ||
+          data.hasMultipleProfiles ||
+          (data.profilesCount && data.profilesCount > 1)
+        );
 
-        if (data.requireProfileSelection || data.hasMultipleProfiles) {
+        if (shouldShowProfiles) {
           window.location.href = '/profiles';
         } else if (!data.user.lockedCourseId) {
           if (joinCode) {

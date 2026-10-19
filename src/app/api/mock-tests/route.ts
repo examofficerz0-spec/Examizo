@@ -37,6 +37,15 @@ export async function GET() {
       const searchCourseIds = validCourseIds.length > 0 ? validCourseIds : [courseId];
 
       const placeholders = searchCourseIds.map(() => '?').join(',');
+      const currentSubProfileId = String(user._id || user.id || auth.userId);
+      let d1UserAttempts: any[] = [];
+      try {
+        d1UserAttempts = (await queryD1(
+          'SELECT test_id, score, accuracy, submitted_at FROM attempts WHERE (student_id = ? OR sub_profile_id = ?)',
+          [currentSubProfileId, currentSubProfileId]
+        )) || [];
+      } catch (_) {}
+
       const d1Tests = await queryD1(
         `SELECT * FROM mock_tests WHERE course_id IN (${placeholders}) AND is_active = 1 ORDER BY created_at DESC`,
         searchCourseIds
@@ -81,6 +90,11 @@ export async function GET() {
               }
             }
 
+            const testAttempts = d1UserAttempts.filter((a: any) => String(a.test_id) === String(m.id));
+            const attemptsCount = testAttempts.length;
+            const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
+            const isAttempted = attemptsCount > 0;
+
             return {
               _id: m.id,
               id: m.id,
@@ -91,6 +105,9 @@ export async function GET() {
               cutoff_marks: Number(m.cutoff_marks || 0),
               question_ids: qs,
               questions_count: qIds.length,
+              attempts_count: attemptsCount,
+              highest_score: highestScore,
+              is_attempted: isAttempted,
               is_active: m.is_active !== 0,
             };
           })
@@ -104,7 +121,11 @@ export async function GET() {
 
     // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
+    const currentSubProfileId = String(user._id || user.id || auth.userId);
     const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
+    const userAttempts = (db.attempts || []).filter(
+      (a: any) => String(a.student_id) === currentSubProfileId || String(a.sub_profile_id) === currentSubProfileId
+    );
 
     const tests = (db.mockTests || [])
       .filter((m: any) => {
@@ -118,7 +139,19 @@ export async function GET() {
             return (db.questions || []).find((q: any) => String(q._id || q.id) === idStr);
           })
           .filter(Boolean);
-        return { ...m, question_ids: qList };
+
+        const testAttempts = userAttempts.filter((a: any) => String(a.test_id) === String(m._id || m.id));
+        const attemptsCount = testAttempts.length;
+        const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
+        const isAttempted = attemptsCount > 0;
+
+        return {
+          ...m,
+          question_ids: qList,
+          attempts_count: attemptsCount,
+          highest_score: highestScore,
+          is_attempted: isAttempted,
+        };
       });
 
     return NextResponse.json({ tests });

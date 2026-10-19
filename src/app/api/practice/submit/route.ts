@@ -65,10 +65,11 @@ export async function POST(req: Request) {
         const attemptId = generateId();
 
         await executeD1(
-          `INSERT INTO attempts (id, student_id, course_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             attemptId,
+            userId,
             userId,
             courseId,
             type || 'practice',
@@ -87,6 +88,10 @@ export async function POST(req: Request) {
             userId,
             String(user.email || '').toLowerCase(),
           ]);
+          executeD1('UPDATE sub_profiles SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ?', [
+            xpEarned,
+            userId,
+          ]).catch(() => {});
           await executeD1(
             `INSERT INTO xp_transactions (id, student_id, attempt_id, xp_amount, reason, created_at)
              VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,

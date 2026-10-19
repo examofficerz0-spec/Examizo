@@ -133,7 +133,7 @@ export async function POST(req: Request) {
         const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@exammaster.internal`;
 
         await executeD1(
-          `INSERT INTO users (id, name, full_name, nickname, dob, email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO users (id, name, full_name, nickname, dob, email, account_email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             profileId,
             cleanFullName,
@@ -141,6 +141,7 @@ export async function POST(req: Request) {
             cleanNickname,
             cleanDob,
             profileEmail,
+            mainEmail,
             currentUser.password_hash || 'profile_nopass',
             'Active',
             0,
@@ -152,6 +153,24 @@ export async function POST(req: Request) {
             cleanAvatarColor,
           ]
         );
+
+        // Also insert into dedicated sub_profiles table
+        executeD1(
+          `INSERT OR REPLACE INTO sub_profiles (id, parent_user_id, parent_email, name, full_name, nickname, dob, pin, avatar_color, locked_course_id, xp_total, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'Active')`,
+          [
+            profileId,
+            String(currentUser._id || currentUser.id || auth.userId),
+            mainEmail,
+            cleanFullName,
+            cleanFullName,
+            cleanNickname,
+            cleanDob,
+            cleanPin,
+            cleanAvatarColor,
+            cleanCourseId,
+          ]
+        ).catch(() => {});
 
         // Mirror to sharedDb for local continuity
         try {

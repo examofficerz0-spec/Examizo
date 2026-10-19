@@ -172,10 +172,21 @@ export default function MockTestsListPage() {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60">
-                        {testItem.type || 'Full Mock'}
-                      </span>
-                      <span className="text-xs font-bold text-slate-400">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60">
+                          {testItem.type || 'Full Mock'}
+                        </span>
+                        {testItem.is_attempted ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            ✓ Attempted ({testItem.attempts_count}x) • Best: {testItem.highest_score} Marks
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                            Unattempted
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-slate-400 shrink-0">
                         ⏱ {testItem.duration_minutes || 60} Mins
                       </span>
                     </div>
@@ -200,9 +211,21 @@ export default function MockTestsListPage() {
                     <button
                       type="button"
                       onClick={() => handleStartTest(testId)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 group-hover:scale-105 cursor-pointer"
+                      className={`px-4 py-2 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-1.5 group-hover:scale-105 cursor-pointer ${
+                        testItem.is_attempted
+                          ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                          : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
+                      }`}
                     >
-                      <PlayCircle className="w-4 h-4" /> Start
+                      {testItem.is_attempted ? (
+                        <>
+                          <RotateCcw className="w-4 h-4" /> Retake
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle className="w-4 h-4" /> Start
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

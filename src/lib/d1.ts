@@ -140,6 +140,42 @@ export async function ensureD1Tables() {
       )
     `);
 
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS sub_profiles (
+        id TEXT PRIMARY KEY,
+        parent_user_id TEXT NOT NULL,
+        parent_email TEXT NOT NULL,
+        name TEXT NOT NULL,
+        full_name TEXT,
+        nickname TEXT,
+        dob TEXT,
+        pin TEXT,
+        avatar_color TEXT DEFAULT 'bg-blue-600',
+        locked_course_id TEXT,
+        xp_total INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'Active',
+        is_primary INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS mistake_logs (
+        id TEXT PRIMARY KEY,
+        sub_profile_id TEXT NOT NULL,
+        student_id TEXT NOT NULL,
+        course_id TEXT NOT NULL,
+        test_id TEXT,
+        question_id TEXT NOT NULL,
+        selected_option INTEGER,
+        correct_option INTEGER NOT NULL,
+        is_resolved INTEGER DEFAULT 0,
+        attempt_type TEXT DEFAULT 'practice',
+        attempted_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
     // Ensure all critical columns exist even if table was pre-created with an older schema
     await Promise.allSettled([
       executeD1('ALTER TABLE users ADD COLUMN full_name TEXT'),
@@ -166,6 +202,7 @@ export async function ensureD1Tables() {
       executeD1('ALTER TABLE courses ADD COLUMN marks_per_correct REAL DEFAULT 4.0'),
       executeD1('ALTER TABLE courses ADD COLUMN penalty_per_incorrect REAL DEFAULT 1.0'),
       executeD1('ALTER TABLE courses ADD COLUMN is_active INTEGER DEFAULT 1'),
+      executeD1('ALTER TABLE attempts ADD COLUMN sub_profile_id TEXT'),
     ]).catch(() => {});
   } catch (_) {}
 }

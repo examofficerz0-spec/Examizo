@@ -120,11 +120,21 @@ export async function POST(req: Request) {
         let d1ProfilesCount = 0;
         try {
           const d1Family = await queryD1(
-            "SELECT id, pin FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ?) AND status != 'Deleted' AND name != 'Deleted User'",
-            [lowerEmail, `${userPrefix}+%`]
+            "SELECT id, pin FROM users WHERE (LOWER(email) = ? OR LOWER(email) LIKE ? OR LOWER(account_email) = ?) AND status != 'Deleted' AND name != 'Deleted User'",
+            [lowerEmail, `${userPrefix}+%`, lowerEmail]
           );
           if (d1Family && Array.isArray(d1Family)) {
             d1ProfilesCount = d1Family.length;
+          }
+        } catch (_) {}
+
+        try {
+          const subRows = await queryD1(
+            "SELECT id, pin FROM sub_profiles WHERE (LOWER(parent_email) = ? OR parent_user_id = ?) AND status != 'Deleted'",
+            [lowerEmail, u.id]
+          );
+          if (subRows && Array.isArray(subRows) && subRows.length > 0) {
+            d1ProfilesCount = Math.max(d1ProfilesCount, subRows.length + 1);
           }
         } catch (_) {}
 
@@ -150,6 +160,7 @@ export async function POST(req: Request) {
         const response = NextResponse.json({
           success: true,
           requireProfileSelection,
+          hasMultipleProfiles: hasSubProfiles,
           profilesCount: totalProfilesCount,
           user: { id: u.id, name: u.name, email: u.email, lockedCourseId: resolvedCourseId, hasPin: activeProfileHasPin },
         });
@@ -233,6 +244,7 @@ export async function POST(req: Request) {
     const response = NextResponse.json({
       success: true,
       requireProfileSelection,
+      hasMultipleProfiles: hasSubProfiles,
       profilesCount: familyProfiles.length,
       user: { id: userId, name: memUser.name, email: memUser.email, lockedCourseId: resolvedCourseId, hasPin: activeProfileHasPin },
     });

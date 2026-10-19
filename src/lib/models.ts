@@ -47,6 +47,39 @@ export interface IUser {
   digilockerProfile?: IDigiLockerProfile | null;
 }
 
+export interface ISubProfile {
+  id: string;
+  parent_user_id: string;
+  parent_email: string;
+  name: string;
+  full_name?: string;
+  nickname?: string;
+  dob?: string;
+  pin?: string;
+  avatar_color?: string;
+  locked_course_id?: string | null;
+  xp_total: number;
+  status: 'Active' | 'Suspended' | 'Deleted';
+  is_primary?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface IMistakeLog {
+  id: string;
+  sub_profile_id: string;
+  student_id: string;
+  course_id: string;
+  test_id?: string | null;
+  question_id: string;
+  selected_option: number | null;
+  correct_option: number;
+  is_resolved: boolean;
+  attempt_type: 'mock' | 'practice' | 'weekly';
+  attempted_at?: string;
+}
+
+
 export interface ICourse {
   _id?: string;
   id: string;

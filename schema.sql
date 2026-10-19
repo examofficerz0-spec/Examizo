@@ -190,13 +190,62 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 12. Dedicated Sub-Profiles (Multi-Profile Academic Hub)
+CREATE TABLE IF NOT EXISTS sub_profiles (
+  id TEXT PRIMARY KEY,
+  parent_user_id TEXT NOT NULL,
+  parent_email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  full_name TEXT,
+  nickname TEXT,
+  dob TEXT,
+  pin TEXT DEFAULT NULL,
+  avatar_color TEXT DEFAULT 'bg-blue-600',
+  locked_course_id TEXT DEFAULT NULL,
+  xp_total INTEGER DEFAULT 0,
+  status TEXT CHECK(status IN ('Active', 'Suspended', 'Deleted')) DEFAULT 'Active',
+  is_primary INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (parent_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (locked_course_id) REFERENCES courses(id) ON DELETE SET NULL
+);
+
+-- 13. Granular Mistake Log & Incorrect Answers Audit
+CREATE TABLE IF NOT EXISTS mistake_logs (
+  id TEXT PRIMARY KEY,
+  sub_profile_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  course_id TEXT NOT NULL,
+  test_id TEXT DEFAULT NULL,
+  question_id TEXT NOT NULL,
+  selected_option INTEGER DEFAULT NULL,
+  correct_option INTEGER NOT NULL,
+  is_resolved INTEGER DEFAULT 0,
+  attempt_type TEXT CHECK(attempt_type IN ('mock', 'practice', 'weekly')) DEFAULT 'practice',
+  attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sub_profile_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+-- Safe migration ALTER statements (for existing databases)
+-- ALTER TABLE attempts ADD COLUMN sub_profile_id TEXT DEFAULT NULL;
+
 -- Indexes for lightning fast queries & edge performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_account_email ON users(account_email);
 CREATE INDEX IF NOT EXISTS idx_users_locked_course ON users(locked_course_id);
+CREATE INDEX IF NOT EXISTS idx_sub_profiles_parent ON sub_profiles(parent_user_id);
+CREATE INDEX IF NOT EXISTS idx_sub_profiles_parent_email ON sub_profiles(parent_email);
+CREATE INDEX IF NOT EXISTS idx_sub_profiles_course ON sub_profiles(locked_course_id);
 CREATE INDEX IF NOT EXISTS idx_questions_course_id ON questions(course_id);
 CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic_tag);
 CREATE INDEX IF NOT EXISTS idx_mock_tests_course ON mock_tests(course_id);
 CREATE INDEX IF NOT EXISTS idx_weekly_dpps_course ON weekly_dpps(course_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_student ON attempts(student_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_course ON attempts(course_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_sub_profile ON attempts(student_id, course_id);
+CREATE INDEX IF NOT EXISTS idx_mistake_logs_sub_profile ON mistake_logs(sub_profile_id, is_resolved);
+CREATE INDEX IF NOT EXISTS idx_mistake_logs_test ON mistake_logs(test_id, question_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
+

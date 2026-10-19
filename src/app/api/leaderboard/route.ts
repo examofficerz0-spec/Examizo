@@ -26,10 +26,12 @@ export async function GET() {
 
     const currentUserId = String(user._id || user.id || auth.userId);
 
+    const currentDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
+
     // 1. Primary: Cloudflare D1
     try {
       const d1Students = await queryD1(
-        "SELECT id, name, xp_total, created_at FROM users WHERE locked_course_id = ? AND status = 'Active' ORDER BY xp_total DESC, created_at ASC",
+        "SELECT id, name, nickname, full_name, xp_total, created_at FROM users WHERE locked_course_id = ? AND status = 'Active' ORDER BY xp_total DESC, created_at ASC",
         [user.locked_course_id]
       );
 
@@ -40,11 +42,14 @@ export async function GET() {
           if (isSelf) {
             userRank = idx + 1;
           }
+          const sName = s.nickname && String(s.nickname).trim() ? String(s.nickname).trim() : (s.full_name || s.name);
           return {
             id: s.id,
             user_id: s.id,
             rank: idx + 1,
-            name: s.name,
+            name: sName,
+            fullName: s.full_name || s.name,
+            nickname: s.nickname || null,
             xp_total: s.xp_total || 0,
             isSelf,
             isCurrentUser: isSelf,
@@ -56,7 +61,7 @@ export async function GET() {
           userRank: {
             user_id: currentUserId,
             rank: userRank,
-            name: user.name,
+            name: currentDisplayName,
             xp_total: user.xp_total || 0,
           },
         });
@@ -77,11 +82,14 @@ export async function GET() {
       if (isSelf) {
         userRank = idx + 1;
       }
+      const sName = s.nickname && String(s.nickname).trim() ? String(s.nickname).trim() : (s.full_name || s.name);
       return {
         id: String(s._id || s.id),
         user_id: String(s._id || s.id),
         rank: idx + 1,
-        name: s.name,
+        name: sName,
+        fullName: s.full_name || s.name,
+        nickname: s.nickname || null,
         xp_total: s.xp_total || 0,
         isSelf,
         isCurrentUser: isSelf,
@@ -93,7 +101,7 @@ export async function GET() {
       userRank: {
         user_id: currentUserId,
         rank: userRank,
-        name: user.name,
+        name: currentDisplayName,
         xp_total: user.xp_total || 0,
       },
     });

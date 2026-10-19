@@ -37,9 +37,10 @@ export async function GET() {
 
     // 1. Primary: Cloudflare D1
     try {
+      const parentEmailTarget = (accountEmail || currentEmail).toLowerCase().trim();
       const d1Users = await queryD1(
-        "SELECT * FROM users WHERE (LOWER(email) LIKE ? OR LOWER(email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended' AND status != 'suspended'",
-        [`${baseHandle}@%`, `${baseHandle}+%`, String(currentUser._id || currentUser.id || auth.userId)]
+        "SELECT * FROM users WHERE (LOWER(email) LIKE ? OR LOWER(email) LIKE ? OR LOWER(account_email) = ? OR LOWER(account_email) LIKE ? OR id = ?) AND status != 'Deleted' AND name != 'Deleted User' AND status != 'Suspended' AND status != 'suspended'",
+        [`${baseHandle}@%`, `${baseHandle}+%`, parentEmailTarget, `${baseHandle}@%`, String(currentUser._id || currentUser.id || auth.userId)]
       );
 
       if (d1Users && d1Users.length > 0) {

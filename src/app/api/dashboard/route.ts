@@ -89,10 +89,13 @@ export async function GET() {
 
       const courseDbId = courseRow ? courseRow.id : courseId;
       const d1Qs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
-      const d1Attempts = await queryD1('SELECT * FROM attempts WHERE (student_id = ? OR student_id = ?)', [userId, String(auth.email || '')]);
+      const d1Attempts = await queryD1(
+        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ?',
+        [userId, userId]
+      );
       const d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
       const d1Leaderboard = await queryD1(
-        "SELECT id, name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
+        "SELECT id, name, nickname, full_name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
         [courseDbId]
       );
 
@@ -252,7 +255,7 @@ export async function GET() {
 
       const leaderboardStudents = (d1Leaderboard || []).map((u: any) => ({
         id: u.id,
-        name: u.name,
+        name: u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : (u.full_name || u.name),
         xp: u.xp_total || 0,
       }));
 
@@ -264,9 +267,11 @@ export async function GET() {
         }
       }
 
+      const activeDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
+
       return NextResponse.json({
         user: {
-          name: user.name,
+          name: activeDisplayName,
           email: user.email,
           xp_total: user.xp_total || 0,
           lockedCourse,
@@ -296,7 +301,7 @@ export async function GET() {
       mockTestMap.set(String(mt._id || mt.id), mt);
     });
 
-    const attempts = (db.attempts || []).filter((a) => (String(a.student_id) === userId || String(a.student_id) === String(auth.email || '')) && String(a.course_id) === courseId);
+    const attempts = (db.attempts || []).filter((a) => (String(a.student_id) === userId || String(a.sub_profile_id) === userId) && String(a.course_id) === courseId);
     const courseQs = (db.questions || []).filter((q) => String(q.course_id) === courseId && q.is_active !== false);
 
     const incorrectLogMap = new Map<string, any>();
