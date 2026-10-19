@@ -502,7 +502,7 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                   <span>Profile Nickname (Optional)</span>
-                  <span className="text-[10px] text-blue-600 font-bold">Netflix Screen</span>
+                  <span className="text-[10px] text-blue-600 font-bold">Profile Screen</span>
                 </label>
                 <input
                   type="text"

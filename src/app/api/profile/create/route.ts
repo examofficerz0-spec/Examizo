@@ -130,7 +130,7 @@ export async function POST(req: Request) {
         }
 
         const profileId = generateId();
-        const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@exammaster.internal`;
+        const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@examizo.internal`;
 
         await executeD1(
           `INSERT INTO users (id, name, full_name, nickname, dob, email, account_email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -270,7 +270,7 @@ export async function POST(req: Request) {
     }
 
     const profileId = generateId();
-    const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}@exammaster.internal`;
+    const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}@examizo.internal`;
 
     const newProfile = {
       _id: profileId,

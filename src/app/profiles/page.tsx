@@ -50,7 +50,7 @@ const AVATAR_PALETTES = [
   'from-amber-500 to-orange-600',
 ];
 
-export default function NetflixProfilesPage() {
+export default function ProfilesPage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -351,7 +351,7 @@ export default function NetflixProfilesPage() {
         </div>
       </header>
 
-      {/* Main Center Netflix "Who's Studying?" Container */}
+      {/* Main Center "Who's Studying?" Container */}
       <main className="relative z-10 flex flex-col items-center justify-center my-auto py-12 max-w-5xl mx-auto w-full text-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider mb-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xs">
           <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Multi-Profile Academic Hub
@@ -454,7 +454,7 @@ export default function NetflixProfilesPage() {
             );
           })}
 
-          {/* Add Profile Card (Netflix Plus tile, max 4) */}
+          {/* Add Profile Card (Multi-profile tile, max 4) */}
           {profiles.length < 4 && !isManaging && (
             <div
               onClick={openCreateModal}
@@ -511,7 +511,7 @@ export default function NetflixProfilesPage() {
         Protected student profiles &copy; {new Date().getFullYear()} Examizo Precision Learning
       </footer>
 
-      {/* ── MODAL 1: 4-Digit PIN Unlock Dialog (Netflix Style) ── */}
+      {/* ── MODAL 1: 4-Digit PIN Unlock Dialog ── */}
       {selectedProfileForPin && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div
@@ -643,7 +643,7 @@ export default function NetflixProfilesPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-800 font-extrabold">Nickname (Optional)</label>
-                  <span className="text-[10px] text-blue-600 font-semibold">Shown on Netflix Screen</span>
+                  <span className="text-[10px] text-blue-600 font-semibold">Shown on Profile Selection</span>
                 </div>
                 <input
                   type="text"
@@ -682,7 +682,7 @@ export default function NetflixProfilesPage() {
                 </p>
               </div>
 
-              {/* Target Course Curriculum Track (Duolingo Style Popup Trigger) */}
+              {/* Target Course Curriculum Track (Interactive Setup Trigger) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-800 font-extrabold flex items-center gap-1.5">
@@ -739,8 +739,8 @@ export default function NetflixProfilesPage() {
                       <div>
                         <h4 className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
                           Choose Curriculum Track
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800">
-                            Duolingo Style
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800">
+                            Interactive Track
                           </span>
                         </h4>
                         <p className="text-[10px] text-slate-500">
@@ -799,7 +799,7 @@ export default function NetflixProfilesPage() {
         </div>
       )}
 
-      {/* Duolingo-style Curriculum Wizard Modal */}
+      {/* Interactive Curriculum Wizard Modal */}
       {showCurriculumPickerModal && (
         <CurriculumPickerModal
           isOpen={showCurriculumPickerModal}

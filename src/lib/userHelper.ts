@@ -40,7 +40,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
     const d1Users = await queryD1('SELECT * FROM users WHERE id = ? OR LOWER(email) = ? LIMIT 1', [userIdStr, emailLower]);
     if (d1Users && d1Users.length > 0) {
       const u = d1Users[0];
-      const isSubProfile = u.email && (u.email.includes('+') || u.email.includes('@exammaster.internal'));
+      const isSubProfile = u.email && (u.email.includes('+') || u.email.includes('@examizo.internal') || u.email.includes('@exammaster.internal'));
       const parentEmail = (u.account_email || (isSubProfile ? `${u.email.split('+')[0]}@${u.email.split('@')[1] || 'examizo.com'}` : u.email)).toLowerCase().trim();
 
       if (isSubProfile && parentEmail && parentEmail !== u.email.toLowerCase()) {
@@ -135,7 +135,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           name: u.name,
           email: u.email,
           password_hash: u.password_hash,
-          account_email: u.account_email || (u.email.includes('+profile_') ? `${u.email.split('+profile_')[0]}@${u.email.split('@')[1] || 'exammaster.internal'}` : u.email),
+          account_email: u.account_email || (u.email.includes('+profile_') ? `${u.email.split('+profile_')[0]}@${u.email.split('@')[1] || 'examizo.internal'}` : u.email),
           locked_course_id: resolvedCourseId,
           status: u.status || 'Active',
           xp_total: u.xp_total || 0,
@@ -169,7 +169,7 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
       }
 
       if (memUser) {
-        const isSubProfile = memUser.email && (memUser.email.includes('+') || memUser.email.includes('@exammaster.internal'));
+        const isSubProfile = memUser.email && (memUser.email.includes('+') || memUser.email.includes('@examizo.internal') || memUser.email.includes('@exammaster.internal'));
         const parentEmail = (memUser.account_email || (isSubProfile ? `${memUser.email.split('+')[0]}@${memUser.email.split('@')[1] || 'examizo.com'}` : memUser.email)).toLowerCase().trim();
 
         if (isSubProfile && parentEmail && parentEmail !== memUser.email.toLowerCase()) {

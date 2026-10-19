@@ -84,7 +84,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   const [textSize, setTextSize] = useState<number>(100);
 
-  // Netflix-style Multi-Profile State
+  // Multi-Profile State
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
   const [showCurriculumPickerModal, setShowCurriculumPickerModal] = useState(false);
@@ -656,7 +656,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
-            {/* Netflix-Style Profile Dropdown Pill */}
+            {/* Profile Dropdown Pill */}
             <div className="relative">
               <button
                 onClick={() => {
@@ -674,7 +674,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown — Netflix Style Multi-Profile Switcher */}
+              {/* Dropdown — Multi-Profile Switcher */}
               <div
                 className={`absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50
                   transition-all duration-200 ease-out origin-top-right
@@ -709,7 +709,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   </div>
                 </div>
 
-                {/* Netflix-Style Switch Profile Section */}
+                {/* Switch Profile Section */}
                 <div className="p-2 space-y-1 border-b border-slate-100 dark:border-slate-800">
                   <div className="px-2 py-1 flex items-center justify-between">
                     <span className="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
@@ -785,7 +785,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     );
                   })}
 
-                  {/* Add New Profile Button (Netflix Style Limit 4) */}
+                  {/* Add New Profile Button (Multi-Profile Limit 4) */}
                   {profiles.length < 4 ? (
                     <button
                       type="button"
@@ -810,7 +810,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     onClick={() => setShowProfileMenu(false)}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-xl transition-colors"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-500" /> Switch Profile (Netflix Screen)
+                    <Sparkles className="w-4 h-4 text-amber-500" /> Switch Profile Screen
                   </Link>
                   <Link
                     href="/profile"
@@ -835,7 +835,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       {/* Persistent Top Height Spacer */}
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
 
-      {/* Netflix-Style Inline Modal: Add New Profile */}
+      {/* Inline Modal: Add New Profile */}
       {showAddProfileModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[70] animate-in fade-in duration-150">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5">
@@ -889,7 +889,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-700 dark:text-slate-300 font-extrabold">Nickname (Optional)</label>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Shown on Netflix Screen</span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Shown on Profile Selection</span>
                 </div>
                 <input
                   type="text"
@@ -927,7 +927,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                 </p>
               </div>
 
-              {/* Target Course Curriculum Track (Duolingo Style) */}
+              {/* Target Course Curriculum Track */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-700 dark:text-slate-300 font-extrabold flex items-center gap-1.5">
@@ -984,8 +984,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                       <div>
                         <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
                           Choose Curriculum Track
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                            Duolingo Style
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300">
+                            Interactive Track
                           </span>
                         </h4>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -1044,7 +1044,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         </div>
       )}
 
-      {/* Duolingo-style Curriculum Wizard Modal for Header */}
+      {/* Interactive Curriculum Wizard Modal for Header */}
       {showCurriculumPickerModal && (
         <CurriculumPickerModal
           isOpen={showCurriculumPickerModal}

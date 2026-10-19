@@ -161,7 +161,7 @@ export default function CourseSelectionPage() {
           />
         ) : (
           <div className="w-full flex justify-center">
-            {/* Inline Duolingo-style Curriculum Wizard */}
+            {/* Inline Curriculum Wizard */}
             <CurriculumPickerModal
               inline={true}
               availableCourses={courses}

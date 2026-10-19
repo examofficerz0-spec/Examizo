@@ -706,7 +706,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                       <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200">
                         Nickname (Optional)
                       </label>
-                      <span className="text-[10px] text-blue-500 font-semibold">Netflix Screen</span>
+                      <span className="text-[10px] text-blue-500 font-semibold">Profile Screen</span>
                     </div>
                     <input
                       type="text"

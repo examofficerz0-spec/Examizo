@@ -680,7 +680,7 @@ export const CurriculumPickerModal: React.FC<CurriculumPickerModalProps> = ({
 
   const cardContent = (
     <div className={`bg-white border-2 border-slate-200/90 rounded-3xl p-5 sm:p-7 max-w-xl w-full shadow-2xl relative text-slate-900 flex flex-col ${inline ? 'my-3 border-slate-200' : 'max-h-[92vh] overflow-hidden'}`}>
-      {/* Top Duolingo-Style Progress Bar */}
+      {/* Top Interactive Progress Bar */}
       <div className="w-full bg-slate-100 rounded-full h-2.5 mb-4 overflow-hidden relative border border-slate-200/50">
         <div
           className="bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300 ease-out shadow-xs"
