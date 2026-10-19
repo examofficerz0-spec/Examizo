@@ -3,6 +3,7 @@ import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
+import { resolveLeaderboardCohort, isUserInCohort } from '@/lib/cohortMatcher';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -88,7 +89,7 @@ export async function GET() {
       };
 
       const courseDbId = courseRow ? courseRow.id : courseId;
-      const [d1Qs, rawAttempts, rawMockTests, d1Leaderboard] = await Promise.all([
+      const [d1Qs, rawAttempts, rawMockTests, d1Users] = await Promise.all([
         queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]),
         queryD1(
           'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY submitted_at DESC, started_at DESC',
@@ -96,8 +97,7 @@ export async function GET() {
         ),
         queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]),
         queryD1(
-          "SELECT id, name, nickname, full_name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
-          [courseDbId]
+          "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM users WHERE status != 'Deleted'"
         ),
       ]);
 
@@ -463,18 +463,33 @@ export async function GET() {
         };
       });
 
-      const leaderboardStudents = (d1Leaderboard || []).map((u: any) => ({
+      const cohort = resolveLeaderboardCohort(courseRow || lockedCourse, d1Courses || []);
+      const cohortStudents = (d1Users || [])
+        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses || []))
+        .sort((a: any, b: any) => {
+          const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
+          if (xpDiff !== 0) return xpDiff;
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        });
+
+      const leaderboardStudents = cohortStudents.map((u: any, idx: number) => ({
         id: u.id,
+        rank: idx + 1,
         name: u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : (u.full_name || u.name),
-        xp: u.xp_total || 0,
+        xp: Number(u.xp_total || 0),
       }));
 
       let rank = 1;
-      for (let i = 0; i < leaderboardStudents.length; i++) {
-        if (String(leaderboardStudents[i].id) === userId) {
+      for (let i = 0; i < cohortStudents.length; i++) {
+        if (String(cohortStudents[i].id) === userId) {
           rank = i + 1;
           break;
         }
+      }
+      if (!cohortStudents.some((s: any) => String(s.id) === userId)) {
+        const selfXp = Number(user.xp_total || 0);
+        const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+        rank = higherCount + 1;
       }
 
       const activeDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
@@ -491,6 +506,14 @@ export async function GET() {
         mockTests,
         mockTestHistory,
         topLeaderboard: leaderboardStudents.slice(0, 3),
+        levelInfo: {
+          levelId: cohort.levelId,
+          levelLabel: cohort.levelLabel,
+          levelCategory: cohort.levelCategory,
+          headline: cohort.headline,
+          badgeText: cohort.badgeText,
+          totalStudentsInLevel: cohortStudents.length,
+        },
         incorrectLog,
       });
     } catch (d1Err) {
@@ -600,6 +623,35 @@ export async function GET() {
       };
     }).sort((x, y) => new Date(y.date || 0).getTime() - new Date(x.date || 0).getTime());
 
+    const fallbackCohort = resolveLeaderboardCohort(lockedCourse, db.courses || []);
+    const fallbackCohortStudents = (db.users || [])
+      .filter((u: any) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, db.courses || []))
+      .sort((a: any, b: any) => {
+        const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
+        if (xpDiff !== 0) return xpDiff;
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      });
+
+    let fallbackRank = 1;
+    for (let i = 0; i < fallbackCohortStudents.length; i++) {
+      if (String(fallbackCohortStudents[i]._id || fallbackCohortStudents[i].id) === userId) {
+        fallbackRank = i + 1;
+        break;
+      }
+    }
+    if (!fallbackCohortStudents.some((s: any) => String(s._id || s.id) === userId)) {
+      const selfXp = Number(user.xp_total || 0);
+      const higherCount = fallbackCohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+      fallbackRank = higherCount + 1;
+    }
+
+    const fallbackLeaderboardStudents = fallbackCohortStudents.map((u: any, idx: number) => ({
+      id: u._id || u.id,
+      rank: idx + 1,
+      name: u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : (u.full_name || u.name),
+      xp: Number(u.xp_total || 0),
+    }));
+
     return NextResponse.json({
       user: {
         name: user.name,
@@ -607,7 +659,7 @@ export async function GET() {
         xp_total: user.xp_total || 0,
         lockedCourse,
         progressPercent: 0,
-        rank: 1,
+        rank: fallbackRank || 1,
       },
       mockTests: courseMockTests.slice(0, 2).map((mt: any) => ({
         id: mt._id || mt.id,
@@ -622,7 +674,15 @@ export async function GET() {
         isAttempted: false,
       })),
       mockTestHistory: fallbackMockTestHistory,
-      topLeaderboard: [],
+      topLeaderboard: fallbackLeaderboardStudents.slice(0, 3),
+      levelInfo: {
+        levelId: fallbackCohort.levelId,
+        levelLabel: fallbackCohort.levelLabel,
+        levelCategory: fallbackCohort.levelCategory,
+        headline: fallbackCohort.headline,
+        badgeText: fallbackCohort.badgeText,
+        totalStudentsInLevel: fallbackCohortStudents.length,
+      },
       incorrectLog: fallbackIncorrectLog,
     });
   } catch (error: any) {

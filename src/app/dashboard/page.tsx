@@ -45,6 +45,14 @@ export default function StudentDashboardPage() {
   const [mockTests, setMockTests] = useState<any[]>([]);
   const [mockTestHistory, setMockTestHistory] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [levelInfo, setLevelInfo] = useState<{
+    levelId?: string;
+    levelLabel?: string;
+    levelCategory?: 'school_class' | 'competitive_course';
+    headline?: string;
+    badgeText?: string;
+    totalStudentsInLevel?: number;
+  } | null>(null);
   const [incorrectLog, setIncorrectLog] = useState<any[]>([]);
   const [showLogModal, setShowLogModal] = useState(false);
   const [logSearch, setLogSearch] = useState('');
@@ -93,6 +101,7 @@ export default function StudentDashboardPage() {
       if (Array.isArray(cached.mockTests)) setMockTests(cached.mockTests);
       if (Array.isArray(cached.mockTestHistory)) setMockTestHistory(cached.mockTestHistory);
       if (Array.isArray(cached.leaderboard)) setLeaderboard(cached.leaderboard);
+      if (cached.levelInfo) setLevelInfo(cached.levelInfo);
       if (Array.isArray(cached.incorrectLog)) setIncorrectLog(cached.incorrectLog);
       setLoading(false);
     }
@@ -104,6 +113,7 @@ export default function StudentDashboardPage() {
         if (Array.isArray(fresh.mockTests)) setMockTests(fresh.mockTests);
         if (Array.isArray(fresh.mockTestHistory)) setMockTestHistory(fresh.mockTestHistory);
         if (Array.isArray(fresh.leaderboard)) setLeaderboard(fresh.leaderboard);
+        if (fresh.levelInfo) setLevelInfo(fresh.levelInfo);
         if (Array.isArray(fresh.incorrectLog)) setIncorrectLog(fresh.incorrectLog);
         setLoading(false);
       }
@@ -192,6 +202,7 @@ export default function StudentDashboardPage() {
           mockTests: Array.isArray(data.mockTests) ? data.mockTests : [],
           mockTestHistory: Array.isArray(data.mockTestHistory) ? data.mockTestHistory : [],
           leaderboard: Array.isArray(data.topLeaderboard) ? data.topLeaderboard : [],
+          levelInfo: data.levelInfo || null,
           incorrectLog: Array.isArray(data.incorrectLog) ? data.incorrectLog : [],
         };
         setSwrCache('dashboard_cache', newCache, data.user?.email);
@@ -200,6 +211,7 @@ export default function StudentDashboardPage() {
         if (Array.isArray(data.mockTests)) setMockTests(data.mockTests);
         if (Array.isArray(data.mockTestHistory)) setMockTestHistory(data.mockTestHistory);
         if (Array.isArray(data.topLeaderboard)) setLeaderboard(data.topLeaderboard);
+        if (data.levelInfo) setLevelInfo(data.levelInfo);
         if (Array.isArray(data.incorrectLog)) setIncorrectLog(data.incorrectLog);
       })
       .catch((err) => {
@@ -746,7 +758,14 @@ export default function StudentDashboardPage() {
                       <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
                         <Trophy className="w-4.5 h-4.5" />
                       </div>
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Course Leaderboard</h3>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                          {levelInfo?.badgeText ? `${levelInfo.badgeText} Standings` : 'Cohort Leaderboard'}
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-400">
+                          {levelInfo?.levelCategory === 'school_class' ? 'Class-Level Peers Only' : 'Course Track Peers Only'}
+                        </p>
+                      </div>
                     </div>
 
                     <Link
@@ -769,19 +788,19 @@ export default function StudentDashboardPage() {
                     <div className="relative z-10 flex justify-between items-end">
                       <div>
                         <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
-                          YOUR CURRENT RANK
+                          YOUR {levelInfo?.levelLabel ? levelInfo.levelLabel.toUpperCase() : 'COHORT'} RANK
                         </span>
                         <span className="text-4xl font-black tracking-tight text-white mt-1 block">
                           #{studentRank}
                         </span>
                       </div>
 
-                      <div className="text-right max-w-[140px]">
+                      <div className="text-right max-w-[170px]">
                         <span className="text-[10px] font-black uppercase tracking-wider text-purple-200/80 block">
-                          TRACK
+                          {levelInfo?.levelCategory === 'school_class' ? 'ACADEMIC CLASS' : 'COHORT TRACK'}
                         </span>
-                        <span className="text-xs font-bold text-purple-100 truncate block mt-1">
-                          {courseName}
+                        <span className="text-xs font-bold text-purple-100 truncate block mt-1" title={levelInfo?.headline || courseName}>
+                          {levelInfo?.levelLabel || courseName}
                         </span>
                       </div>
                     </div>
@@ -797,11 +816,11 @@ export default function StudentDashboardPage() {
                           <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs font-bold">
                             <div className="flex items-center gap-2">
                               <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center">
-                                {idx + 1}
+                                {st.rank || idx + 1}
                               </span>
                               <span className="text-slate-800 dark:text-slate-200">{st.name}</span>
                             </div>
-                            <span className="text-slate-400 font-extrabold">{st.xp_total || 0} XP</span>
+                            <span className="text-slate-400 font-extrabold">{(st.xp !== undefined ? st.xp : st.xp_total) || 0} XP</span>
                           </div>
                         ))}
                       </div>

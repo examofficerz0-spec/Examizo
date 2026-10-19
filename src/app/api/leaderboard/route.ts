@@ -3,6 +3,7 @@ import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
+import { resolveLeaderboardCohort, isUserInCohort } from '@/lib/cohortMatcher';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -25,19 +26,28 @@ export async function GET() {
     }
 
     const currentUserId = String(user._id || user.id || auth.userId);
-
     const currentDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
 
     // 1. Primary: Cloudflare D1
     try {
-      const d1Students = await queryD1(
-        "SELECT id, name, nickname, full_name, xp_total, created_at FROM users WHERE locked_course_id = ? AND status = 'Active' ORDER BY xp_total DESC, created_at ASC",
-        [user.locked_course_id]
+      const d1Courses = (await queryD1('SELECT id, name, category, board, curriculum FROM courses')) || [];
+      const cohort = resolveLeaderboardCohort(user.locked_course_id, d1Courses);
+
+      const allActiveUsers = await queryD1(
+        "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM users WHERE status = 'Active'"
       );
 
-      if (d1Students && d1Students.length > 0) {
+      const cohortStudents = (allActiveUsers || [])
+        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses))
+        .sort((a: any, b: any) => {
+          const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
+          if (xpDiff !== 0) return xpDiff;
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        });
+
+      if (cohortStudents.length > 0) {
         let userRank = 1;
-        const formattedList = d1Students.map((s: any, idx: number) => {
+        const formattedList = cohortStudents.map((s: any, idx: number) => {
           const isSelf = String(s.id) === currentUserId;
           if (isSelf) {
             userRank = idx + 1;
@@ -50,19 +60,35 @@ export async function GET() {
             name: sName,
             fullName: s.full_name || s.name,
             nickname: s.nickname || null,
-            xp_total: s.xp_total || 0,
+            xp_total: Number(s.xp_total || 0),
             isSelf,
             isCurrentUser: isSelf,
           };
         });
 
+        // If current user is not in the list (e.g. newly created profile), find their rank position
+        if (!cohortStudents.some((s: any) => String(s.id) === currentUserId)) {
+          const selfXp = Number(user.xp_total || 0);
+          const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+          userRank = higherCount + 1;
+        }
+
         return NextResponse.json({
-          leaderboard: formattedList.slice(0, 20),
+          leaderboard: formattedList.slice(0, 50),
           userRank: {
             user_id: currentUserId,
             rank: userRank,
             name: currentDisplayName,
-            xp_total: user.xp_total || 0,
+            xp_total: Number(user.xp_total || 0),
+          },
+          level: {
+            type: cohort.type,
+            levelId: cohort.levelId,
+            levelLabel: cohort.levelLabel,
+            levelCategory: cohort.levelCategory,
+            headline: cohort.headline,
+            badgeText: cohort.badgeText,
+            totalStudentsInLevel: cohortStudents.length,
           },
         });
       }
@@ -72,12 +98,19 @@ export async function GET() {
 
     // 2. Shared DB Local Resilience Fallback
     const db = readSharedDb();
-    const students = (db.users || [])
-      .filter((u: any) => String(u.locked_course_id) === String(user.locked_course_id) && u.status === 'Active')
-      .sort((a: any, b: any) => (b.xp_total || 0) - (a.xp_total || 0));
+    const fallbackCourses = db.courses || [];
+    const cohort = resolveLeaderboardCohort(user.locked_course_id, fallbackCourses);
+
+    const cohortStudents = (db.users || [])
+      .filter((u: any) => u.status === 'Active' && isUserInCohort(u.locked_course_id, cohort, fallbackCourses))
+      .sort((a: any, b: any) => {
+        const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
+        if (xpDiff !== 0) return xpDiff;
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      });
 
     let userRank = 1;
-    const formattedList = students.map((s: any, idx: number) => {
+    const formattedList = cohortStudents.map((s: any, idx: number) => {
       const isSelf = String(s._id || s.id) === currentUserId;
       if (isSelf) {
         userRank = idx + 1;
@@ -90,19 +123,34 @@ export async function GET() {
         name: sName,
         fullName: s.full_name || s.name,
         nickname: s.nickname || null,
-        xp_total: s.xp_total || 0,
+        xp_total: Number(s.xp_total || 0),
         isSelf,
         isCurrentUser: isSelf,
       };
     });
 
+    if (!cohortStudents.some((s: any) => String(s._id || s.id) === currentUserId)) {
+      const selfXp = Number(user.xp_total || 0);
+      const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+      userRank = higherCount + 1;
+    }
+
     return NextResponse.json({
-      leaderboard: formattedList.slice(0, 20),
+      leaderboard: formattedList.slice(0, 50),
       userRank: {
         user_id: currentUserId,
         rank: userRank,
         name: currentDisplayName,
-        xp_total: user.xp_total || 0,
+        xp_total: Number(user.xp_total || 0),
+      },
+      level: {
+        type: cohort.type,
+        levelId: cohort.levelId,
+        levelLabel: cohort.levelLabel,
+        levelCategory: cohort.levelCategory,
+        headline: cohort.headline,
+        badgeText: cohort.badgeText,
+        totalStudentsInLevel: cohortStudents.length,
       },
     });
   } catch (error: any) {

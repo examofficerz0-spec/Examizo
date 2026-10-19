@@ -19,6 +19,14 @@ export default function LeaderboardPage() {
   // Global Leaderboard State
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [userRank, setUserRank] = useState<any>(null);
+  const [levelInfo, setLevelInfo] = useState<{
+    levelId?: string;
+    levelLabel?: string;
+    levelCategory?: 'school_class' | 'competitive_course';
+    headline?: string;
+    badgeText?: string;
+    totalStudentsInLevel?: number;
+  } | null>(null);
   const [loadingGlobal, setLoadingGlobal] = useState(true);
 
   // Friends Leaderboard State
@@ -55,6 +63,7 @@ export default function LeaderboardPage() {
     if (cached) {
       if (Array.isArray(cached.leaderboard)) setLeaderboard(cached.leaderboard);
       if (cached.userRank) setUserRank(cached.userRank);
+      if (cached.level) setLevelInfo(cached.level);
       setLoadingGlobal(false);
     }
 
@@ -63,6 +72,7 @@ export default function LeaderboardPage() {
       if (fresh) {
         if (Array.isArray(fresh.leaderboard)) setLeaderboard(fresh.leaderboard);
         if (fresh.userRank) setUserRank(fresh.userRank);
+        if (fresh.level) setLevelInfo(fresh.level);
         setLoadingGlobal(false);
       }
     });
@@ -74,10 +84,12 @@ export default function LeaderboardPage() {
           const cacheObj = {
             leaderboard: Array.isArray(data.leaderboard) ? data.leaderboard : [],
             userRank: data.userRank || null,
+            level: data.level || null,
           };
           setSwrCache('leaderboard_cache', cacheObj);
           setLeaderboard(cacheObj.leaderboard);
           setUserRank(cacheObj.userRank);
+          if (data.level) setLevelInfo(data.level);
         }
       })
       .catch(console.error)
@@ -310,16 +322,25 @@ export default function LeaderboardPage() {
         {/* Header Banner */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 border border-amber-200 dark:border-amber-900/50">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 border border-amber-200 dark:border-amber-900/50 shrink-0">
                 <Trophy className="w-6 h-6" />
               </span>
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Leaderboard &amp; Student Standings
-                </h1>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                  Track live course rankings or compete with your study buddies in your custom friends arena!
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {levelInfo?.headline || 'Leaderboard & Academic Standings'}
+                  </h1>
+                  {levelInfo?.badgeText && (
+                    <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                      {levelInfo.badgeText}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                  {levelInfo?.levelCategory === 'school_class'
+                    ? 'Strict Academic Class Standings: Only students enrolled in this grade level compete on this leaderboard.'
+                    : 'Strict Competitive Course Standings: Only students enrolled in this examination track compete on this leaderboard.'}
                 </p>
               </div>
             </div>
@@ -348,7 +369,7 @@ export default function LeaderboardPage() {
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
-                    YOUR OFFICIAL COURSE RANKING
+                    YOUR OFFICIAL {levelInfo?.levelLabel ? levelInfo.levelLabel.toUpperCase() : 'COHORT'} STANDING
                   </span>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">{userRank.name}</h3>
                 </div>
@@ -412,7 +433,7 @@ export default function LeaderboardPage() {
                 }`}
               >
                 <Trophy className="w-4 h-4" />
-                Course Standings (Global)
+                {levelInfo?.badgeText ? `${levelInfo.badgeText} Standings` : 'Academic Cohort Standings'}
               </button>
 
               <button
@@ -429,9 +450,29 @@ export default function LeaderboardPage() {
               </button>
             </div>
 
-            {/* TAB 1: GLOBAL LEADERBOARD */}
+            {/* TAB 1: GLOBAL COHORT LEADERBOARD */}
             {activeTab === 'global' && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs">
+                {/* Cohort Isolation Banner */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-3.5 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-slate-50 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>
+                      Active Academic Cohort: <strong className="text-blue-600 dark:text-blue-400 font-black">{levelInfo?.headline || 'Same-Level Students Only'}</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
+                      🔒 Only {levelInfo?.levelLabel || 'Same Level'} Students
+                    </span>
+                    {levelInfo?.totalStudentsInLevel !== undefined && (
+                      <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
+                        👥 {levelInfo.totalStudentsInLevel} Student{levelInfo.totalStudentsInLevel === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 {loadingGlobal ? (
                   <PageLoader
                     inline
@@ -595,7 +636,11 @@ export default function LeaderboardPage() {
                     Custom Friends Arena Standings
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Compare progress, track XP, and challenge your study partners.
+                    Compare progress, track XP, and challenge your study partners. (Cross-level study duels permitted here; switch to{' '}
+                    <strong className="text-blue-600 dark:text-blue-400 font-extrabold">
+                      {levelInfo?.badgeText || 'Academic Standings'}
+                    </strong>{' '}
+                    for official isolated peer rankings).
                   </p>
                 </div>
 
