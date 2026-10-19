@@ -189,6 +189,11 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [activeLanguage, setActiveLanguage] = useState<'en' | 'hi'>(initialLangParam === 'hi' ? 'hi' : 'en');
   const [hasAcceptedRules, setHasAcceptedRules] = useState(false);
 
+  // Attempts count (maximum 3 tries limit)
+  const [attemptsCount, setAttemptsCount] = useState<number>(0);
+  const [maxAttempts, setMaxAttempts] = useState<number>(3);
+  const [restoredSessionNotification, setRestoredSessionNotification] = useState<string | null>(null);
+
   // Question Response State
   const [userState, setUserState] = useState<Record<string, { selectedOption: number | null; isMFR: boolean; isVisited: boolean }>>({});
 
@@ -206,12 +211,34 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [openReviewQuestions, setOpenReviewQuestions] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
 
+  // In-progress local storage auto-save helper
+  const saveInProgressSession = useCallback((overrideUserState?: any, overrideIdx?: number, overrideTime?: number) => {
+    if (!testId) return;
+    try {
+      const currentQuestions: any[] = test?.question_ids || [];
+      const qIds = currentQuestions.map((q: any) => String(q._id || q.id || '')).filter(Boolean);
+      const sessionData = {
+        testId,
+        questionOrder: qIds,
+        userState: overrideUserState || userState,
+        currentIdx: overrideIdx !== undefined ? overrideIdx : currentIdx,
+        timeLeft: overrideTime !== undefined ? overrideTime : timeLeft,
+        activeLanguage,
+        isExamStarted: true,
+        hasAcceptedRules: true,
+        lastSavedAt: Date.now(),
+      };
+      localStorage.setItem(`examizo_mock_session_${testId}`, JSON.stringify(sessionData));
+    } catch (_) {}
+  }, [testId, test, userState, currentIdx, timeLeft, activeLanguage]);
+
   // Check sessionStorage on initial load for completed test results
   useEffect(() => {
     if (!testId) return;
     if (isRetakeRequested) {
       try {
         sessionStorage.removeItem(`mock_result_${testId}`);
+        localStorage.removeItem(`examizo_mock_session_${testId}`);
       } catch (_) {}
       return;
     }
@@ -267,6 +294,16 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           return;
         }
 
+        const currentAttempts = Number(data.attemptsCount || 0);
+        setAttemptsCount(currentAttempts);
+        setMaxAttempts(Number(data.maxAttempts || 3));
+
+        if (isRetakeRequested && currentAttempts >= 3) {
+          alert('Maximum attempts reached: You have already completed all 3 permitted tries for this mock examination.');
+          router.push(`/mock-tests/${testId}`);
+          return;
+        }
+
         const rawQuestions = Array.isArray(data.test?.question_ids) ? data.test.question_ids : [];
         const courseSubjectsList: string[] = data.test?.course_id?.subjects || ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Botany', 'Zoology'];
 
@@ -292,32 +329,58 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
         const normalizedQuestions = deduplicateQuestions(rawNormalizedQuestions);
 
-        // ─── SUBJECT-SCOPED QUESTION RESHUFFLING PER ATTEMPT ───
-        // Questions are grouped strictly by subject and shuffled ONLY within each subject group
-        const subjectBuckets: Record<string, any[]> = {};
-        normalizedQuestions.forEach((q: any) => {
-          const { subject } = getQuestionSubjectAndTopicHelper(q, courseSubjectsList);
-          if (!subjectBuckets[subject]) {
-            subjectBuckets[subject] = [];
-          }
-          subjectBuckets[subject].push(q);
-        });
-
-        // Sort subject buckets strictly by courseSubjectsList order
-        const sortedSubjectNames = Object.keys(subjectBuckets).sort((a, b) => {
-          const idxA = courseSubjectsList.indexOf(a);
-          const idxB = courseSubjectsList.indexOf(b);
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          if (idxA !== -1) return -1;
-          if (idxB !== -1) return 1;
-          return a.localeCompare(b);
-        });
+        // Check if an in-progress session exists in localStorage for recovery
+        let sessionToRestore: any = null;
+        if (!isRetakeRequested) {
+          try {
+            const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
+            if (rawSession) {
+              const parsed = JSON.parse(rawSession);
+              if (parsed && String(parsed.testId) === String(testId) && parsed.isExamStarted) {
+                sessionToRestore = parsed;
+              }
+            }
+          } catch (_) {}
+        }
 
         let finalReshuffledQuestions: any[] = [];
-        sortedSubjectNames.forEach((subj) => {
-          const shuffledBucket = shuffleArray(subjectBuckets[subj]);
-          finalReshuffledQuestions = finalReshuffledQuestions.concat(shuffledBucket);
-        });
+        let isSessionRestored = false;
+
+        if (sessionToRestore && Array.isArray(sessionToRestore.questionOrder) && sessionToRestore.questionOrder.length > 0) {
+          // RESTORE EXACT QUESTION SEQUENCE PREVIOUSLY GIVEN TO STUDENT (PREVENTS RESHUFFLE CORRUPTION)
+          const qOrderMap = new Map<string, number>(sessionToRestore.questionOrder.map((id: string, idx: number) => [String(id), idx]));
+          finalReshuffledQuestions = [...normalizedQuestions].sort((a: any, b: any) => {
+            const idxA = Number(qOrderMap.get(String(a._id || a.id)) ?? 9999);
+            const idxB = Number(qOrderMap.get(String(b._id || b.id)) ?? 9999);
+            return idxA - idxB;
+          });
+          isSessionRestored = true;
+        } else {
+          // Questions are grouped strictly by subject and shuffled ONLY within each subject group
+          const subjectBuckets: Record<string, any[]> = {};
+          normalizedQuestions.forEach((q: any) => {
+            const { subject } = getQuestionSubjectAndTopicHelper(q, courseSubjectsList);
+            if (!subjectBuckets[subject]) {
+              subjectBuckets[subject] = [];
+            }
+            subjectBuckets[subject].push(q);
+          });
+
+          // Sort subject buckets strictly by courseSubjectsList order
+          const sortedSubjectNames = Object.keys(subjectBuckets).sort((a, b) => {
+            const idxA = courseSubjectsList.indexOf(a);
+            const idxB = courseSubjectsList.indexOf(b);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return a.localeCompare(b);
+          });
+
+          sortedSubjectNames.forEach((subj) => {
+            const shuffledBucket = shuffleArray(subjectBuckets[subj]);
+            finalReshuffledQuestions = finalReshuffledQuestions.concat(shuffledBucket);
+          });
+        }
 
         const testData = {
           ...data.test,
@@ -338,8 +401,28 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           }
         });
 
-        // Restore latest completed attempt from server if available and not explicitly retaking
-        if (!isRetakeRequested && data.latestAttempt) {
+        if (isSessionRestored && sessionToRestore) {
+          // Compute remaining time accounting for power off / disconnection time
+          const elapsedSecs = Math.max(0, Math.floor((Date.now() - Number(sessionToRestore.lastSavedAt || Date.now())) / 1000));
+          const restoredTimeLeft = Math.max(0, Number(sessionToRestore.timeLeft || 0) - elapsedSecs);
+
+          setUserState({ ...initial, ...(sessionToRestore.userState || {}) });
+          setTimeLeft(restoredTimeLeft);
+          setCurrentIdx(Math.min(finalReshuffledQuestions.length - 1, Math.max(0, sessionToRestore.currentIdx || 0)));
+          if (sessionToRestore.activeLanguage) setActiveLanguage(sessionToRestore.activeLanguage);
+          setIsExamStarted(true);
+          setHasAcceptedRules(true);
+
+          if (restoredTimeLeft <= 1) {
+            setRestoredSessionNotification('⚠️ Disconnect time exceeded examination duration. Auto-submitting saved answers.');
+            setTimeout(() => {
+              handleFinalSubmit('auto');
+            }, 800);
+          } else {
+            setRestoredSessionNotification('⚡ Active Exam Resumed! Your answers and remaining time have been safely recovered.');
+          }
+        } else if (!isRetakeRequested && data.latestAttempt) {
+          // Restore latest completed attempt from server if available and not explicitly retaking
           setResult((prev: any) => {
             if (prev) return prev;
             return {
@@ -370,12 +453,11 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           } else {
             setUserState((prev) => ({ ...initial, ...prev }));
           }
+          setTimeLeft((data.test?.duration_minutes || 60) * 60);
         } else {
           setUserState((prev) => ({ ...initial, ...prev }));
+          setTimeLeft((data.test?.duration_minutes || 60) * 60);
         }
-
-        // Set timer (duration in minutes * 60)
-        setTimeLeft((data.test?.duration_minutes || 60) * 60);
       })
       .catch((err) => {
         console.error(err);
@@ -418,6 +500,23 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     setIsFullscreen(true);
     setIsExamStarted(true);
     setShowLockWarning(false);
+    try {
+      const qIds = (test?.question_ids || []).map((q: any) => String(q._id || q.id || '')).filter(Boolean);
+      localStorage.setItem(
+        `examizo_mock_session_${testId}`,
+        JSON.stringify({
+          testId,
+          questionOrder: qIds,
+          userState,
+          currentIdx: 0,
+          timeLeft: timeLeft > 0 ? timeLeft : (test?.duration_minutes || 60) * 60,
+          activeLanguage,
+          isExamStarted: true,
+          hasAcceptedRules: true,
+          lastSavedAt: Date.now(),
+        })
+      );
+    } catch (_) {}
   };
 
   const exitFullscreen = () => {
@@ -620,12 +719,24 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           handleFinalSubmit('auto');
           return 0;
         }
-        return prev - 1;
+        const nextTime = prev - 1;
+        if (nextTime % 4 === 0 && testId) {
+          try {
+            const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
+            if (rawSession) {
+              const parsed = JSON.parse(rawSession);
+              parsed.timeLeft = nextTime;
+              parsed.lastSavedAt = Date.now();
+              localStorage.setItem(`examizo_mock_session_${testId}`, JSON.stringify(parsed));
+            }
+          } catch (_) {}
+        }
+        return nextTime;
       });
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [test, result, isExamStarted]);
+  }, [test, result, isExamStarted, testId]);
 
   const questions: any[] = test?.question_ids || [];
   const currentQ = questions[currentIdx] || null;
@@ -713,10 +824,16 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   // Helper function to update question state
   const updateQuestionState = (qId: string, updates: Partial<{ selectedOption: number | null; isMFR: boolean; isVisited: boolean }>) => {
     if (!qId) return;
-    setUserState((prev) => ({
-      ...prev,
-      [qId]: { ...prev[qId], ...updates, isVisited: true },
-    }));
+    setUserState((prev) => {
+      const updated = {
+        ...prev,
+        [qId]: { ...prev[qId], ...updates, isVisited: true },
+      };
+      if (testId && isExamStarted && !result) {
+        saveInProgressSession(updated);
+      }
+      return updated;
+    });
   };
 
   const handleSelectOption = (optIdx: number) => {
@@ -740,6 +857,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
       setCurrentIdx(idx);
       if (questions[idx]?._id) {
         updateQuestionState(questions[idx]._id, { isVisited: true });
+      }
+      if (testId && isExamStarted && !result) {
+        saveInProgressSession(undefined, idx);
       }
     }
   };
@@ -851,6 +971,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     setSubmitting(true);
     try {
       const targetTestId = test?._id || test?.id || testId;
+      const totalSecs = (test?.duration_minutes || 60) * 60;
+      const timeSpentSeconds = Math.max(1, totalSecs - (timeLeft || 0));
       const qIdsList = (questions || []).map((q: any) => String(q._id || q.id || '')).filter(Boolean);
       const res = await fetch(`/api/mock-tests/${targetTestId}/submit`, {
         method: 'POST',
@@ -859,6 +981,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           userAnswers: userState,
           questionIds: qIdsList,
           submissionType,
+          timeSpentSeconds,
         }),
       });
 
@@ -870,11 +993,21 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         setShowBackWarning(false);
         setShowCompletionWindow(true);
         exitFullscreen();
+        setRestoredSessionNotification(null);
+
+        if (data.result?.attemptsUsed !== undefined) {
+          setAttemptsCount(data.result.attemptsUsed);
+        } else {
+          setAttemptsCount((prev) => prev + 1);
+        }
+
         if (typeof window !== 'undefined') {
           clearAllClientUserCaches();
           window.dispatchEvent(new Event('xpUpdated'));
           window.dispatchEvent(new Event('storage'));
           try {
+            localStorage.removeItem(`examizo_mock_session_${targetTestId}`);
+            localStorage.removeItem(`examizo_mock_session_${testId}`);
             sessionStorage.removeItem('dashboard_cache');
             sessionStorage.removeItem('mock_tests');
             sessionStorage.setItem(`mock_result_${targetTestId}`, JSON.stringify({
@@ -898,9 +1031,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   };
 
   const handleRetakeTest = () => {
+    if (attemptsCount >= 3) {
+      alert('You have reached the maximum limit of 3 tries for this examination. You cannot retake it again.');
+      return;
+    }
     try {
       sessionStorage.removeItem(`mock_result_${testId}`);
+      localStorage.removeItem(`examizo_mock_session_${testId}`);
     } catch (_) {}
+    setRestoredSessionNotification(null);
     setResult(null);
     setIsExamStarted(false);
     setHasAcceptedRules(false);
@@ -1084,35 +1223,55 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
             {/* Action Buttons */}
             <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                disabled={!hasAcceptedRules}
-                onClick={handleStartExamLock}
-                className={`w-full py-4 px-6 text-xs sm:text-sm font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 transition-all ${
-                  hasAcceptedRules
-                    ? 'bg-[#0B192C] hover:bg-[#060E18] dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-[0.99] text-white shadow-xl shadow-slate-900/20 dark:shadow-blue-600/30 cursor-pointer'
-                    : 'bg-slate-200 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 border border-slate-300/40 dark:border-slate-700/40'
-                }`}
-              >
-                {hasAcceptedRules ? (
-                  <>
-                    <ShieldCheck className="w-5 h-5" />
-                    Lock Screen &amp; Start Examination
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-5 h-5" />
-                    Check the box above to unlock examination
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/mock-tests')}
-                className="w-full py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-              >
-                Cancel &amp; Return to Mock Tests
-              </button>
+              {attemptsCount >= 3 ? (
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center space-y-2">
+                  <div className="text-xs font-black text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1.5">
+                    <Lock className="w-4 h-4" /> Maximum Attempts Limit Reached
+                  </div>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                    You have completed all 3 permitted tries for this mock examination.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/mock-tests')}
+                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors cursor-pointer"
+                  >
+                    Return to Mock Tests Catalog
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={!hasAcceptedRules}
+                    onClick={handleStartExamLock}
+                    className={`w-full py-4 px-6 text-xs sm:text-sm font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 transition-all ${
+                      hasAcceptedRules
+                        ? 'bg-[#0B192C] hover:bg-[#060E18] dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-[0.99] text-white shadow-xl shadow-slate-900/20 dark:shadow-blue-600/30 cursor-pointer'
+                        : 'bg-slate-200 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 border border-slate-300/40 dark:border-slate-700/40'
+                    }`}
+                  >
+                    {hasAcceptedRules ? (
+                      <>
+                        <ShieldCheck className="w-5 h-5" />
+                        Lock Screen &amp; Start Examination (Try {attemptsCount + 1} of 3)
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5" />
+                        Check the box above to unlock examination (Try {attemptsCount + 1} of 3)
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/mock-tests')}
+                    className="w-full py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  >
+                    Cancel &amp; Return to Mock Tests
+                  </button>
+                </>
+              )}
             </div>
 
           </div>
@@ -1300,13 +1459,19 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 <span>Responses recorded and synced with student ranking engine.</span>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handleRetakeTest}
-                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#181622] border border-slate-200 dark:border-[#242033] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Retake Test
-                </button>
+                {attemptsCount >= 3 ? (
+                  <div className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-black text-slate-500 bg-slate-100 dark:bg-[#181622] border border-slate-200 dark:border-[#242033] flex items-center justify-center gap-1.5 select-none">
+                    <Lock className="w-3.5 h-3.5" /> 3/3 Tries Completed (Limit Reached)
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleRetakeTest}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#181622] border border-slate-200 dark:border-[#242033] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Retake Test ({attemptsCount}/3 Tries)
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -1918,6 +2083,23 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         </div>
       )}
 
+      {/* Restored In-Progress Session Notification Banner */}
+      {restoredSessionNotification && (
+        <div className="bg-gradient-to-r from-amber-500/20 via-blue-500/15 to-emerald-500/20 border-b border-amber-300 dark:border-amber-800/80 px-4 py-2 text-center text-xs font-black text-amber-900 dark:text-amber-200 flex items-center justify-between z-30 shadow-xs">
+          <div className="flex items-center gap-2 mx-auto">
+            <Zap className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
+            <span>{restoredSessionNotification}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRestoredSessionNotification(null)}
+            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Test Top Header Bar */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 md:px-6 py-2 md:py-3 shrink-0 sticky top-0 z-20 shadow-md shadow-slate-200/50 dark:shadow-black/60">
 
@@ -1963,7 +2145,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           <div className="flex items-center gap-4 min-w-0">
             <Logo size={28} showText={false} />
             <div className="min-w-0">
-              <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate">{test.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate">{test.title}</h1>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-850">
+                  Try {Math.min(3, attemptsCount + 1)}/3
+                </span>
+                <span className="text-[10px] text-emerald-600 font-extrabold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Auto-Saved
+                </span>
+              </div>
               <p className="text-[10px] text-slate-500">Course: {test.course_id?.name}</p>
             </div>
           </div>

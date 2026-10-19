@@ -29,6 +29,9 @@ import {
   Check,
   Sparkles,
   Layers,
+  History,
+  Clock,
+  FileCheck,
 } from 'lucide-react';
 
 import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
@@ -40,6 +43,7 @@ export default function StudentDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [mockTests, setMockTests] = useState<any[]>([]);
+  const [mockTestHistory, setMockTestHistory] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [incorrectLog, setIncorrectLog] = useState<any[]>([]);
   const [showLogModal, setShowLogModal] = useState(false);
@@ -87,6 +91,7 @@ export default function StudentDashboardPage() {
     if (cached) {
       if (cached.user) setUserData(cached.user);
       if (Array.isArray(cached.mockTests)) setMockTests(cached.mockTests);
+      if (Array.isArray(cached.mockTestHistory)) setMockTestHistory(cached.mockTestHistory);
       if (Array.isArray(cached.leaderboard)) setLeaderboard(cached.leaderboard);
       if (Array.isArray(cached.incorrectLog)) setIncorrectLog(cached.incorrectLog);
       setLoading(false);
@@ -97,6 +102,7 @@ export default function StudentDashboardPage() {
       if (fresh) {
         if (fresh.user) setUserData(fresh.user);
         if (Array.isArray(fresh.mockTests)) setMockTests(fresh.mockTests);
+        if (Array.isArray(fresh.mockTestHistory)) setMockTestHistory(fresh.mockTestHistory);
         if (Array.isArray(fresh.leaderboard)) setLeaderboard(fresh.leaderboard);
         if (Array.isArray(fresh.incorrectLog)) setIncorrectLog(fresh.incorrectLog);
         setLoading(false);
@@ -184,6 +190,7 @@ export default function StudentDashboardPage() {
         const newCache = {
           user: data.user || null,
           mockTests: Array.isArray(data.mockTests) ? data.mockTests : [],
+          mockTestHistory: Array.isArray(data.mockTestHistory) ? data.mockTestHistory : [],
           leaderboard: Array.isArray(data.topLeaderboard) ? data.topLeaderboard : [],
           incorrectLog: Array.isArray(data.incorrectLog) ? data.incorrectLog : [],
         };
@@ -191,6 +198,7 @@ export default function StudentDashboardPage() {
 
         if (data.user) setUserData(data.user);
         if (Array.isArray(data.mockTests)) setMockTests(data.mockTests);
+        if (Array.isArray(data.mockTestHistory)) setMockTestHistory(data.mockTestHistory);
         if (Array.isArray(data.topLeaderboard)) setLeaderboard(data.topLeaderboard);
         if (Array.isArray(data.incorrectLog)) setIncorrectLog(data.incorrectLog);
       })
@@ -826,8 +834,176 @@ export default function StudentDashboardPage() {
           })()}
         </div>
 
-        {/* Row 2: Incorrect Questions Audit Log Window Card */}
+        {/* Mock Examination Attempts & History Bar */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 transition-all">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center shrink-0">
+                <History className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    Mock Examination Attempts &amp; History
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                    {mockTestHistory.length} Attempt{mockTestHistory.length === 1 ? '' : 's'} Logged
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Track your scores, completion accuracy, time benchmarks, and try limits (3 tries maximum per test).
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/mock-tests"
+              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
+            >
+              Take a mock test <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {mockTestHistory.length === 0 ? (
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center flex flex-col items-center justify-center space-y-2 bg-slate-50/50 dark:bg-slate-800/30">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 stroke-[1.8]" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No mock examinations attempted yet</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Complete any full-length mock test to see your chronological history, scores, and try breakdown here.
+                </p>
+              </div>
+              <Link
+                href="/mock-tests"
+                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors inline-flex items-center gap-1.5"
+              >
+                <span>Browse Mock Tests</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mockTestHistory.map((item: any, idx: number) => {
+                const tryNum = item.tryNumber || 1;
+                const canRetake = tryNum < 3;
+                const isPassed = (item.percentage || 0) >= 60;
+
+                let tryBadgeStyle = 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900';
+                if (tryNum === 2) {
+                  tryBadgeStyle = 'bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900';
+                } else if (tryNum >= 3) {
+                  tryBadgeStyle = 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900';
+                }
+
+                return (
+                  <div
+                    key={item.id || idx}
+                    className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between gap-3 shadow-2xs group"
+                  >
+                    <div>
+                      {/* Top Row: Title + Try Badge */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {item.title}
+                        </h4>
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase shrink-0 border ${tryBadgeStyle}`}
+                        >
+                          Try {tryNum}/3
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium mt-1">
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {new Date(item.date).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        <span>•</span>
+                        <span>{item.timeSpentMinutes || 1} min duration</span>
+                      </div>
+                    </div>
+
+                    {/* Middle: Performance Bar */}
+                    <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/70 dark:border-slate-800/80 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-500">Score Achieved</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
+                          <strong className="text-blue-600 dark:text-blue-400">{item.score}</strong> / {item.totalMarks}
+                          <span className="ml-1 text-[10px] text-slate-400 font-bold">({item.percentage}%)</span>
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isPassed ? 'bg-emerald-500' : 'bg-blue-600'
+                          }`}
+                          style={{ width: `${Math.min(100, Math.max(5, item.percentage || 0))}%` }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 pt-0.5">
+                        <span>Accuracy: <strong className="text-slate-800 dark:text-slate-200">{item.accuracy || 0}%</strong></span>
+                        <span
+                          className={`px-1.5 py-0.2 rounded font-black text-[9px] uppercase ${
+                            isPassed
+                              ? 'text-emerald-700 dark:text-emerald-300'
+                              : 'text-amber-700 dark:text-amber-300'
+                          }`}
+                        >
+                          {isPassed ? 'Passed' : 'Needs Practice'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Actions */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                      {item.test_id ? (
+                        canRetake ? (
+                          <Link
+                            href={`/mock-tests/${item.test_id}`}
+                            className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                          >
+                            <span>Retake ({3 - tryNum} left)</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        ) : (
+                          <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-800/90 px-2 py-0.5 rounded-md">
+                            3/3 Tries Maxed
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-[10px] font-medium text-slate-400">Completed</span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMistakeCardExpanded(true);
+                          const el = document.getElementById('mistake-log-section');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <AlertCircle className="w-3 h-3 text-rose-500" />
+                        <span>Mistakes</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Row 2: Incorrect Questions Audit Log Window Card */}
+        <div id="mistake-log-section" className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4 transition-all">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div
               onClick={() => incorrectLog.length > 0 && setIsMistakeCardExpanded(!isMistakeCardExpanded)}

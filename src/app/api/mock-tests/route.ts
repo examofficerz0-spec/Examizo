@@ -38,24 +38,35 @@ export async function GET() {
 
       const placeholders = searchCourseIds.map(() => '?').join(',');
       const currentSubProfileId = String(user._id || user.id || auth.userId);
+      const userAliases = [
+        currentSubProfileId,
+        String(auth.userId || ''),
+        String(user.email || '').toLowerCase(),
+        String(user.account_email || '').toLowerCase(),
+      ].filter(Boolean);
+      const placeholdersUser = userAliases.map(() => '?').join(',');
+
       let d1UserAttempts: any[] = [];
       try {
         d1UserAttempts = (await queryD1(
-          'SELECT test_id, score, accuracy, submitted_at FROM attempts WHERE (student_id = ? OR sub_profile_id = ?)',
-          [currentSubProfileId, currentSubProfileId]
+          `SELECT id, test_id, score, accuracy, submitted_at FROM attempts WHERE student_id IN (${placeholdersUser}) OR sub_profile_id IN (${placeholdersUser})`,
+          [...userAliases, ...userAliases]
         )) || [];
-        if (d1UserAttempts.length === 0) {
-          const db = readSharedDb();
-          const memAtts = (db.attempts || []).filter(
-            (a: any) =>
-              String(a.student_id) === currentSubProfileId ||
-              String(a.sub_profile_id) === currentSubProfileId ||
-              (user.email && String(a.student_id) === String(user.email))
-          );
-          if (memAtts.length > 0) {
-            d1UserAttempts = memAtts;
+
+        const db = readSharedDb();
+        const memAtts = (db.attempts || []).filter(
+          (a: any) =>
+            userAliases.includes(String(a.student_id)) ||
+            userAliases.includes(String(a.sub_profile_id))
+        );
+        const existingIds = new Set(d1UserAttempts.map((item: any) => String(item.id || item._id)));
+        memAtts.forEach((a: any) => {
+          const aId = String(a._id || a.id);
+          if (!existingIds.has(aId)) {
+            d1UserAttempts.push(a);
+            existingIds.add(aId);
           }
-        }
+        });
       } catch (_) {}
 
       const d1Tests = await queryD1(
@@ -118,6 +129,9 @@ export async function GET() {
               question_ids: qs,
               questions_count: qIds.length,
               attempts_count: attemptsCount,
+              attemptsCount,
+              max_attempts: 3,
+              maxAttempts: 3,
               highest_score: highestScore,
               is_attempted: isAttempted,
               is_active: m.is_active !== 0,
@@ -136,7 +150,11 @@ export async function GET() {
     const currentSubProfileId = String(user._id || user.id || auth.userId);
     const validCourseIds = getEquivalentCourseIds(courseId, db.courses || []);
     const userAttempts = (db.attempts || []).filter(
-      (a: any) => String(a.student_id) === currentSubProfileId || String(a.sub_profile_id) === currentSubProfileId
+      (a: any) =>
+        String(a.student_id) === currentSubProfileId ||
+        String(a.sub_profile_id) === currentSubProfileId ||
+        (user.email && String(a.student_id) === String(user.email)) ||
+        (user.account_email && String(a.student_id) === String(user.account_email))
     );
 
     const tests = (db.mockTests || [])
@@ -152,7 +170,7 @@ export async function GET() {
           })
           .filter(Boolean);
 
-        const testAttempts = userAttempts.filter((a: any) => String(a.test_id) === String(m._id || m.id));
+        const testAttempts = userAttempts.filter((a: any) => String(a.test_id || a.mock_test_id) === String(m._id || m.id));
         const attemptsCount = testAttempts.length;
         const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
         const isAttempted = attemptsCount > 0;
@@ -161,6 +179,9 @@ export async function GET() {
           ...m,
           question_ids: qList,
           attempts_count: attemptsCount,
+          attemptsCount,
+          max_attempts: 3,
+          maxAttempts: 3,
           highest_score: highestScore,
           is_attempted: isAttempted,
         };

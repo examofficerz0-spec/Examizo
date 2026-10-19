@@ -83,23 +83,48 @@ export async function POST(req: Request) {
         );
 
         // Record any incorrect answers into mistake_logs table
+        const mistakePromises: Promise<any>[] = [];
+        const incorrectList: any[] = [];
         for (const resp of processedResponses) {
           if (resp.is_correct === false) {
             const qMatch = d1Questions.find((item: any) => String(item.id) === String(resp.question_id));
-            executeD1(
-              `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
-               VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 0, 'practice', CURRENT_TIMESTAMP)`,
-              [
-                generateId(),
-                userId,
-                userId,
-                courseId,
-                resp.question_id,
-                resp.selected_option,
-                Number(qMatch?.correct_option || 0),
-              ]
-            ).catch(() => {});
+            const mistakeId = generateId();
+            incorrectList.push({
+              _id: mistakeId,
+              id: mistakeId,
+              sub_profile_id: userId,
+              student_id: userId,
+              course_id: courseId,
+              test_id: null,
+              question_id: resp.question_id,
+              selected_option: resp.selected_option,
+              correct_option: Number(qMatch?.correct_option || 0),
+              is_resolved: 0,
+              attempt_type: 'practice',
+              attempted_at: new Date().toISOString(),
+            });
+
+            mistakePromises.push(
+              executeD1(
+                `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
+                 VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 0, 'practice', CURRENT_TIMESTAMP)`,
+                [
+                  mistakeId,
+                  userId,
+                  userId,
+                  courseId,
+                  resp.question_id,
+                  resp.selected_option,
+                  Number(qMatch?.correct_option || 0),
+                ]
+              ).catch((err) => {
+                console.warn('[practice/submit] D1 mistake_logs insert error:', err);
+              })
+            );
           }
+        }
+        if (mistakePromises.length > 0) {
+          await Promise.all(mistakePromises);
         }
 
         let newXpTotal = (user.xp_total || 0) + xpEarned;
@@ -146,6 +171,11 @@ export async function POST(req: Request) {
             submission_type: 'manual',
             created_at: new Date().toISOString(),
           });
+
+          if (incorrectList.length > 0) {
+            if (!(db as any).mistake_logs) (db as any).mistake_logs = [];
+            (db as any).mistake_logs.push(...incorrectList);
+          }
 
           const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
           if (memUser && xpEarned > 0) {

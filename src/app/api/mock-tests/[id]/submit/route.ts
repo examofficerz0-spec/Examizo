@@ -15,7 +15,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userAnswers, submissionType, questionIds } = await req.json();
+    const { userAnswers, submissionType, questionIds, timeSpentSeconds } = await req.json();
+    const actualTimeSpent = Math.max(0, Number(timeSpentSeconds || 0));
 
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
@@ -36,6 +37,30 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       const d1Tests = await queryD1('SELECT * FROM mock_tests WHERE id = ? LIMIT 1', [params.id]);
       if (d1Tests && d1Tests.length > 0) {
         const test = d1Tests[0];
+
+        // ─── Enforce strict 3 attempts limit ───
+        const existingAtts = await queryD1(
+          'SELECT count(*) as count FROM attempts WHERE (student_id = ? OR student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?) AND (test_id = ? OR topic_tag = ?)',
+          [userId, String(auth.email || ''), userId, String(user.account_email || ''), String(user.account_email || ''), test.id, test.title || '']
+        );
+        let totalExisting = Number(existingAtts?.[0]?.count || 0);
+        try {
+          const db = readSharedDb();
+          const memCount = (db.attempts || []).filter(
+            (a: any) =>
+              (String(a.student_id) === userId || String(a.sub_profile_id) === userId || (user.email && String(a.student_id) === String(user.email))) &&
+              (String(a.test_id) === test.id || a.topic_tag === test.title)
+          ).length;
+          totalExisting = Math.max(totalExisting, memCount);
+        } catch (_) {}
+
+        if (totalExisting >= 3) {
+          return NextResponse.json(
+            { error: 'Maximum attempts limit reached (3 of 3 tries used). You cannot retake this examination further.' },
+            { status: 403 }
+          );
+        }
+
         const d1Courses = await queryD1('SELECT * FROM courses WHERE id = ? LIMIT 1', [courseId]);
         const course = d1Courses?.[0];
 
@@ -121,7 +146,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         await executeD1(
           `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, test_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
-           VALUES (?, ?, ?, ?, ?, 'mock', ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+           VALUES (?, ?, ?, ?, ?, 'mock', ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             attemptId,
             userId,
@@ -132,29 +157,36 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             JSON.stringify(processedResponses),
             finalScore,
             accuracyPercent,
+            actualTimeSpent,
             submissionType || 'manual',
           ]
         );
 
-        // Also record incorrect answers in mistake_logs
+        // Reliably persist incorrect answers into mistake_logs
+        const mistakePromises: Promise<any>[] = [];
         for (const resp of processedResponses) {
           if (resp.is_correct === false) {
             const qMatch = (d1Questions || []).find((item: any) => String(item.id) === String(resp.question_id));
-            executeD1(
-              `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'mock', CURRENT_TIMESTAMP)`,
-              [
-                generateId(),
-                userId,
-                userId,
-                courseId,
-                test.id,
-                resp.question_id,
-                resp.selected_option,
-                Number(qMatch?.correct_option || 0),
-              ]
-            ).catch(() => {});
+            mistakePromises.push(
+              executeD1(
+                `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'mock', CURRENT_TIMESTAMP)`,
+                [
+                  generateId(),
+                  userId,
+                  userId,
+                  courseId,
+                  test.id,
+                  resp.question_id,
+                  resp.selected_option,
+                  Number(qMatch?.correct_option || 0),
+                ]
+              ).catch((mErr) => console.warn('[api/mock-tests/submit] Mistake log insert error:', mErr))
+            );
           }
+        }
+        if (mistakePromises.length > 0) {
+          await Promise.all(mistakePromises);
         }
 
         let newXpTotal = (user.xp_total || 0) + xpEarned;
@@ -198,9 +230,31 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             responses: processedResponses,
             score: finalScore,
             accuracy: accuracyPercent,
+            time_spent_seconds: actualTimeSpent,
             submission_type: submissionType || 'manual',
             created_at: new Date().toISOString(),
           });
+
+          if (!db.mistake_logs) db.mistake_logs = [];
+          for (const resp of processedResponses) {
+            if (resp.is_correct === false) {
+              const qMatch = (d1Questions || []).find((item: any) => String(item.id) === String(resp.question_id));
+              db.mistake_logs.push({
+                _id: generateId(),
+                id: generateId(),
+                sub_profile_id: userId,
+                student_id: userId,
+                course_id: courseId,
+                test_id: test.id,
+                question_id: resp.question_id,
+                selected_option: resp.selected_option,
+                correct_option: Number(qMatch?.correct_option || 0),
+                is_resolved: 0,
+                attempt_type: 'mock',
+                attempted_at: new Date().toISOString(),
+              });
+            }
+          }
 
           const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
           if (memUser && xpEarned > 0) {
@@ -228,6 +282,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             incorrectCount,
             unattemptedCount,
             totalQuestions: qIds.length,
+            timeSpentSeconds: actualTimeSpent,
+            attemptsUsed: totalExisting + 1,
+            maxAttempts: 3,
             xpEarned,
             cutoffBonusAwarded,
             newXpTotal,
@@ -243,6 +300,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const test = (db.mockTests || []).find((m) => m._id === params.id || m.id === params.id);
     if (!test) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
+    }
+
+    // Check attempts limit in fallback
+    const memUserAttempts = (db.attempts || []).filter(
+      (a: any) =>
+        (String(a.student_id) === userId || String(a.sub_profile_id) === userId || (user.email && String(a.student_id) === String(user.email))) &&
+        (String(a.test_id) === String(test._id || test.id) || a.topic_tag === test.title)
+    );
+    if (memUserAttempts.length >= 3) {
+      return NextResponse.json(
+        { error: 'Maximum attempts limit reached (3 of 3 tries used). You cannot retake this examination further.' },
+        { status: 403 }
+      );
     }
 
     const course = (db.courses || []).find((c) => c._id === user.locked_course_id || c.id === user.locked_course_id);
@@ -308,6 +378,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const attempt = {
       _id: generateId(),
       student_id: user._id || auth.userId,
+      sub_profile_id: userId,
       course_id: user.locked_course_id,
       test_id: test._id || test.id,
       type: 'mock',
@@ -315,6 +386,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       responses: processedResponses,
       score: Math.max(0, totalScore),
       accuracy: accuracyPercent,
+      time_spent_seconds: actualTimeSpent,
       submission_type: submissionType || 'manual',
       created_at: new Date().toISOString(),
     };
@@ -322,10 +394,31 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (!db.attempts) db.attempts = [];
     db.attempts.push(attempt);
 
+    if (!db.mistake_logs) db.mistake_logs = [];
+    for (const resp of processedResponses) {
+      if (resp.is_correct === false) {
+        const qMatch = (qList || []).find((item: any) => String(item._id || item.id) === String(resp.question_id));
+        db.mistake_logs.push({
+          _id: generateId(),
+          id: generateId(),
+          sub_profile_id: userId,
+          student_id: userId,
+          course_id: courseId,
+          test_id: test._id || test.id,
+          question_id: resp.question_id,
+          selected_option: resp.selected_option,
+          correct_option: Number(qMatch?.correct_option || 0),
+          is_resolved: 0,
+          attempt_type: 'mock',
+          attempted_at: new Date().toISOString(),
+        });
+      }
+    }
+
     // Also push attempt to D1 so Cloudflare D1 stays in sync even during fallback
     executeD1(
       `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, test_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
-       VALUES (?, ?, ?, ?, ?, 'mock', ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+       VALUES (?, ?, ?, ?, ?, 'mock', ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         attempt._id,
         userId,
@@ -336,6 +429,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         JSON.stringify(processedResponses),
         attempt.score,
         accuracyPercent,
+        actualTimeSpent,
         submissionType || 'manual',
       ]
     ).catch(() => {});
@@ -386,6 +480,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         incorrectCount,
         unattemptedCount,
         totalQuestions: qList.length,
+        timeSpentSeconds: actualTimeSpent,
+        attemptsUsed: memUserAttempts.length + 1,
+        maxAttempts: 3,
         xpEarned,
         cutoffBonusAwarded,
         newXpTotal: user.xp_total || 0,

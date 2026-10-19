@@ -37,23 +37,27 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY started_at DESC',
           [String(u.id), String(u.id), String(u.email || ''), String(u.account_email || '')]
         );
+        d1Attempts = Array.isArray(d1Attempts) ? d1Attempts : [];
 
-        if (!d1Attempts || d1Attempts.length === 0) {
-          try {
-            const db = readSharedDb();
-            const memAtts = (db.attempts || []).filter(
-              (a: any) =>
-                String(a.student_id) === String(u.id) ||
-                String(a.sub_profile_id) === String(u.id) ||
-                (u.email && String(a.student_id) === String(u.email))
-            );
-            if (memAtts.length > 0) {
-              d1Attempts = memAtts.map((a: any) => ({
-                id: a._id || a.id,
+        try {
+          const db = readSharedDb();
+          const memAtts = (db.attempts || []).filter(
+            (a: any) =>
+              String(a.student_id) === String(u.id) ||
+              String(a.sub_profile_id) === String(u.id) ||
+              (u.email && String(a.student_id) === String(u.email)) ||
+              (u.account_email && String(a.student_id) === String(u.account_email))
+          );
+          const existingIds = new Set(d1Attempts.map((item: any) => String(item.id)));
+          memAtts.forEach((a: any) => {
+            const attId = String(a._id || a.id);
+            if (!existingIds.has(attId)) {
+              d1Attempts.push({
+                id: attId,
                 student_id: a.student_id,
                 sub_profile_id: a.sub_profile_id,
                 course_id: a.course_id,
-                test_id: a.test_id,
+                test_id: a.test_id || a.mock_test_id,
                 type: a.type,
                 topic_tag: a.topic_tag,
                 responses_json: typeof a.responses === 'string' ? a.responses : JSON.stringify(a.responses || a.responses_json || []),
@@ -62,10 +66,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                 time_spent_seconds: a.time_spent_seconds,
                 started_at: a.started_at || a.created_at,
                 submitted_at: a.submitted_at || a.created_at,
-              }));
+              });
+              existingIds.add(attId);
             }
-          } catch (_) {}
-        }
+          });
+        } catch (_) {}
 
         let mockTests = await queryD1('SELECT * FROM mock_tests');
         if (!mockTests || mockTests.length === 0) {
@@ -115,38 +120,47 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         const mockAttempts = (d1Attempts || []).filter((a: any) => a.type === 'mock' || a.test_id);
 
-        const mockTestHistory = mockAttempts.map((a: any) => {
-          const test = (mockTests || []).find((m: any) => String(m.id) === String(a.test_id));
-          let qCount = 0;
-          try {
-            const qIds = typeof test?.question_ids_json === 'string' ? JSON.parse(test.question_ids_json) : (test?.question_ids_json || []);
-            qCount = qIds.length;
-          } catch (_) {}
+        const mockTestHistory = mockAttempts
+          .map((a: any, _idx: number, arr: any[]) => {
+            const test = (mockTests || []).find((m: any) => String(m.id) === String(a.test_id));
+            let qCount = 0;
+            try {
+              const qIds = typeof test?.question_ids_json === 'string' ? JSON.parse(test.question_ids_json) : (test?.question_ids_json || []);
+              qCount = qIds.length;
+            } catch (_) {}
 
-          let responsesCount = 0;
-          try {
-            const resp = typeof a.responses_json === 'string' ? JSON.parse(a.responses_json) : (a.responses_json || []);
-            responsesCount = resp.length;
-          } catch (_) {}
+            let responsesCount = 0;
+            try {
+              const resp = typeof a.responses_json === 'string' ? JSON.parse(a.responses_json) : (a.responses_json || []);
+              responsesCount = resp.length;
+            } catch (_) {}
 
-          const totalMarks = qCount > 0
-            ? qCount * 4
-            : (test?.cutoff_marks ? test.cutoff_marks * 2 : (responsesCount > 0 ? responsesCount * 4 : 300));
+            const totalMarks = qCount > 0
+              ? qCount * 4
+              : (test?.cutoff_marks ? test.cutoff_marks * 2 : (responsesCount > 0 ? responsesCount * 4 : 300));
 
-          const percentage = totalMarks > 0 ? Math.round(((a.score || 0) / totalMarks) * 100) : 0;
-          const timeSpentMinutes = Math.round((a.time_spent_seconds || 0) / 60);
+            const percentage = totalMarks > 0 ? Math.round(((a.score || 0) / totalMarks) * 100) : 0;
+            const timeSpentMinutes = Math.max(1, Math.round((a.time_spent_seconds || 0) / 60));
 
-          return {
-            id: a.id,
-            title: a.topic_tag || test?.title || 'Full Mock Examination',
-            score: a.score || 0,
-            totalMarks,
-            percentage,
-            timeSpentSeconds: a.time_spent_seconds || 0,
-            timeSpentMinutes,
-            date: a.submitted_at || a.started_at || new Date().toISOString(),
-          };
-        });
+            const sameTestAttempts = arr
+              .filter((item: any) => String(item.test_id || item.topic_tag) === String(a.test_id || a.topic_tag))
+              .sort((x: any, y: any) => new Date(x.submitted_at || x.started_at || 0).getTime() - new Date(y.submitted_at || y.started_at || 0).getTime());
+            const tryIndex = sameTestAttempts.findIndex((item: any) => item.id === a.id);
+            const tryNumber = tryIndex !== -1 ? tryIndex + 1 : 1;
+
+            return {
+              id: a.id,
+              title: a.topic_tag || test?.title || 'Full Mock Examination',
+              score: a.score || 0,
+              totalMarks,
+              percentage,
+              timeSpentSeconds: a.time_spent_seconds || 0,
+              timeSpentMinutes,
+              tryNumber,
+              date: a.submitted_at || a.started_at || new Date().toISOString(),
+            };
+          })
+          .sort((x: any, y: any) => new Date(y.date || 0).getTime() - new Date(x.date || 0).getTime());
 
         const modulesCompletedCount = passedTopics.size > 0 ? passedTopics.size : allAttemptedTopics.size;
         const moduleCompletionPercentage = totalModulesInCourse > 0

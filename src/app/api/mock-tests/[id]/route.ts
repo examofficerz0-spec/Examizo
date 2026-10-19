@@ -228,16 +228,31 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         }
 
         let latestAttempt = null;
+        let attemptsCount = 0;
         try {
           const d1Attempts = await queryD1(
-            'SELECT * FROM attempts WHERE (student_id = ? OR student_id = ?) AND (test_id = ? OR topic_tag = ?) ORDER BY started_at DESC LIMIT 1',
-            [userId, String(auth.email || ''), params.id, rawTest.title || '']
+            'SELECT * FROM attempts WHERE (student_id = ? OR student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?) AND (test_id = ? OR topic_tag = ?) ORDER BY submitted_at DESC, started_at DESC',
+            [userId, String(auth.email || ''), userId, String(user.account_email || ''), String(user.account_email || ''), params.id, rawTest.title || '']
           );
-          if (d1Attempts && d1Attempts.length > 0) {
-            const att = d1Attempts[0];
+          let allAttempts = d1Attempts || [];
+          try {
+            const db = readSharedDb();
+            const memAtts = (db.attempts || []).filter(
+              (a: any) =>
+                (String(a.student_id) === userId || String(a.sub_profile_id) === userId || (user.email && String(a.student_id) === String(user.email))) &&
+                (String(a.test_id) === params.id || a.topic_tag === rawTest.title)
+            );
+            if (memAtts.length > 0 && allAttempts.length === 0) {
+              allAttempts = memAtts;
+            }
+          } catch (_) {}
+
+          attemptsCount = allAttempts.length;
+          if (allAttempts.length > 0) {
+            const att = allAttempts[0];
             let responses = [];
             try {
-              responses = typeof att.responses_json === 'string' ? JSON.parse(att.responses_json) : (att.responses_json || []);
+              responses = typeof att.responses_json === 'string' ? JSON.parse(att.responses_json) : (att.responses || att.responses_json || []);
             } catch (_) {}
             let correctCount = 0;
             let incorrectCount = 0;
@@ -248,7 +263,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
               else unattemptedCount++;
             });
             latestAttempt = {
-              id: att.id,
+              id: att.id || att._id,
               score: Number(att.score || 0),
               accuracyPercent: Number(att.accuracy || 0),
               correctCount,
@@ -274,7 +289,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           question_ids: orderedQs,
         };
 
-        return NextResponse.json({ test, latestAttempt });
+        return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });
       }
     } catch (d1Err) {
       console.warn('[api/mock-tests/[id]] D1 fallback:', d1Err);
@@ -298,8 +313,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const question_ids = deduplicateQuestions(rawQuestions);
 
     const userAttempts = (db.attempts || []).filter(
-      (a: any) => (a.student_id === user._id || a.student_id === auth.userId) && (a.test_id === params.id || a.topic_tag === rawTest.title)
+      (a: any) => (a.student_id === user._id || a.student_id === auth.userId || a.sub_profile_id === user._id) && (a.test_id === params.id || a.topic_tag === rawTest.title)
     );
+    const attemptsCount = userAttempts.length;
     const lastAtt = userAttempts[userAttempts.length - 1];
     let latestAttempt = null;
     if (lastAtt) {
@@ -331,7 +347,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       question_ids,
     };
 
-    return NextResponse.json({ test, latestAttempt });
+    return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

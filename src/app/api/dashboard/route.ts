@@ -89,23 +89,26 @@ export async function GET() {
 
       const courseDbId = courseRow ? courseRow.id : courseId;
       const d1Qs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
-      let d1Attempts = await queryD1(
-        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?',
-        [userId, userId, String(user.email || ''), String(user.account_email || '')]
-      );
+      let d1Attempts = (await queryD1(
+        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY submitted_at DESC, started_at DESC',
+        [userId, userId, String(auth.email || ''), String(user.email || ''), String(user.account_email || '')]
+      )) || [];
 
-      if (!d1Attempts || d1Attempts.length === 0) {
-        try {
-          const db = readSharedDb();
-          const memAtts = (db.attempts || []).filter(
-            (a: any) =>
-              String(a.student_id) === userId ||
-              String(a.sub_profile_id) === userId ||
-              (user.email && String(a.student_id) === String(user.email))
-          );
-          if (memAtts.length > 0) {
-            d1Attempts = memAtts.map((a: any) => ({
-              id: a._id || a.id,
+      try {
+        const db = readSharedDb();
+        const memAtts = (db.attempts || []).filter(
+          (a: any) =>
+            String(a.student_id) === userId ||
+            String(a.sub_profile_id) === userId ||
+            (user.email && (String(a.student_id) === String(user.email) || String(a.student_id) === String(auth.email))) ||
+            (user.account_email && String(a.student_id) === String(user.account_email))
+        );
+        const existingIds = new Set((d1Attempts || []).map((x: any) => String(x.id || x._id)));
+        memAtts.forEach((a: any) => {
+          const aId = String(a.id || a._id);
+          if (!existingIds.has(aId)) {
+            d1Attempts.push({
+              id: aId,
               student_id: a.student_id,
               sub_profile_id: a.sub_profile_id,
               course_id: a.course_id,
@@ -117,10 +120,12 @@ export async function GET() {
               accuracy: a.accuracy,
               time_spent_seconds: a.time_spent_seconds,
               submitted_at: a.submitted_at || a.created_at,
-            }));
+              started_at: a.started_at || a.created_at,
+            });
+            existingIds.add(aId);
           }
-        } catch (_) {}
-      }
+        });
+      } catch (_) {}
 
       let d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
       if (!d1MockTests || d1MockTests.length === 0) {
@@ -167,7 +172,7 @@ export async function GET() {
       const formattedAttempts = (d1Attempts || []).map((a: any) => {
         let responses: any[] = [];
         try {
-          responses = typeof a.responses_json === 'string' ? JSON.parse(a.responses_json) : (a.responses_json || []);
+          responses = typeof a.responses_json === 'string' ? JSON.parse(a.responses_json) : (a.responses_json || a.responses || []);
         } catch (e) {
           responses = [];
         }
@@ -184,13 +189,67 @@ export async function GET() {
           accuracy: a.accuracy,
           time_spent_seconds: a.time_spent_seconds,
           submitted_at: a.submitted_at || a.started_at,
+          started_at: a.started_at || a.submitted_at,
         };
       });
 
       const attemptedQIds = new Set<string>();
       formattedAttempts.forEach((a) => {
-        (a.responses || []).forEach((r: any) => attemptedQIds.add(String(r.question_id)));
+        (a.responses || []).forEach((r: any) => {
+          if (r.question_id) attemptedQIds.add(String(r.question_id));
+        });
       });
+
+      // Fetch any missing questions that were attempted but not under current course_id
+      const knownQMap = new Map<string, any>(formattedQs.map((q: any) => [String(q.id || q._id), q]));
+      const missingQIds = Array.from(attemptedQIds).filter((id) => !knownQMap.has(id));
+      if (missingQIds.length > 0) {
+        try {
+          const quoted = missingQIds.map((id) => `'${id}'`).join(',');
+          const extraD1Qs = await queryD1(`SELECT * FROM questions WHERE id IN (${quoted})`);
+          (extraD1Qs || []).forEach((q: any) => {
+            let opts: string[] = [];
+            try {
+              opts = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options_json || []);
+            } catch (_) {}
+            const fQ = {
+              _id: q.id,
+              id: q.id,
+              question_text: q.question_text,
+              image_url: q.image_url || '',
+              options: opts,
+              correct_option: Number(q.correct_option || 0),
+              explanation: q.explanation || '',
+              detailed_explanation: q.detailed_explanation || '',
+              topic_tag: q.topic_tag || 'General',
+            };
+            formattedQs.push(fQ);
+            knownQMap.set(String(q.id), fQ);
+          });
+        } catch (_) {}
+
+        try {
+          const db = readSharedDb();
+          (db.questions || []).forEach((q: any) => {
+            const qIdStr = String(q._id || q.id);
+            if (!knownQMap.has(qIdStr) && attemptedQIds.has(qIdStr)) {
+              const fQ = {
+                _id: qIdStr,
+                id: qIdStr,
+                question_text: q.question_text,
+                image_url: q.image_url || '',
+                options: q.options || [],
+                correct_option: Number(q.correct_option || 0),
+                explanation: q.explanation || '',
+                detailed_explanation: q.detailed_explanation || '',
+                topic_tag: q.topic_tag || 'General',
+              };
+              formattedQs.push(fQ);
+              knownQMap.set(qIdStr, fQ);
+            }
+          });
+        } catch (_) {}
+      }
 
       const mockTestMap = new Map<string, any>();
       (d1MockTests || []).forEach((mt: any) => {
@@ -198,7 +257,66 @@ export async function GET() {
         if (mt._id) mockTestMap.set(String(mt._id), mt);
       });
 
+      // ─── Query mistake_logs table directly ───
+      let directMistakeLogs: any[] = [];
+      try {
+        directMistakeLogs = (await queryD1(
+          'SELECT * FROM mistake_logs WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? ORDER BY attempted_at DESC',
+          [userId, userId, String(auth.email || ''), String(user.email || '')]
+        )) || [];
+      } catch (_) {}
+
+      try {
+        const db = readSharedDb();
+        const memMistakes = (db.mistake_logs || []).filter(
+          (m: any) =>
+            String(m.student_id) === userId ||
+            String(m.sub_profile_id) === userId ||
+            (user.email && String(m.student_id) === String(user.email))
+        );
+        const existingMLIds = new Set((directMistakeLogs || []).map((m: any) => String(m.id || m._id)));
+        memMistakes.forEach((m: any) => {
+          const mId = String(m.id || m._id);
+          if (!existingMLIds.has(mId)) {
+            directMistakeLogs.push(m);
+            existingMLIds.add(mId);
+          }
+        });
+      } catch (_) {}
+
       const incorrectLogMap = new Map<string, any>();
+
+      // Merge direct mistake_logs entries
+      (directMistakeLogs || []).forEach((ml: any) => {
+        const qId = String(ml.question_id);
+        const q = knownQMap.get(qId);
+        const testId = ml.test_id ? String(ml.test_id) : 'practice';
+        const uniqueKey = `${testId}_${qId}`;
+        const matchedTest = ml.test_id ? mockTestMap.get(String(ml.test_id)) : null;
+        const testTitle = matchedTest?.title || (ml.attempt_type === 'mock' ? 'Mock Examination' : 'Practice Session');
+
+        if (!incorrectLogMap.has(uniqueKey)) {
+          incorrectLogMap.set(uniqueKey, {
+            _id: `${testId}_${qId}`,
+            question_id: qId,
+            test_id: testId,
+            test_title: testTitle,
+            test_type: ml.attempt_type || (ml.test_id ? 'mock' : 'practice'),
+            question_text: q?.question_text || `Question #${qId}`,
+            image_url: q?.image_url || '',
+            options: q?.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+            userSelectedOption: ml.selected_option,
+            correctOption: ml.correct_option !== undefined ? ml.correct_option : q?.correct_option,
+            explanation: q?.explanation || '',
+            detailed_explanation: q?.detailed_explanation || '',
+            topic_tag: q?.topic_tag || 'General',
+            attemptedAt: ml.attempted_at || new Date().toISOString(),
+            attemptType: ml.attempt_type || (ml.test_id ? 'mock' : 'practice'),
+          });
+        }
+      });
+
+      // Merge attempt responses
       formattedAttempts.forEach((a) => {
         const isMock = a.type === 'mock' || Boolean(a.test_id);
         let testTitle = 'General Practice';
@@ -215,35 +333,77 @@ export async function GET() {
 
         (a.responses || []).forEach((r: any) => {
           const qId = String(r.question_id);
-          const q = formattedQs.find((item: any) => String(item.id) === qId);
-          if (q) {
-            const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option >= 0 && Number(r.selected_option) !== Number(q.correct_option));
-            if (isIncorrect) {
-              const uniqueKey = `${testId}_${qId}`;
-              if (!incorrectLogMap.has(uniqueKey)) {
-                incorrectLogMap.set(uniqueKey, {
-                  _id: `${testId}_${q.id}`,
-                  question_id: q.id,
-                  test_id: testId,
-                  test_title: testTitle,
-                  test_type: isMock ? 'mock' : 'practice',
-                  question_text: q.question_text,
-                  image_url: q.image_url || '',
-                  options: q.options || [],
-                  userSelectedOption: r.selected_option,
-                  correctOption: q.correct_option,
-                  explanation: q.explanation || '',
-                  detailed_explanation: q.detailed_explanation || '',
-                  topic_tag: q.topic_tag || a.topic_tag || 'General',
-                  attemptedAt: a.submitted_at || new Date().toISOString(),
-                  attemptType: a.type || (isMock ? 'mock' : 'practice'),
-                });
-              }
+          const q = knownQMap.get(qId);
+          const isIncorrect = r.is_correct === false || (r.selected_option !== undefined && r.selected_option !== null && r.selected_option >= 0 && q && Number(r.selected_option) !== Number(q.correct_option));
+          if (isIncorrect) {
+            const uniqueKey = `${testId}_${qId}`;
+            if (!incorrectLogMap.has(uniqueKey)) {
+              incorrectLogMap.set(uniqueKey, {
+                _id: `${testId}_${qId}`,
+                question_id: qId,
+                test_id: testId,
+                test_title: testTitle,
+                test_type: isMock ? 'mock' : 'practice',
+                question_text: q?.question_text || `Question #${qId}`,
+                image_url: q?.image_url || '',
+                options: q?.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+                userSelectedOption: r.selected_option,
+                correctOption: q?.correct_option ?? 0,
+                explanation: q?.explanation || '',
+                detailed_explanation: q?.detailed_explanation || '',
+                topic_tag: q?.topic_tag || a.topic_tag || 'General',
+                attemptedAt: a.submitted_at || new Date().toISOString(),
+                attemptType: a.type || (isMock ? 'mock' : 'practice'),
+              });
             }
           }
         });
       });
       const incorrectLog = Array.from(incorrectLogMap.values());
+
+      // ─── Compute Mock Test Attempt History ───
+      const mockAttempts = formattedAttempts.filter((a) => a.type === 'mock' || Boolean(a.test_id));
+      const mockTestHistory = mockAttempts.map((a, _idx, arr) => {
+        const matchedTest = a.test_id ? mockTestMap.get(String(a.test_id)) : null;
+        let totalQuestions = (a.responses || []).length;
+        let totalMarks = totalQuestions * 4 || 100;
+        if (matchedTest) {
+          let qIds = [];
+          try {
+            qIds = typeof matchedTest.question_ids_json === 'string' ? JSON.parse(matchedTest.question_ids_json) : (matchedTest.question_ids || []);
+          } catch (_) {}
+          if (qIds.length > 0) {
+            totalQuestions = qIds.length;
+            totalMarks = totalQuestions * 4;
+          }
+        }
+
+        const sameTestAttempts = arr
+          .filter((item) => String(item.test_id || item.topic_tag) === String(a.test_id || a.topic_tag))
+          .sort((x, y) => new Date(x.submitted_at || 0).getTime() - new Date(y.submitted_at || 0).getTime());
+        const tryIndex = sameTestAttempts.findIndex((item) => item.id === a.id);
+        const tryNumber = tryIndex !== -1 ? tryIndex + 1 : 1;
+
+        const score = Number(a.score || 0);
+        const percentage = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : Number(a.accuracy || 0);
+        const timeSpentMinutes = Math.max(1, Math.round(Number(a.time_spent_seconds || 0) / 60));
+
+        return {
+          id: a.id || a._id,
+          test_id: a.test_id,
+          title: matchedTest?.title || a.topic_tag || 'Mock Examination',
+          score,
+          totalMarks,
+          percentage,
+          accuracy: Number(a.accuracy || 0),
+          totalQuestions,
+          timeSpentMinutes,
+          timeSpentSeconds: Number(a.time_spent_seconds || 0),
+          tryNumber,
+          date: a.submitted_at || a.started_at || new Date().toISOString(),
+          submittedAt: a.submitted_at || a.started_at,
+        };
+      }).sort((x, y) => new Date(y.date || 0).getTime() - new Date(x.date || 0).getTime());
 
       const topicSet = new Set<string>();
       formattedQs.forEach((q: any) => {
@@ -324,6 +484,7 @@ export async function GET() {
           rank: rank || 1,
         },
         mockTests,
+        mockTestHistory,
         topLeaderboard: leaderboardStudents.slice(0, 3),
         incorrectLog,
       });
@@ -398,6 +559,42 @@ export async function GET() {
     });
     const fallbackIncorrectLog = Array.from(incorrectLogMap.values());
 
+    // Fallback Mock Test Attempt History
+    const fallbackMockAttempts = (attempts || []).filter((a: any) => a.type === 'mock' || Boolean(a.test_id || a.mock_test_id));
+    const fallbackMockTestHistory = fallbackMockAttempts.map((a: any, _idx: number, arr: any[]) => {
+      const testRefId = a.test_id || a.mock_test_id;
+      const matchedTest = testRefId ? mockTestMap.get(String(testRefId)) : null;
+      let totalQuestions = (a.responses || []).length;
+      let totalMarks = totalQuestions * 4 || 100;
+      if (matchedTest && Array.isArray(matchedTest.question_ids) && matchedTest.question_ids.length > 0) {
+        totalQuestions = matchedTest.question_ids.length;
+        totalMarks = totalQuestions * 4;
+      }
+      const sameTestAttempts = arr
+        .filter((item) => String(item.test_id || item.mock_test_id || item.topic_tag) === String(testRefId || a.topic_tag))
+        .sort((x, y) => new Date(x.submitted_at || x.created_at || 0).getTime() - new Date(y.submitted_at || y.created_at || 0).getTime());
+      const tryIndex = sameTestAttempts.findIndex((item) => (item.id || item._id) === (a.id || a._id));
+      const tryNumber = tryIndex !== -1 ? tryIndex + 1 : 1;
+      const score = Number(a.score || 0);
+      const percentage = totalMarks > 0 ? Math.round((score / totalMarks) * 100) : Number(a.accuracy || 0);
+      const timeSpentMinutes = Math.max(1, Math.round(Number(a.time_spent_seconds || 0) / 60));
+      return {
+        id: a.id || a._id,
+        test_id: testRefId,
+        title: matchedTest?.title || a.topic_tag || 'Mock Examination',
+        score,
+        totalMarks,
+        percentage,
+        accuracy: Number(a.accuracy || 0),
+        totalQuestions,
+        timeSpentMinutes,
+        timeSpentSeconds: Number(a.time_spent_seconds || 0),
+        tryNumber,
+        date: a.submitted_at || a.created_at || new Date().toISOString(),
+        submittedAt: a.submitted_at || a.created_at,
+      };
+    }).sort((x, y) => new Date(y.date || 0).getTime() - new Date(x.date || 0).getTime());
+
     return NextResponse.json({
       user: {
         name: user.name,
@@ -419,6 +616,7 @@ export async function GET() {
         highestScore: 0,
         isAttempted: false,
       })),
+      mockTestHistory: fallbackMockTestHistory,
       topLeaderboard: [],
       incorrectLog: fallbackIncorrectLog,
     });

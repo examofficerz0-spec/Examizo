@@ -245,8 +245,13 @@ export const StudentStatsModal: React.FC<StudentStatsModalProps> = ({ studentId,
                     {data.stats.mockTestHistory.map((test: any) => (
                       <div key={test.id} className="p-3.5 bg-white dark:bg-slate-900 flex items-center justify-between gap-3 text-xs">
                         <div>
-                          <div className="font-extrabold text-slate-900 dark:text-white">{test.title}</div>
-                          <div className="text-[10px] text-slate-400 font-medium">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-slate-900 dark:text-white">{test.title}</span>
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800">
+                              Try {test.tryNumber || 1}/3
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">
                             {new Date(test.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • {test.timeSpentMinutes} mins duration
                           </div>
                         </div>
