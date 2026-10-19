@@ -1722,14 +1722,23 @@ export default function PracticeSetsPage() {
                           <ChevronLeft className="w-4 h-4" /> Previous
                         </button>
 
-                        <button
-                          type="button"
-                          disabled={currentIdx === filteredQuestions.length - 1}
-                          onClick={() => setCurrentIdx((prev) => Math.min(filteredQuestions.length - 1, prev + 1))}
-                          className="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1 transition-colors"
-                        >
-                          Next <ChevronRight className="w-4 h-4" />
-                        </button>
+                        {currentIdx === filteredQuestions.length - 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmModal(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer shadow-xs"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Submit
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setCurrentIdx((prev) => Math.min(filteredQuestions.length - 1, prev + 1))}
+                            className="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            Next <ChevronRight className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

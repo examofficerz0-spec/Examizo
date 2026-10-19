@@ -2166,18 +2166,27 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     type="button"
                     onClick={() => navigateTo(currentIdx - 1)}
                     disabled={currentIdx === 0}
-                    className="flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" /> Previous
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(currentIdx + 1)}
-                    disabled={currentIdx === questions.length - 1}
-                    className="flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95"
-                  >
-                    Next <ChevronRight className="w-4 h-4" />
-                  </button>
+                  {currentIdx === questions.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmModal(true)}
+                      className="flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 active:scale-95 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Submit Test
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => navigateTo(currentIdx + 1)}
+                      className="flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer"
+                    >
+                      Next <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
