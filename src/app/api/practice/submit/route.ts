@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(req: Request) {
   try {
+    await ensureD1Tables();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -81,6 +82,26 @@ export async function POST(req: Request) {
           ]
         );
 
+        // Record any incorrect answers into mistake_logs table
+        for (const resp of processedResponses) {
+          if (resp.is_correct === false) {
+            const qMatch = d1Questions.find((item: any) => String(item.id) === String(resp.question_id));
+            executeD1(
+              `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
+               VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 0, 'practice', CURRENT_TIMESTAMP)`,
+              [
+                generateId(),
+                userId,
+                userId,
+                courseId,
+                resp.question_id,
+                resp.selected_option,
+                Number(qMatch?.correct_option || 0),
+              ]
+            ).catch(() => {});
+          }
+        }
+
         let newXpTotal = (user.xp_total || 0) + xpEarned;
         if (xpEarned > 0) {
           await executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
@@ -93,10 +114,11 @@ export async function POST(req: Request) {
             userId,
           ]).catch(() => {});
           await executeD1(
-            `INSERT INTO xp_transactions (id, student_id, attempt_id, xp_amount, reason, created_at)
-             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            `INSERT INTO xp_transactions (id, student_id, sub_profile_id, attempt_id, xp_amount, reason, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [
               generateId(),
+              userId,
               userId,
               attemptId,
               xpEarned,
@@ -104,6 +126,43 @@ export async function POST(req: Request) {
             ]
           );
         }
+
+        // Dual-write to sharedDb for instant consistency
+        try {
+          const db = readSharedDb();
+          if (!db.attempts) db.attempts = [];
+          db.attempts.push({
+            _id: attemptId,
+            id: attemptId,
+            student_id: userId,
+            sub_profile_id: userId,
+            course_id: courseId,
+            type: type || 'practice',
+            topic_tag: topicTag || 'General',
+            responses: processedResponses,
+            score: correctCount,
+            accuracy: accuracyPercent,
+            time_spent_seconds: durationSeconds,
+            submission_type: 'manual',
+            created_at: new Date().toISOString(),
+          });
+
+          const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
+          if (memUser && xpEarned > 0) {
+            memUser.xp_total = (memUser.xp_total || 0) + xpEarned;
+            if (!db.xpTransactions) db.xpTransactions = [];
+            db.xpTransactions.push({
+              _id: generateId(),
+              student_id: userId,
+              sub_profile_id: userId,
+              attempt_id: attemptId,
+              xp_amount: xpEarned,
+              reason: `+${xpEarned} XP for practice set (${correctCount} correct answers)`,
+              created_at: new Date().toISOString(),
+            });
+          }
+          writeSharedDb(db);
+        } catch (_) {}
 
         return NextResponse.json({
           success: true,
@@ -174,6 +233,24 @@ export async function POST(req: Request) {
     if (!db.attempts) db.attempts = [];
     db.attempts.push(attempt);
 
+    // Also push to D1 for continuous synchronization
+    executeD1(
+      `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [
+        attempt._id,
+        userId,
+        userId,
+        courseId,
+        type || 'practice',
+        topicTag || 'General',
+        JSON.stringify(processedResponses),
+        correctCount,
+        accuracyPercent,
+        durationSeconds,
+      ]
+    ).catch(() => {});
+
     if (xpEarned > 0) {
       user.xp_total = (user.xp_total || 0) + xpEarned;
       if (!db.xpTransactions) db.xpTransactions = [];
@@ -181,11 +258,34 @@ export async function POST(req: Request) {
         _id: generateId(),
         id: generateId(),
         student_id: user._id || auth.userId,
+        sub_profile_id: userId,
         attempt_id: attempt._id,
         xp_amount: xpEarned,
         reason: `+${xpEarned} XP for practice set (${correctCount} correct answers)`,
         created_at: new Date().toISOString(),
       });
+
+      executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
+        xpEarned,
+        userId,
+        String(user.email || '').toLowerCase(),
+      ]).catch(() => {});
+      executeD1('UPDATE sub_profiles SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ?', [
+        xpEarned,
+        userId,
+      ]).catch(() => {});
+      executeD1(
+        `INSERT INTO xp_transactions (id, student_id, sub_profile_id, attempt_id, xp_amount, reason, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [
+          generateId(),
+          userId,
+          userId,
+          attempt._id,
+          xpEarned,
+          `+${xpEarned} XP for practice set (${correctCount} correct answers)`,
+        ]
+      ).catch(() => {});
     }
 
     writeSharedDb(db);

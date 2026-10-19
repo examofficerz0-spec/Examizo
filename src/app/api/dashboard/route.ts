@@ -89,11 +89,56 @@ export async function GET() {
 
       const courseDbId = courseRow ? courseRow.id : courseId;
       const d1Qs = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
-      const d1Attempts = await queryD1(
-        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ?',
-        [userId, userId]
+      let d1Attempts = await queryD1(
+        'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?',
+        [userId, userId, String(user.email || ''), String(user.account_email || '')]
       );
-      const d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
+
+      if (!d1Attempts || d1Attempts.length === 0) {
+        try {
+          const db = readSharedDb();
+          const memAtts = (db.attempts || []).filter(
+            (a: any) =>
+              String(a.student_id) === userId ||
+              String(a.sub_profile_id) === userId ||
+              (user.email && String(a.student_id) === String(user.email))
+          );
+          if (memAtts.length > 0) {
+            d1Attempts = memAtts.map((a: any) => ({
+              id: a._id || a.id,
+              student_id: a.student_id,
+              sub_profile_id: a.sub_profile_id,
+              course_id: a.course_id,
+              test_id: a.test_id,
+              type: a.type,
+              topic_tag: a.topic_tag,
+              responses_json: typeof a.responses === 'string' ? a.responses : JSON.stringify(a.responses || a.responses_json || []),
+              score: a.score,
+              accuracy: a.accuracy,
+              time_spent_seconds: a.time_spent_seconds,
+              submitted_at: a.submitted_at || a.created_at,
+            }));
+          }
+        } catch (_) {}
+      }
+
+      let d1MockTests = await queryD1('SELECT * FROM mock_tests WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]);
+      if (!d1MockTests || d1MockTests.length === 0) {
+        try {
+          const db = readSharedDb();
+          const memTests = (db.mockTests || []).filter((m: any) => String(m.course_id) === courseDbId && m.is_active !== false);
+          if (memTests.length > 0) {
+            d1MockTests = memTests.map((m: any) => ({
+              id: m._id || m.id,
+              title: m.title,
+              type: m.type || 'full',
+              duration_minutes: m.duration_minutes || 60,
+              cutoff_marks: m.cutoff_marks || 120,
+              question_ids_json: JSON.stringify(m.question_ids || []),
+            }));
+          }
+        } catch (_) {}
+      }
       const d1Leaderboard = await queryD1(
         "SELECT id, name, nickname, full_name, xp_total FROM users WHERE locked_course_id = ? AND status != 'Deleted' ORDER BY xp_total DESC LIMIT 10",
         [courseDbId]

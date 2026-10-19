@@ -44,6 +44,18 @@ export async function GET() {
           'SELECT test_id, score, accuracy, submitted_at FROM attempts WHERE (student_id = ? OR sub_profile_id = ?)',
           [currentSubProfileId, currentSubProfileId]
         )) || [];
+        if (d1UserAttempts.length === 0) {
+          const db = readSharedDb();
+          const memAtts = (db.attempts || []).filter(
+            (a: any) =>
+              String(a.student_id) === currentSubProfileId ||
+              String(a.sub_profile_id) === currentSubProfileId ||
+              (user.email && String(a.student_id) === String(user.email))
+          );
+          if (memAtts.length > 0) {
+            d1UserAttempts = memAtts;
+          }
+        }
       } catch (_) {}
 
       const d1Tests = await queryD1(

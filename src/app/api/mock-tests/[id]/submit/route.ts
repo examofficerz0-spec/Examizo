@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { readSharedDb, writeSharedDb, generateId } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { queryD1, executeD1 } from '@/lib/d1';
+import { queryD1, executeD1, ensureD1Tables } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
+    await ensureD1Tables();
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -135,6 +136,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           ]
         );
 
+        // Also record incorrect answers in mistake_logs
+        for (const resp of processedResponses) {
+          if (resp.is_correct === false) {
+            const qMatch = (d1Questions || []).find((item: any) => String(item.id) === String(resp.question_id));
+            executeD1(
+              `INSERT INTO mistake_logs (id, sub_profile_id, student_id, course_id, test_id, question_id, selected_option, correct_option, is_resolved, attempt_type, attempted_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'mock', CURRENT_TIMESTAMP)`,
+              [
+                generateId(),
+                userId,
+                userId,
+                courseId,
+                test.id,
+                resp.question_id,
+                resp.selected_option,
+                Number(qMatch?.correct_option || 0),
+              ]
+            ).catch(() => {});
+          }
+        }
+
         let newXpTotal = (user.xp_total || 0) + xpEarned;
         if (xpEarned > 0) {
           await executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
@@ -147,10 +169,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             userId,
           ]).catch(() => {});
           await executeD1(
-            `INSERT INTO xp_transactions (id, student_id, attempt_id, xp_amount, reason, created_at)
-             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            `INSERT INTO xp_transactions (id, student_id, sub_profile_id, attempt_id, xp_amount, reason, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [
               generateId(),
+              userId,
               userId,
               attemptId,
               xpEarned,
@@ -158,6 +181,43 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             ]
           );
         }
+
+        // Dual-write to sharedDb for complete cross-tier persistence
+        try {
+          const db = readSharedDb();
+          if (!db.attempts) db.attempts = [];
+          db.attempts.push({
+            _id: attemptId,
+            id: attemptId,
+            student_id: userId,
+            sub_profile_id: userId,
+            course_id: courseId,
+            test_id: test.id,
+            type: 'mock',
+            topic_tag: test.title || 'Mock Test',
+            responses: processedResponses,
+            score: finalScore,
+            accuracy: accuracyPercent,
+            submission_type: submissionType || 'manual',
+            created_at: new Date().toISOString(),
+          });
+
+          const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
+          if (memUser && xpEarned > 0) {
+            memUser.xp_total = (memUser.xp_total || 0) + xpEarned;
+            if (!db.xpTransactions) db.xpTransactions = [];
+            db.xpTransactions.push({
+              _id: generateId(),
+              student_id: userId,
+              sub_profile_id: userId,
+              attempt_id: attemptId,
+              xp_amount: xpEarned,
+              reason: cutoffBonusAwarded ? `+${xpEarned} XP (Cutoff Bonus)` : `+${xpEarned} XP for Mock Test`,
+              created_at: new Date().toISOString(),
+            });
+          }
+          writeSharedDb(db);
+        } catch (_) {}
 
         return NextResponse.json({
           success: true,
@@ -262,6 +322,24 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (!db.attempts) db.attempts = [];
     db.attempts.push(attempt);
 
+    // Also push attempt to D1 so Cloudflare D1 stays in sync even during fallback
+    executeD1(
+      `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, test_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
+       VALUES (?, ?, ?, ?, ?, 'mock', ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [
+        attempt._id,
+        userId,
+        userId,
+        courseId,
+        test._id || test.id,
+        test.title || 'Mock Test',
+        JSON.stringify(processedResponses),
+        attempt.score,
+        accuracyPercent,
+        submissionType || 'manual',
+      ]
+    ).catch(() => {});
+
     if (xpEarned > 0) {
       user.xp_total = (user.xp_total || 0) + xpEarned;
       if (!db.xpTransactions) db.xpTransactions = [];
@@ -273,6 +351,28 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         reason: cutoffBonusAwarded ? `+${xpEarned} XP (Cutoff Bonus)` : `+${xpEarned} XP for Mock Test`,
         created_at: new Date().toISOString(),
       });
+
+      executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
+        xpEarned,
+        userId,
+        String(user.email || '').toLowerCase(),
+      ]).catch(() => {});
+      executeD1('UPDATE sub_profiles SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ?', [
+        xpEarned,
+        userId,
+      ]).catch(() => {});
+      executeD1(
+        `INSERT INTO xp_transactions (id, student_id, sub_profile_id, attempt_id, xp_amount, reason, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [
+          generateId(),
+          userId,
+          userId,
+          attempt._id,
+          xpEarned,
+          cutoffBonusAwarded ? `+${xpEarned} XP (Cutoff Bonus)` : `+${xpEarned} XP for Mock Test`,
+        ]
+      ).catch(() => {});
     }
 
     writeSharedDb(db);

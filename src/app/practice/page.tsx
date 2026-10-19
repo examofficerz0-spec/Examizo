@@ -41,6 +41,7 @@ import {
   normalizeQuestionSignature,
   deduplicateQuestions,
 } from '@/lib/questionDeduplicator';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 const calculateWeeklyCountdown = () => {
   const now = new Date();
@@ -660,8 +661,11 @@ export default function PracticeSetsPage() {
         setSubmittedResult(resPayload);
         setShowConfirmModal(false);
         if (typeof window !== 'undefined') {
+          clearAllClientUserCaches();
           window.dispatchEvent(new Event('xpUpdated'));
+          window.dispatchEvent(new Event('storage'));
           try {
+            sessionStorage.removeItem('dashboard_cache');
             sessionStorage.setItem('practice_submitted_result', JSON.stringify({
               result: resPayload,
               userAnswers,

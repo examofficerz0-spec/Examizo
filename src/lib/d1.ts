@@ -99,6 +99,9 @@ export async function executeD1(sql: string, params: any[] = []): Promise<boolea
     });
 
     const data = await res.json();
+    if (!data.success) {
+      console.error('[D1 Execute Failed]:', JSON.stringify(data.errors || data));
+    }
     return !!data.success;
   } catch (err) {
     console.error('[D1 Execute Error]:', err);
@@ -176,6 +179,129 @@ export async function ensureD1Tables() {
       )
     `);
 
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS attempts (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        sub_profile_id TEXT,
+        course_id TEXT NOT NULL,
+        test_id TEXT,
+        type TEXT DEFAULT 'practice',
+        topic_tag TEXT,
+        responses_json TEXT DEFAULT '[]',
+        score REAL DEFAULT 0,
+        accuracy REAL DEFAULT 0,
+        time_spent_seconds INTEGER DEFAULT 0,
+        submission_type TEXT DEFAULT 'manual',
+        started_at TEXT DEFAULT (datetime('now')),
+        submitted_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS xp_transactions (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        sub_profile_id TEXT,
+        attempt_id TEXT,
+        xp_amount INTEGER NOT NULL,
+        reason TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS mock_tests (
+        id TEXT PRIMARY KEY,
+        course_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        type TEXT DEFAULT 'full',
+        duration_minutes INTEGER DEFAULT 60,
+        cutoff_marks INTEGER DEFAULT 0,
+        question_ids_json TEXT DEFAULT '[]',
+        preset_id TEXT,
+        is_dynamic_reshuffle INTEGER DEFAULT 0,
+        subject_allocations_json TEXT DEFAULT '{}',
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS questions (
+        id TEXT PRIMARY KEY,
+        course_id TEXT NOT NULL,
+        question_text TEXT NOT NULL,
+        options_json TEXT DEFAULT '[]',
+        correct_option INTEGER NOT NULL,
+        explanation TEXT,
+        detailed_explanation TEXT,
+        topic_tag TEXT,
+        subject TEXT,
+        marks REAL DEFAULT 1,
+        image_url TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS courses (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        category TEXT,
+        board TEXT DEFAULT 'CBSE',
+        curriculum TEXT DEFAULT '',
+        subjects_json TEXT DEFAULT '[]',
+        marks_per_correct REAL DEFAULT 4.0,
+        penalty_per_incorrect REAL DEFAULT 1.0,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS weekly_dpps (
+        id TEXT PRIMARY KEY,
+        course_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        week_number INTEGER DEFAULT 1,
+        question_ids_json TEXT DEFAULT '[]',
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS resources (
+        id TEXT PRIMARY KEY,
+        course_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        type TEXT DEFAULT 'pdf',
+        file_url TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
     // Ensure all critical columns exist even if table was pre-created with an older schema
     await Promise.allSettled([
       executeD1('ALTER TABLE users ADD COLUMN full_name TEXT'),
@@ -203,6 +329,10 @@ export async function ensureD1Tables() {
       executeD1('ALTER TABLE courses ADD COLUMN penalty_per_incorrect REAL DEFAULT 1.0'),
       executeD1('ALTER TABLE courses ADD COLUMN is_active INTEGER DEFAULT 1'),
       executeD1('ALTER TABLE attempts ADD COLUMN sub_profile_id TEXT'),
+      executeD1('ALTER TABLE xp_transactions ADD COLUMN sub_profile_id TEXT'),
+      executeD1('ALTER TABLE questions ADD COLUMN subject TEXT'),
+      executeD1('ALTER TABLE questions ADD COLUMN image_url TEXT'),
+      executeD1('ALTER TABLE questions ADD COLUMN detailed_explanation TEXT'),
     ]).catch(() => {});
   } catch (_) {}
 }

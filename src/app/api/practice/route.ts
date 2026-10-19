@@ -78,7 +78,22 @@ export async function GET(req: Request) {
         }
 
         const d1Questions = await queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseRow.id]);
-        const d1Attempts = await queryD1('SELECT * FROM attempts WHERE student_id = ? OR student_id = ?', [String(user._id || auth.userId), String(auth.email || '')]);
+        let d1Attempts = await queryD1(
+          'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?',
+          [String(user._id || auth.userId), String(user._id || auth.userId), String(auth.email || ''), String(user.account_email || '')]
+        );
+        if (!d1Attempts || d1Attempts.length === 0) {
+          try {
+            const db = readSharedDb();
+            const memAtts = (db.attempts || []).filter(
+              (a: any) =>
+                String(a.student_id) === String(user._id || auth.userId) ||
+                String(a.sub_profile_id) === String(user._id || auth.userId) ||
+                (auth.email && String(a.student_id) === String(auth.email))
+            );
+            if (memAtts.length > 0) d1Attempts = memAtts;
+          } catch (_) {}
+        }
 
         let formattedQuestions = d1Questions
           .map((q: any) => {

@@ -17,6 +17,7 @@ import {
   normalizeQuestionSignature,
   deduplicateQuestions,
 } from '@/lib/questionDeduplicator';
+import { clearAllClientUserCaches } from '@/lib/clientCache';
 
 function shuffleArray<T>(arr: T[]): T[] {
   const shuffled = [...arr];
@@ -870,8 +871,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         setShowCompletionWindow(true);
         exitFullscreen();
         if (typeof window !== 'undefined') {
+          clearAllClientUserCaches();
           window.dispatchEvent(new Event('xpUpdated'));
+          window.dispatchEvent(new Event('storage'));
           try {
+            sessionStorage.removeItem('dashboard_cache');
+            sessionStorage.removeItem('mock_tests');
             sessionStorage.setItem(`mock_result_${targetTestId}`, JSON.stringify({
               result: data.result,
               userState,
@@ -1304,7 +1309,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => {
+                    clearAllClientUserCaches();
+                    window.location.href = '/dashboard';
+                  }}
                   className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl text-xs font-black text-white bg-[#0B192C] hover:bg-[#060E18] dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-slate-900/10 dark:shadow-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   Return to Dashboard <ArrowRight className="w-3.5 h-3.5" />
