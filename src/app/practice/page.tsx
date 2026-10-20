@@ -1590,52 +1590,93 @@ export default function PracticeSetsPage() {
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */
-                        <div className={getNormalizedOptions(currentQ).some(isImageStr) ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}>
-                          {getNormalizedOptions(currentQ).map((opt: string, optIdx: number) => {
-                            const isSelected = userAnswers[currentQ._id] === optIdx;
-                            const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
-                            const isCorrect = optIdx === currentQ.correct_option;
+                        (() => {
+                          const isVisual = getNormalizedOptions(currentQ).some(isImageStr);
+                          return (
+                            <div className={isVisual ? 'grid grid-cols-2 gap-2.5 sm:gap-3.5' : 'space-y-3'}>
+                              {getNormalizedOptions(currentQ).map((opt: string, optIdx: number) => {
+                                const isSelected = userAnswers[currentQ._id] === optIdx;
+                                const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
+                                const isCorrect = optIdx === currentQ.correct_option;
 
-                            let style = 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300';
+                                let style = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-400';
 
-                            if (isChecked) {
-                              if (isCorrect) {
-                                style = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300';
-                              } else if (isSelected && !isCorrect) {
-                                style = 'bg-rose-50 border-rose-500 text-rose-950 font-bold dark:bg-rose-950 dark:border-rose-700 dark:text-rose-300';
-                              }
-                            } else if (isSelected) {
-                              style = 'bg-brand-50 border-brand-800 text-brand-900 dark:bg-brand-950 dark:border-brand-500 dark:text-brand-300 font-bold shadow-xs';
-                            }
+                                if (isChecked) {
+                                  if (isCorrect) {
+                                    style = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20';
+                                  } else if (isSelected && !isCorrect) {
+                                    style = 'bg-rose-50 border-rose-500 text-rose-950 font-bold dark:bg-rose-950 dark:border-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20';
+                                  }
+                                } else if (isSelected) {
+                                  style = 'bg-blue-50/90 border-blue-600 text-blue-950 dark:bg-blue-950 dark:border-blue-500 dark:text-blue-200 font-bold shadow-xs ring-2 ring-blue-500/20';
+                                }
 
-                            return (
-                              <button
-                                key={optIdx}
-                                type="button"
-                                onClick={() => handleSelectOption(currentQ._id, optIdx)}
-                                className={`w-full p-3.5 rounded-xl border text-xs text-left font-medium transition-all flex items-center justify-between gap-3 ${style}`}
-                              >
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                  <span
-                                    className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center font-bold shrink-0 ${
-                                      isSelected
-                                        ? 'bg-brand-800 text-white'
-                                        : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                                    }`}
+                                if (isVisual) {
+                                  return (
+                                    <button
+                                      key={optIdx}
+                                      type="button"
+                                      onClick={() => handleSelectOption(currentQ._id, optIdx)}
+                                      className={`group relative p-2.5 sm:p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center cursor-pointer min-h-[110px] sm:min-h-[135px] ${style}`}
+                                    >
+                                      <span
+                                        className={`absolute top-2 left-2 w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center transition-all ${
+                                          isSelected
+                                            ? 'bg-blue-600 text-white shadow-xs'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                        }`}
+                                      >
+                                        {String.fromCharCode(65 + optIdx)}
+                                      </span>
+
+                                      {isChecked && isCorrect && (
+                                        <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                        </span>
+                                      )}
+                                      {isChecked && isSelected && !isCorrect && (
+                                        <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs">
+                                          <XCircle className="w-3.5 h-3.5 text-white" />
+                                        </span>
+                                      )}
+
+                                      <div className="pt-3 pb-1 flex items-center justify-center w-full">
+                                        <OptionContent text={hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt} borderless />
+                                      </div>
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    onClick={() => handleSelectOption(currentQ._id, optIdx)}
+                                    className={`w-full p-3.5 rounded-xl border-2 text-xs text-left font-medium transition-all flex items-center justify-between gap-3 ${style}`}
                                   >
-                                    {String.fromCharCode(65 + optIdx)}
-                                  </span>
-                                  <div className="flex-1 min-w-0">
-                                    <OptionContent text={hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt} />
-                                  </div>
-                                </div>
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                      <span
+                                        className={`w-6 h-6 rounded-lg text-[11px] flex items-center justify-center font-bold shrink-0 ${
+                                          isSelected
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                        }`}
+                                      >
+                                        {String.fromCharCode(65 + optIdx)}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <OptionContent text={hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt} />
+                                      </div>
+                                    </div>
 
-                                {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                                {isChecked && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
-                              </button>
-                            );
-                          })}
-                        </div>
+                                    {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                                    {isChecked && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()
                       ) : (
                         /* Short / Long Answer Text Response Field */
                         <div className="space-y-3">
