@@ -1458,11 +1458,26 @@ export default function PracticeSetsPage() {
                                                                 [q._id]: !prev[q._id],
                                                               }))
                                                             }
-                                                            className="text-xs font-bold text-brand-800 dark:text-blue-400 flex items-center justify-between w-full hover:underline"
+                                                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center justify-between w-full group py-1 transition-colors cursor-pointer"
                                                           >
-                                                            <span>📘 View Detailed Step-by-Step Explanation</span>
+                                                            <span className="flex items-center gap-1.5">
+                                                              <span>📘 View Step-by-Step Solution Breakdown</span>
+                                                              {(() => {
+                                                                const steps = String(q.detailed_explanation)
+                                                                  .split('\n')
+                                                                  .filter((l: string) => l.trim().length > 0);
+                                                                if (steps.length > 1) {
+                                                                  return (
+                                                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+                                                                      {steps.length} steps
+                                                                    </span>
+                                                                  );
+                                                                }
+                                                                return null;
+                                                              })()}
+                                                            </span>
                                                             <ChevronDown
-                                                              className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                                                              className={`w-3.5 h-3.5 transition-transform duration-300 text-blue-500 shrink-0 ${
                                                                 openDetailedExplanation[q._id] ? 'rotate-180' : 'rotate-0'
                                                               }`}
                                                             />
@@ -1470,14 +1485,14 @@ export default function PracticeSetsPage() {
                                                           <div
                                                             className={`grid transition-all duration-300 ease-in-out ${
                                                               openDetailedExplanation[q._id]
-                                                                ? 'grid-rows-[1fr] opacity-100 mt-2'
+                                                                ? 'grid-rows-[1fr] opacity-100 mt-2.5'
                                                                 : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
                                                             }`}
                                                           >
-                                                            <div className="overflow-hidden">
-                                                              <p className="text-slate-600 dark:text-slate-300 font-mono text-[11px] whitespace-pre-line pt-1">
+                                                            <div className="min-h-0 overflow-hidden">
+                                                              <div className="text-slate-800 dark:text-slate-200 font-mono text-[11px] sm:text-xs whitespace-pre-wrap break-words leading-relaxed bg-slate-50/90 dark:bg-slate-950/80 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800/80 shadow-2xs max-h-[600px] overflow-y-auto">
                                                                 {q.detailed_explanation}
-                                                              </p>
+                                                              </div>
                                                             </div>
                                                           </div>
                                                         </div>
@@ -1679,14 +1694,29 @@ export default function PracticeSetsPage() {
                                   : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
                               }`}
                             >
-                              <div className="overflow-hidden">
+                              <div className="min-h-0 overflow-hidden">
                                 <div className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg space-y-2 text-xs">
-                                  <span className="font-extrabold text-slate-900 dark:text-white block text-xs">
-                                    📘 Detailed Step-by-Step Derivation & Solution:
-                                  </span>
-                                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-mono text-[11px]">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-extrabold text-slate-900 dark:text-white block text-xs">
+                                      📘 Detailed Step-by-Step Derivation &amp; Solution:
+                                    </span>
+                                    {(() => {
+                                      const text = currentQ.detailed_explanation || currentQ.explanation;
+                                      if (!text) return null;
+                                      const steps = String(text).split('\n').filter((l: string) => l.trim().length > 0);
+                                      if (steps.length > 1) {
+                                        return (
+                                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+                                            {steps.length} steps
+                                          </span>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
+                                  <div className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap break-words font-mono text-[11px] sm:text-xs max-h-[600px] overflow-y-auto">
                                     {currentQ.detailed_explanation || currentQ.explanation || 'No extra detailed breakdown provided for this question.'}
-                                  </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>

@@ -511,21 +511,25 @@ export default function StudentDashboardPage() {
               </div>
 
               {/* Explanation Box */}
-              {item.explanation ? (
+              {(item.explanation || item.detailed_explanation) ? (
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 space-y-2.5 shadow-2xs">
-                  <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
-                    <div className="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
-                      💡
-                    </div>
-                    <span className="font-extrabold text-xs">Explanation:</span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal whitespace-pre-line">
-                    {item.explanation}
-                  </p>
+                  {item.explanation && (
+                    <>
+                      <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                        <div className="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
+                          💡
+                        </div>
+                        <span className="font-extrabold text-xs">Explanation:</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal whitespace-pre-wrap break-words">
+                        {item.explanation}
+                      </p>
+                    </>
+                  )}
 
                   {/* Detailed Step-by-Step Explanation Accordion */}
                   {item.detailed_explanation && (
-                    <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className={`${item.explanation ? 'pt-2.5 border-t border-slate-100 dark:border-slate-800' : ''}`}>
                       <button
                         type="button"
                         onClick={() =>
@@ -534,11 +538,26 @@ export default function StudentDashboardPage() {
                             [qKey]: !prev[qKey],
                           }))
                         }
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 cursor-pointer py-1 transition-colors"
+                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center justify-between w-full group py-1 transition-colors cursor-pointer"
                       >
-                        <span>📘 View Step-by-Step Solution Breakdown</span>
+                        <span className="flex items-center gap-1.5">
+                          <span>📘 View Step-by-Step Solution Breakdown</span>
+                          {(() => {
+                            const steps = String(item.detailed_explanation)
+                              .split('\n')
+                              .filter((l: string) => l.trim().length > 0);
+                            if (steps.length > 1) {
+                              return (
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+                                  {steps.length} steps
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </span>
                         <ChevronDown
-                          className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                          className={`w-3.5 h-3.5 transition-transform duration-300 text-blue-500 shrink-0 ${
                             isDetailedOpen ? 'rotate-180' : 'rotate-0'
                           }`}
                         />
@@ -546,14 +565,14 @@ export default function StudentDashboardPage() {
                       <div
                         className={`grid transition-all duration-300 ease-in-out ${
                           isDetailedOpen
-                            ? 'grid-rows-[1fr] opacity-100 mt-2'
+                            ? 'grid-rows-[1fr] opacity-100 mt-2.5'
                             : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
                         }`}
                       >
-                        <div className="overflow-hidden">
-                          <p className="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-line leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80">
+                        <div className="min-h-0 overflow-hidden">
+                          <div className="text-slate-800 dark:text-slate-200 font-mono text-[11px] sm:text-xs whitespace-pre-wrap break-words leading-relaxed bg-slate-50/90 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200/90 dark:border-slate-800/80 shadow-2xs max-h-[600px] overflow-y-auto">
                             {item.detailed_explanation}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </div>

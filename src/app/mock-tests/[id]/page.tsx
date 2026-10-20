@@ -208,6 +208,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [reviewSubjectFilter, setReviewSubjectFilter] = useState<string>('all');
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
   const [openReviewQuestions, setOpenReviewQuestions] = useState<Record<string, boolean>>({});
+  const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
 
   // In-progress local storage auto-save helper
@@ -1983,15 +1984,69 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                           </div>
 
                                           {/* Explanation Section */}
-                                          {q.explanation && (
-                                            <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-1">
-                                              <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                                                <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                                                Explanation &amp; Solution Key
-                                              </span>
-                                              <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                                                {q.explanation}
-                                              </p>
+                                          {(q.explanation || q.detailed_explanation) && (
+                                            <div className="p-3.5 rounded-xl bg-blue-50/80 dark:bg-[#181622] border border-blue-200/80 dark:border-[#242033] space-y-2">
+                                              {q.explanation && (
+                                                <>
+                                                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                                    <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                                    Explanation &amp; Solution Key
+                                                  </span>
+                                                  <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap break-words">
+                                                    {q.explanation}
+                                                  </p>
+                                                </>
+                                              )}
+
+                                              {q.detailed_explanation && (
+                                                <div className={`${q.explanation ? 'pt-2 border-t border-blue-200/50 dark:border-slate-800' : ''}`}>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setOpenDetailedExplanation((prev) => ({
+                                                        ...prev,
+                                                        [q._id || q.id]: !prev[q._id || q.id],
+                                                      }))
+                                                    }
+                                                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center justify-between w-full group py-1 transition-colors cursor-pointer"
+                                                  >
+                                                    <span className="flex items-center gap-1.5">
+                                                      <span>📘 View Step-by-Step Solution Breakdown</span>
+                                                      {(() => {
+                                                        const steps = String(q.detailed_explanation)
+                                                          .split('\n')
+                                                          .filter((l: string) => l.trim().length > 0);
+                                                        if (steps.length > 1) {
+                                                          return (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300/60 dark:border-blue-900/40">
+                                                              {steps.length} steps
+                                                            </span>
+                                                          );
+                                                        }
+                                                        return null;
+                                                      })()}
+                                                    </span>
+                                                    <ChevronDown
+                                                      className={`w-3.5 h-3.5 transition-transform duration-300 text-blue-500 shrink-0 ${
+                                                        openDetailedExplanation[q._id || q.id] ? 'rotate-180' : 'rotate-0'
+                                                      }`}
+                                                    />
+                                                  </button>
+                                                  <div
+                                                    className={`grid transition-all duration-300 ease-in-out ${
+                                                      openDetailedExplanation[q._id || q.id]
+                                                        ? 'grid-rows-[1fr] opacity-100 mt-2'
+                                                        : 'grid-rows-[0fr] opacity-0 mt-0 overflow-hidden'
+                                                    }`}
+                                                  >
+                                                    <div className="min-h-0 overflow-hidden">
+                                                      <div className="text-slate-800 dark:text-slate-200 font-mono text-[11px] sm:text-xs whitespace-pre-wrap break-words leading-relaxed bg-white dark:bg-slate-950/90 p-3.5 rounded-xl border border-blue-200/80 dark:border-slate-800 shadow-2xs max-h-[600px] overflow-y-auto">
+                                                        {q.detailed_explanation}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
                                         </div>
