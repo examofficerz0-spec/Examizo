@@ -15,7 +15,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userAnswers, submissionType, questionIds, timeSpentSeconds } = await req.json();
+    const { userAnswers, submissionType, questionIds, timeSpentSeconds, isRetake } = await req.json();
     const actualTimeSpent = Math.max(0, Number(timeSpentSeconds || 0));
 
     const authResult = await getUserFromAuth(auth);
@@ -38,7 +38,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       if (d1Tests && d1Tests.length > 0) {
         const test = d1Tests[0];
 
-        // ─── Enforce strict 3 attempts limit ───
+        // ─── Enforce strict 3 attempts limit (bypassed for Practice Retakes) ───
         const existingAtts = await queryD1(
           'SELECT count(*) as count FROM attempts WHERE (student_id = ? OR student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?) AND (test_id = ? OR topic_tag = ?)',
           [userId, String(auth.email || ''), userId, String(user.account_email || ''), String(user.account_email || ''), test.id, test.title || '']
@@ -54,7 +54,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           totalExisting = Math.max(totalExisting, memCount);
         } catch (_) {}
 
-        if (totalExisting >= 3) {
+        const isPracticeRetake = Boolean(isRetake || totalExisting > 0 || submissionType === 'practice_retake');
+
+        if (!isPracticeRetake && totalExisting >= 3) {
           return NextResponse.json(
             { error: 'Maximum attempts limit reached (3 of 3 tries used). You cannot retake this examination further.' },
             { status: 403 }
@@ -114,7 +116,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             if (isCorrect) {
               correctCount++;
               totalScore += marksPerCorrect;
-              xpEarned += 27;
+              if (!isPracticeRetake) {
+                xpEarned += 27;
+              }
             } else {
               incorrectCount++;
               totalScore -= penaltyPerIncorrect;
@@ -139,13 +143,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         let cutoffBonusAwarded = false;
         const cutoffMarks = Number(test.cutoff_marks || 0);
-        if (cutoffMarks > 0 && totalScore >= cutoffMarks) {
+        if (!isPracticeRetake && cutoffMarks > 0 && totalScore >= cutoffMarks) {
           xpEarned += 100;
           cutoffBonusAwarded = true;
         }
 
+        if (isPracticeRetake) {
+          xpEarned = 0;
+          cutoffBonusAwarded = false;
+        }
+
         const attemptId = generateId();
         const finalScore = totalScore;
+        const finalSubmissionType = isPracticeRetake ? 'practice_retake' : (submissionType || 'manual');
 
         await executeD1(
           `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, test_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
@@ -161,7 +171,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             finalScore,
             accuracyPercent,
             actualTimeSpent,
-            submissionType || 'manual',
+            finalSubmissionType,
           ]
         );
 
@@ -192,8 +202,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           await Promise.all(mistakePromises);
         }
 
-        let newXpTotal = (user.xp_total || 0) + xpEarned;
-        if (xpEarned > 0) {
+        let newXpTotal = (user.xp_total || 0) + (isPracticeRetake ? 0 : xpEarned);
+        if (!isPracticeRetake && xpEarned > 0) {
           await executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
             xpEarned,
             userId,
@@ -234,7 +244,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             score: finalScore,
             accuracy: accuracyPercent,
             time_spent_seconds: actualTimeSpent,
-            submission_type: submissionType || 'manual',
+            submission_type: finalSubmissionType,
             created_at: new Date().toISOString(),
           });
 
@@ -260,7 +270,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           }
 
           const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
-          if (memUser && xpEarned > 0) {
+          if (memUser && !isPracticeRetake && xpEarned > 0) {
             memUser.xp_total = (memUser.xp_total || 0) + xpEarned;
             if (!db.xpTransactions) db.xpTransactions = [];
             db.xpTransactions.push({
@@ -288,8 +298,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             timeSpentSeconds: actualTimeSpent,
             attemptsUsed: totalExisting + 1,
             maxAttempts: 3,
-            xpEarned,
-            cutoffBonusAwarded,
+            xpEarned: isPracticeRetake ? 0 : xpEarned,
+            isRetake: isPracticeRetake,
+            submissionType: finalSubmissionType,
+            cutoffBonusAwarded: isPracticeRetake ? false : cutoffBonusAwarded,
             newXpTotal,
           },
         });
@@ -311,7 +323,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         (String(a.student_id) === userId || String(a.sub_profile_id) === userId || (user.email && String(a.student_id) === String(user.email))) &&
         (String(a.test_id) === String(test._id || test.id) || a.topic_tag === test.title)
     );
-    if (memUserAttempts.length >= 3) {
+
+    const isPracticeRetake = Boolean(isRetake || memUserAttempts.length > 0 || submissionType === 'practice_retake');
+
+    if (!isPracticeRetake && memUserAttempts.length >= 3) {
       return NextResponse.json(
         { error: 'Maximum attempts limit reached (3 of 3 tries used). You cannot retake this examination further.' },
         { status: 403 }
@@ -349,7 +364,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         if (isCorrect) {
           correctCount++;
           totalScore += marksPerCorrect;
-          xpEarned += 27;
+          if (!isPracticeRetake) {
+            xpEarned += 27;
+          }
         } else {
           incorrectCount++;
           totalScore -= penaltyPerIncorrect;
@@ -373,10 +390,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const accuracyPercent = totalAttempted > 0 ? Math.round((correctCount / totalAttempted) * 100) : 0;
 
     let cutoffBonusAwarded = false;
-    if (test.cutoff_marks && totalScore >= test.cutoff_marks) {
+    if (!isPracticeRetake && test.cutoff_marks && totalScore >= test.cutoff_marks) {
       xpEarned += 100;
       cutoffBonusAwarded = true;
     }
+
+    if (isPracticeRetake) {
+      xpEarned = 0;
+      cutoffBonusAwarded = false;
+    }
+
+    const finalSubmissionType = isPracticeRetake ? 'practice_retake' : (submissionType || 'manual');
 
     const attempt = {
       _id: generateId(),
@@ -390,7 +414,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       score: totalScore,
       accuracy: accuracyPercent,
       time_spent_seconds: actualTimeSpent,
-      submission_type: submissionType || 'manual',
+      submission_type: finalSubmissionType,
       created_at: new Date().toISOString(),
     };
 
@@ -433,11 +457,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         attempt.score,
         accuracyPercent,
         actualTimeSpent,
-        submissionType || 'manual',
+        finalSubmissionType,
       ]
     ).catch(() => {});
 
-    if (xpEarned > 0) {
+    if (!isPracticeRetake && xpEarned > 0) {
       user.xp_total = (user.xp_total || 0) + xpEarned;
       if (!db.xpTransactions) db.xpTransactions = [];
       db.xpTransactions.push({
@@ -486,8 +510,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         timeSpentSeconds: actualTimeSpent,
         attemptsUsed: memUserAttempts.length + 1,
         maxAttempts: 3,
-        xpEarned,
-        cutoffBonusAwarded,
+        xpEarned: isPracticeRetake ? 0 : xpEarned,
+        isRetake: isPracticeRetake,
+        submissionType: finalSubmissionType,
+        cutoffBonusAwarded: isPracticeRetake ? false : cutoffBonusAwarded,
         newXpTotal: user.xp_total || 0,
       },
     });

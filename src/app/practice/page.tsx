@@ -647,6 +647,7 @@ export default function PracticeSetsPage() {
           topicTag: selectedTopic ? `${selectedSubject} - ${selectedTopic}` : selectedSubject || 'All Topics',
           type: isWeeklySession ? 'weekly' : 'practice',
           timeSpentSeconds: timerSeconds,
+          isRetake: Boolean(isWeeklySession && isWeeklyAttemptedThisWeek),
         }),
       });
 

@@ -15,8 +15,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { answers, topicTag, type, timeSpentSeconds } = await req.json();
+    const { answers, topicTag, type, timeSpentSeconds, isRetake, submissionType } = await req.json();
     const durationSeconds = Number(timeSpentSeconds || 0);
+    const isPracticeRetake = Boolean(isRetake || type === 'practice_retake' || submissionType === 'practice_retake');
+    const finalSubmissionType = isPracticeRetake ? 'practice_retake' : (submissionType || 'manual');
 
     const authResult = await getUserFromAuth(auth);
     if (!authResult || !authResult.user) {
@@ -52,7 +54,9 @@ export async function POST(req: Request) {
             const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
             if (isCorrect) {
               correctCount++;
-              xpEarned += 27;
+              if (!isPracticeRetake) {
+                xpEarned += 27;
+              }
             }
             processedResponses.push({
               question_id: q.id,
@@ -62,13 +66,17 @@ export async function POST(req: Request) {
           }
         }
 
+        if (isPracticeRetake) {
+          xpEarned = 0;
+        }
+
         const totalQuestions = answers.length;
         const accuracyPercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
         const attemptId = generateId();
 
         await executeD1(
           `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             attemptId,
             userId,
@@ -80,6 +88,7 @@ export async function POST(req: Request) {
             correctCount,
             accuracyPercent,
             durationSeconds,
+            finalSubmissionType,
           ]
         );
 
@@ -128,8 +137,9 @@ export async function POST(req: Request) {
           await Promise.all(mistakePromises);
         }
 
-        let newXpTotal = (user.xp_total || 0) + xpEarned;
-        if (xpEarned > 0) {
+        let newXpTotal = user.xp_total || 0;
+        if (xpEarned > 0 && !isPracticeRetake) {
+          newXpTotal += xpEarned;
           await executeD1('UPDATE users SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = ? OR email = ?', [
             xpEarned,
             userId,
@@ -169,7 +179,7 @@ export async function POST(req: Request) {
             score: correctCount,
             accuracy: accuracyPercent,
             time_spent_seconds: durationSeconds,
-            submission_type: 'manual',
+            submission_type: finalSubmissionType,
             created_at: new Date().toISOString(),
           });
 
@@ -179,7 +189,7 @@ export async function POST(req: Request) {
           }
 
           const memUser = (db.users || []).find((u: any) => String(u._id) === userId || String(u.id) === userId || u.email === user.email);
-          if (memUser && xpEarned > 0) {
+          if (memUser && xpEarned > 0 && !isPracticeRetake) {
             memUser.xp_total = (memUser.xp_total || 0) + xpEarned;
             if (!db.xpTransactions) db.xpTransactions = [];
             db.xpTransactions.push({
@@ -208,12 +218,15 @@ export async function POST(req: Request) {
             score: correctCount,
             accuracy: accuracyPercent,
             time_spent_seconds: durationSeconds,
+            submission_type: finalSubmissionType,
           },
           correctCount,
           totalQuestions,
           accuracyPercent,
           xpEarned,
           newXpTotal,
+          isRetake: isPracticeRetake,
+          submissionType: finalSubmissionType,
         });
       }
     } catch (d1Err) {
@@ -232,7 +245,9 @@ export async function POST(req: Request) {
         const isCorrect = Number(ans.selectedOption) === Number(q.correct_option);
         if (isCorrect) {
           correctCount++;
-          xpEarned += 27;
+          if (!isPracticeRetake) {
+            xpEarned += 27;
+          }
         }
         processedResponses.push({
           question_id: q._id || q.id,
@@ -240,6 +255,10 @@ export async function POST(req: Request) {
           is_correct: isCorrect,
         });
       }
+    }
+
+    if (isPracticeRetake) {
+      xpEarned = 0;
     }
 
     const totalQuestions = (answers || []).length;
@@ -257,7 +276,7 @@ export async function POST(req: Request) {
       accuracy: accuracyPercent,
       questions_count: totalQuestions,
       time_spent_seconds: durationSeconds,
-      submission_type: 'manual',
+      submission_type: finalSubmissionType,
       created_at: new Date().toISOString(),
     };
 
@@ -267,7 +286,7 @@ export async function POST(req: Request) {
     // Also push to D1 for continuous synchronization
     executeD1(
       `INSERT INTO attempts (id, student_id, sub_profile_id, course_id, type, topic_tag, responses_json, score, accuracy, time_spent_seconds, submission_type, started_at, submitted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         attempt._id,
         userId,
@@ -279,10 +298,11 @@ export async function POST(req: Request) {
         correctCount,
         accuracyPercent,
         durationSeconds,
+        finalSubmissionType,
       ]
     ).catch(() => {});
 
-    if (xpEarned > 0) {
+    if (xpEarned > 0 && !isPracticeRetake) {
       user.xp_total = (user.xp_total || 0) + xpEarned;
       if (!db.xpTransactions) db.xpTransactions = [];
       db.xpTransactions.push({
@@ -329,6 +349,8 @@ export async function POST(req: Request) {
       accuracyPercent,
       xpEarned,
       newXpTotal: user.xp_total || 0,
+      isRetake: isPracticeRetake,
+      submissionType: finalSubmissionType,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

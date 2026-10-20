@@ -48,6 +48,9 @@ const deduplicateQuestions = (list: any[]): any[] => {
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
+    const { searchParams } = new URL(req.url);
+    const isRetakeReq = searchParams.get('retake') === 'true';
+
     const auth = getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -276,12 +279,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           }
         } catch (_) {}
 
-        const sanitizedOrderedQs = attemptsCount > 0
-          ? orderedQs
-          : orderedQs.map((q: any) => {
+        const shouldSanitize = attemptsCount === 0 || isRetakeReq;
+        const sanitizedOrderedQs = shouldSanitize
+          ? orderedQs.map((q: any) => {
               const { correct_option, explanation, detailed_explanation, ...rest } = q;
               return rest;
-            });
+            })
+          : orderedQs;
 
         const test = {
           _id: rawTest.id,
@@ -296,7 +300,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           question_ids: sanitizedOrderedQs,
         };
 
-        return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });
+        return NextResponse.json({
+          test,
+          latestAttempt: isRetakeReq ? null : latestAttempt,
+          attemptsCount,
+          maxAttempts: 3,
+          isRetakeMode: isRetakeReq,
+        });
       }
     } catch (d1Err) {
       console.warn('[api/mock-tests/[id]] D1 fallback:', d1Err);
@@ -348,7 +358,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       };
     }
 
-    const sanitizedFallbackQs = attemptsCount > 0
+    const sanitizedFallbackQs = (attemptsCount > 0 && !isRetakeReq)
       ? question_ids
       : question_ids.map((q: any) => {
           const { correct_option, explanation, detailed_explanation, ...rest } = q;
@@ -361,7 +371,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       question_ids: sanitizedFallbackQs,
     };
 
-    return NextResponse.json({ test, latestAttempt, attemptsCount, maxAttempts: 3 });
+    return NextResponse.json({
+      test,
+      latestAttempt: isRetakeReq ? null : latestAttempt,
+      attemptsCount,
+      maxAttempts: 3,
+      isRetakeMode: isRetakeReq,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
