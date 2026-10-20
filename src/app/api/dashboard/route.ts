@@ -465,7 +465,7 @@ export async function GET() {
 
       const cohort = resolveLeaderboardCohort(courseRow || lockedCourse, d1Courses || []);
       const cohortStudents = (d1Users || [])
-        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses || []))
+        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses || []) && Number(u.xp_total || 0) > 0)
         .sort((a: any, b: any) => {
           const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
           if (xpDiff !== 0) return xpDiff;
@@ -479,17 +479,19 @@ export async function GET() {
         xp: Number(u.xp_total || 0),
       }));
 
-      let rank = 1;
+      let rank: number = 0;
       for (let i = 0; i < cohortStudents.length; i++) {
         if (String(cohortStudents[i].id) === userId) {
           rank = i + 1;
           break;
         }
       }
-      if (!cohortStudents.some((s: any) => String(s.id) === userId)) {
+      if (rank === 0) {
         const selfXp = Number(user.xp_total || 0);
-        const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-        rank = higherCount + 1;
+        if (selfXp > 0) {
+          const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+          rank = higherCount + 1;
+        }
       }
 
       const activeDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
@@ -625,24 +627,26 @@ export async function GET() {
 
     const fallbackCohort = resolveLeaderboardCohort(lockedCourse, db.courses || []);
     const fallbackCohortStudents = (db.users || [])
-      .filter((u: any) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, db.courses || []))
+      .filter((u: any) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, db.courses || []) && Number(u.xp_total || 0) > 0)
       .sort((a: any, b: any) => {
         const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
         if (xpDiff !== 0) return xpDiff;
         return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
       });
 
-    let fallbackRank = 1;
+    let fallbackRank: number = 0;
     for (let i = 0; i < fallbackCohortStudents.length; i++) {
       if (String(fallbackCohortStudents[i]._id || fallbackCohortStudents[i].id) === userId) {
         fallbackRank = i + 1;
         break;
       }
     }
-    if (!fallbackCohortStudents.some((s: any) => String(s._id || s.id) === userId)) {
+    if (fallbackRank === 0) {
       const selfXp = Number(user.xp_total || 0);
-      const higherCount = fallbackCohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-      fallbackRank = higherCount + 1;
+      if (selfXp > 0) {
+        const higherCount = fallbackCohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
+        fallbackRank = higherCount + 1;
+      }
     }
 
     const fallbackLeaderboardStudents = fallbackCohortStudents.map((u: any, idx: number) => ({

@@ -30,7 +30,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           "SELECT id, xp_total, locked_course_id, created_at FROM users WHERE status != 'Deleted'"
         );
         const cohortStudents = (allActiveUsers || [])
-          .filter((usr: any) => isUserInCohort(usr.locked_course_id, cohort, d1Courses))
+          .filter((usr: any) => isUserInCohort(usr.locked_course_id, cohort, d1Courses) && Number(usr.xp_total || 0) > 0)
           .sort((a: any, b: any) => {
             const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
             if (xpDiff !== 0) return xpDiff;
@@ -38,11 +38,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           });
 
         const rankIndex = cohortStudents.findIndex((st: any) => String(st.id) === String(u.id));
-        let rank = rankIndex !== -1 ? rankIndex + 1 : 1;
+        let rank = rankIndex !== -1 ? rankIndex + 1 : 0;
         if (rankIndex === -1) {
           const selfXp = Number(u.xp_total || 0);
-          const higherCount = cohortStudents.filter((st: any) => Number(st.xp_total || 0) > selfXp).length;
-          rank = higherCount + 1;
+          if (selfXp > 0) {
+            const higherCount = cohortStudents.filter((st: any) => Number(st.xp_total || 0) > selfXp).length;
+            rank = higherCount + 1;
+          }
         }
 
         let d1Attempts = await queryD1(
@@ -226,15 +228,17 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const fallbackCohort = resolveLeaderboardCohort(course || user.locked_course_id, fallbackCourses);
 
     const cohortStudents = (db.users || [])
-      .filter((u) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, fallbackCourses))
+      .filter((u) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, fallbackCourses) && Number(u.xp_total || 0) > 0)
       .sort((a, b) => (b.xp_total || 0) - (a.xp_total || 0));
 
     const rankIndex = cohortStudents.findIndex((u) => String(u._id) === String(studentId) || String(u.id) === String(studentId));
-    let rank = rankIndex !== -1 ? rankIndex + 1 : 1;
+    let rank = rankIndex !== -1 ? rankIndex + 1 : 0;
     if (rankIndex === -1) {
       const selfXp = Number(user.xp_total || 0);
-      const higherCount = cohortStudents.filter((st: any) => Number(st.xp_total || 0) > selfXp).length;
-      rank = higherCount + 1;
+      if (selfXp > 0) {
+        const higherCount = cohortStudents.filter((st: any) => Number(st.xp_total || 0) > selfXp).length;
+        rank = higherCount + 1;
+      }
     }
 
     const attempts = (db.attempts || []).filter((a) => String(a.user_id || a.student_id) === String(studentId));

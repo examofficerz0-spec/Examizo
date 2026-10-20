@@ -760,7 +760,7 @@ export default function StudentDashboardPage() {
                       </div>
                       <div>
                         <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                          {levelInfo?.badgeText ? `${levelInfo.badgeText} Standings` : 'Cohort Leaderboard'}
+                          {levelInfo?.levelLabel ? `${levelInfo.levelLabel} Standings` : 'Cohort Leaderboard'}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-400">
                           {levelInfo?.levelCategory === 'school_class' ? 'Class-Level Peers Only' : 'Course Track Peers Only'}
@@ -791,7 +791,7 @@ export default function StudentDashboardPage() {
                           YOUR {levelInfo?.levelLabel ? levelInfo.levelLabel.toUpperCase() : 'COHORT'} RANK
                         </span>
                         <span className="text-4xl font-black tracking-tight text-white mt-1 block">
-                          #{studentRank}
+                          #{studentRank || '—'}
                         </span>
                       </div>
 

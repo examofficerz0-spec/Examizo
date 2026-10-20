@@ -339,8 +339,8 @@ export default function LeaderboardPage() {
                 </div>
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
                   {levelInfo?.levelCategory === 'school_class'
-                    ? 'Strict Academic Class Standings: Only students enrolled in this grade level compete on this leaderboard.'
-                    : 'Strict Competitive Course Standings: Only students enrolled in this examination track compete on this leaderboard.'}
+                    ? `Strict Class Standings: Only students enrolled in ${levelInfo?.levelLabel || 'this class'} compete on this leaderboard.`
+                    : `Strict Examination Standings: Only students enrolled in ${levelInfo?.levelLabel || 'this track'} compete on this leaderboard.`}
                 </p>
               </div>
             </div>
@@ -364,14 +364,21 @@ export default function LeaderboardPage() {
           <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-blue-900/40 p-6 text-slate-900 dark:text-white shadow-xs">
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 font-black text-2xl flex items-center justify-center shadow-md">
-                  #{userRank.rank}
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 font-black text-2xl flex items-center justify-center shadow-md">
+                  #{userRank.rank || '—'}
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
-                    YOUR OFFICIAL {levelInfo?.levelLabel ? levelInfo.levelLabel.toUpperCase() : 'COHORT'} STANDING
-                  </span>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">{userRank.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                      YOUR OFFICIAL {levelInfo?.levelLabel ? levelInfo.levelLabel.toUpperCase() : 'COHORT'} STANDING
+                    </span>
+                    {levelInfo?.totalStudentsInLevel ? (
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        Ranked #{userRank.rank} of {levelInfo.totalStudentsInLevel}
+                      </span>
+                    ) : null}
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{userRank.name}</h3>
                 </div>
               </div>
 
@@ -433,7 +440,7 @@ export default function LeaderboardPage() {
                 }`}
               >
                 <Trophy className="w-4 h-4" />
-                {levelInfo?.badgeText ? `${levelInfo.badgeText} Standings` : 'Academic Cohort Standings'}
+                {levelInfo?.levelLabel ? `${levelInfo.levelLabel} Standings` : 'Cohort Standings'}
               </button>
 
               <button
@@ -454,22 +461,20 @@ export default function LeaderboardPage() {
             {activeTab === 'global' && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-xs">
                 {/* Cohort Isolation Banner */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-3.5 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-slate-50 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-bold">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-3.5 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-slate-50 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-bold">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span>
-                      Active Academic Cohort: <strong className="text-blue-600 dark:text-blue-400 font-black">{levelInfo?.headline || 'Same-Level Students Only'}</strong>
+                      Active Academic Cohort: <strong className="text-blue-600 dark:text-blue-400 font-black">{levelInfo?.headline || 'Cohort Standings'}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                     <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
-                      🔒 Only {levelInfo?.levelLabel || 'Same Level'} Students
+                      🔒 {levelInfo?.levelLabel || 'Class Level'} Only
                     </span>
-                    {levelInfo?.totalStudentsInLevel !== undefined && (
-                      <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
-                        👥 {levelInfo.totalStudentsInLevel} Student{levelInfo.totalStudentsInLevel === 1 ? '' : 's'}
-                      </span>
-                    )}
+                    <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs text-blue-600 dark:text-blue-400">
+                      👥 {levelInfo?.totalStudentsInLevel !== undefined ? levelInfo.totalStudentsInLevel : leaderboard.length} Ranked Student{((levelInfo?.totalStudentsInLevel ?? leaderboard.length) === 1) ? '' : 's'}
+                    </span>
                   </div>
                 </div>
 
@@ -559,9 +564,13 @@ export default function LeaderboardPage() {
                                   <BarChart2 className="w-3.5 h-3.5" /> View Stats
                                 </button>
                               ) : (
-                                <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 italic">
-                                  Your Account (View on Profile)
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => router.push('/profile')}
+                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-[11px] rounded-xl transition-all border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                >
+                                  <span>👤 Your Account</span>
+                                </button>
                               )}
                             </td>
                           </tr>

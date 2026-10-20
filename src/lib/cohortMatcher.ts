@@ -114,28 +114,28 @@ export function resolveLeaderboardCohort(
     switch (key) {
       case 'neet':
         levelLabel = 'NEET UG';
-        headline = 'NEET UG Medical Standings';
-        badgeText = 'NEET UG Track';
+        headline = 'NEET UG Standings';
+        badgeText = 'NEET UG';
         break;
       case 'jee':
         levelLabel = 'JEE Main & Advanced';
         headline = 'JEE Main & Advanced Standings';
-        badgeText = 'JEE Engineering Track';
+        badgeText = 'JEE Main';
         break;
       case 'cuet':
         levelLabel = 'CUET UG';
-        headline = 'CUET UG Examination Standings';
-        badgeText = 'CUET UG Track';
+        headline = 'CUET UG Standings';
+        badgeText = 'CUET UG';
         break;
       case 'nda':
         levelLabel = 'NDA & Defence';
-        headline = 'NDA Defence Examination Standings';
-        badgeText = 'NDA Defence Track';
+        headline = 'NDA Defence Standings';
+        badgeText = 'NDA';
         break;
       case 'foundation':
         levelLabel = 'Foundation & Olympiads';
         headline = 'Foundation Talent Standings';
-        badgeText = 'Foundation Track';
+        badgeText = 'Foundation';
         break;
     }
 
@@ -169,8 +169,8 @@ export function resolveLeaderboardCohort(
   // Decision 2: School Exams (Class-wise)
   const resolvedClass = classNum || 10; // Default to Class 10 if unspecified school course
   const levelLabel = `Class ${resolvedClass}`;
-  const headline = `Class ${resolvedClass} Academic Standings`;
-  const badgeText = `Class ${resolvedClass} Peer Cohort`;
+  const headline = `Class ${resolvedClass} Standings`;
+  const badgeText = `Class ${resolvedClass}`;
 
   const matchedIds = new Set<string>();
   if (initialStr) matchedIds.add(initialStr);
