@@ -291,8 +291,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [showBackWarning, setShowBackWarning] = useState(false);
   const backPressCountRef = useRef(0); // ref for use inside event listener
 
-  // ─── Landscape / Portrait State ───
-  const [isPortrait, setIsPortrait] = useState(false);
+  // ─── Mobile Palette Drawer State ───
+  const [showMobilePalette, setShowMobilePalette] = useState(false);
 
   const handleMockTranslated = useCallback((qId: string, texts: string[]) => {
     setHindiTranslations((prev) => ({
@@ -507,10 +507,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         try { (docEl as any).msRequestFullscreen(); } catch (e) {}
       }
 
-      // Try orientation lock on mobile
+      // Try orientation lock to portrait on mobile devices
       try {
         if (screen?.orientation && typeof (screen.orientation as any).lock === 'function') {
-          await (screen.orientation as any).lock('landscape').catch(() => {});
+          await (screen.orientation as any).lock('portrait').catch(() => {});
         }
       } catch (e) {}
     } catch (e) {
@@ -557,33 +557,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     }
   };
 
-  // ─── Force Landscape on Mobile ───
+  // ─── Maintain Portrait Orientation on Mobile ───
   useEffect(() => {
-    const tryLockLandscape = async () => {
-      try {
-        if (screen?.orientation && typeof (screen.orientation as any).lock === 'function') {
-          await (screen.orientation as any).lock('landscape');
-        }
-      } catch (e) {
-        // Not supported or user denied — fall back to CSS overlay
+    try {
+      if (screen?.orientation && typeof (screen.orientation as any).lock === 'function') {
+        (screen.orientation as any).lock('portrait').catch(() => {});
       }
-    };
-
-    tryLockLandscape();
-
-    const checkOrientation = () => {
-      const isMobile = window.innerWidth <= 900 || ('ontouchstart' in window);
-      const portrait = window.innerHeight > window.innerWidth;
-      setIsPortrait(isMobile && portrait);
-    };
-
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
+    } catch (e) {}
 
     return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
       try {
         if (screen?.orientation && typeof (screen.orientation as any).unlock === 'function') {
           (screen.orientation as any).unlock();
@@ -2200,29 +2182,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   return (
     <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
 
-      {/* ─── Portrait Mode Overlay (mobile only) ─── */}
-      {isPortrait && !result && (
-        <div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center text-center p-8"
-          style={{ background: 'linear-gradient(135deg, #0B192C 0%, #1a2d4a 100%)' }}
-        >
-          <div
-            className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center mb-6"
-            style={{ animation: 'spin 3s linear infinite' }}
-          >
-            <RotateCcw className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-white text-xl font-black mb-2">Rotate Your Device</h2>
-          <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-            Please rotate your device to <strong className="text-white">landscape mode</strong> to take the mock test.
-          </p>
-          <div className="mt-6 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-white/30 animate-pulse" />
-            <span className="text-white/40 text-xs">Waiting for rotation...</span>
-          </div>
-          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-        </div>
-      )}
+
 
       {/* Practice Retake Notification Banner */}
       {isPracticeRetake && !result && (
@@ -2387,7 +2347,41 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           <div className="w-full flex-1 flex flex-col justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-sm">
             <div className="space-y-6">
               {/* Header info bar */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="space-y-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                {/* Mobile Quick Palette Bar */}
+                <div className="md:hidden flex items-center justify-between gap-2 p-2 bg-slate-100/80 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                  <button
+                    type="button"
+                    onClick={() => setShowMobilePalette(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0B192C] text-white text-[11px] font-black shrink-0 shadow-xs"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Palette ({answeredCount}/{questions.length})</span>
+                  </button>
+                  <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-none flex-1 justify-end">
+                    {questions.map((q, idx) => {
+                      const st = userState[q._id];
+                      const isCurrent = idx === currentIdx;
+                      let bg = 'bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+                      if (st?.isMFR) bg = 'bg-amber-500 text-white font-bold';
+                      else if (st?.selectedOption !== null && st?.selectedOption !== undefined) bg = 'bg-emerald-500 text-white font-bold';
+                      else if (st?.isVisited) bg = 'bg-rose-500 text-white font-bold';
+                      return (
+                        <button
+                          key={q._id}
+                          type="button"
+                          onClick={() => navigateTo(idx)}
+                          className={`w-6 h-6 rounded-md text-[10px] font-mono shrink-0 flex items-center justify-center transition-all ${bg} ${
+                            isCurrent ? 'ring-2 ring-blue-600 ring-offset-1 font-black scale-105' : ''
+                          }`}
+                        >
+                          {idx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-3.5 py-1 rounded-full bg-blue-600 text-white text-xs font-black shadow-xs">
                       Q{currentIdx + 1} of {questions.length}
@@ -2413,6 +2407,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     }}
                   />
                 </div>
+              </div>
 
                 {/* Question Text & Options Render / Hindi Skeleton */}
                 {activeLanguage === 'hi' && !hindiTranslations[currentQ?._id] ? (
@@ -2550,7 +2545,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
         {/* Right Navigation Palette Column */}
         {!result && (
-          <div className="w-36 md:w-72 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 md:p-5 shrink-0 space-y-3 md:space-y-5 overflow-y-auto">
+          <div className="hidden md:block w-72 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shrink-0 space-y-5 overflow-y-auto">
             <div>
               <h3 className="text-[10px] md:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 md:mb-3">
                 Palette
@@ -2706,6 +2701,152 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           </div>
         )}
       </div>
+
+      {/* Mobile Palette Bottom Sheet Drawer */}
+      {showMobilePalette && !result && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end md:hidden animate-in fade-in duration-200"
+          onClick={() => setShowMobilePalette(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 p-5 max-h-[80vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-brand-600" />
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Question Palette
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobilePalette(false)}
+                className="p-1 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="overflow-y-auto py-3 space-y-4">
+              {/* 4 State Legend */}
+              <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-600 dark:text-slate-400 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-emerald-500 shrink-0" />
+                  <span>Done ({answeredCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-rose-500 shrink-0" />
+                  <span>Skip ({unansweredCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-amber-500 shrink-0" />
+                  <span>MFR ({mfrCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <span>New ({unvisitedCount})</span>
+                </div>
+              </div>
+
+              {/* Subject switcher if multiple */}
+              {testSubjects.length > 1 && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                    Switch Section:
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {testSubjects.map((sub) => {
+                      const subQ = subjectGroupedQuestions[sub]?.questions || [];
+                      const isActive = activeSubject === sub;
+                      const doneCount = subQ.filter(({ question: q }) => {
+                        const st = userState[q._id];
+                        return st?.selectedOption !== null && st?.selectedOption !== undefined;
+                      }).length;
+
+                      return (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPaletteSubject(sub);
+                            const firstQ = subjectGroupedQuestions[sub]?.questions[0];
+                            if (firstQ) navigateTo(firstQ.originalIdx);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all ${
+                            isActive
+                              ? 'bg-[#0B192C] text-white shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          <span>{sub}</span>
+                          <span className={`text-[9px] px-1 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                            {doneCount}/{subQ.length}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Questions Grid */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-black text-slate-900 dark:text-white">
+                  <span>{activeSubject}</span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Tap to jump to question
+                  </span>
+                </div>
+                <div className="grid grid-cols-6 gap-2 pt-1">
+                  {((subjectGroupedQuestions[activeSubject] || subjectGroupedQuestions[testSubjects[0]])?.questions || []).map(({ question: q, originalIdx: idx }) => {
+                    const st = userState[q._id];
+                    const isCurrent = idx === currentIdx;
+                    let stateColor = 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+
+                    if (st?.isMFR) {
+                      stateColor = 'bg-amber-500 text-white border-amber-600 font-bold';
+                    } else if (st?.selectedOption !== null && st?.selectedOption !== undefined) {
+                      stateColor = 'bg-emerald-500 text-white border-emerald-600 font-bold';
+                    } else if (st?.isVisited) {
+                      stateColor = 'bg-rose-500 text-white border-rose-600 font-bold';
+                    }
+
+                    return (
+                      <button
+                        key={q._id}
+                        type="button"
+                        onClick={() => {
+                          navigateTo(idx);
+                          setShowMobilePalette(false);
+                        }}
+                        className={`h-10 rounded-xl font-mono text-xs flex items-center justify-center border transition-all ${stateColor} ${
+                          isCurrent ? 'ring-2 ring-brand-800 ring-offset-2 font-black shadow-md scale-105' : ''
+                        }`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Close Button */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobilePalette(false)}
+                className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold text-center active:scale-98 transition-transform"
+              >
+                Return to Question {currentIdx + 1}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Manual Submission Modal */}
       {showConfirmModal && (

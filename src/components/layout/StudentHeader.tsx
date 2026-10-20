@@ -21,6 +21,7 @@ import {
   Users,
   Plus,
   Trash2,
+  Smartphone,
   Check,
   X,
   Lock,
@@ -819,6 +820,16 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   >
                     <User className="w-4 h-4 text-blue-500" /> Profile Settings
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      window.dispatchEvent(new CustomEvent('open-pwa-install'));
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Smartphone className="w-4 h-4 text-emerald-500" /> Install App / Shortcut
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
