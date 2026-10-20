@@ -8,7 +8,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:41:35.908Z"
+      "created_at": "2026-08-02T01:41:35.908Z",
+      "raw_password": "123456"
     },
     {
       "_id": "o9qpxf37vmsb4y3ds",
@@ -18,7 +19,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-02T01:42:32.608Z"
+      "created_at": "2026-08-02T01:42:32.608Z",
+      "raw_password": "123456"
     },
     {
       "_id": "qv0yzg7yrmsb4yhs9",
@@ -28,7 +30,8 @@
       "status": "Active",
       "xp_total": 81,
       "locked_course_id": "ynzp9kszdms7g1ytt",
-      "created_at": "2026-08-02T01:42:51.273Z"
+      "created_at": "2026-08-02T01:42:51.273Z",
+      "raw_password": "password123"
     },
     {
       "_id": "nakaymym3msd3w2qg",
@@ -38,7 +41,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
-      "created_at": "2026-08-03T10:48:31.192Z"
+      "created_at": "2026-08-03T10:48:31.192Z",
+      "raw_password": "123456"
     },
     {
       "_id": "t39s5yy8imsejvw8m",
@@ -49,7 +53,8 @@
       "xp_total": 0,
       "locked_course_id": "course_class_10_2027",
       "created_at": "2026-08-04T11:04:02.806Z",
-      "account_email": "aranya@gmail.com"
+      "account_email": "aranya@gmail.com",
+      "raw_password": "123456"
     },
     {
       "_id": "shs0v0etrmsn5ncpy",
@@ -60,7 +65,8 @@
       "xp_total": 0,
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "created_at": "2026-08-10T11:35:25.222Z",
-      "account_email": "roy@gmail.com"
+      "account_email": "roy@gmail.com",
+      "raw_password": "123456"
     },
     {
       "_id": "bdq2qy6esmsn5pyf2",
@@ -71,7 +77,8 @@
       "locked_course_id": "ynzp9kszdms7g1ytt",
       "status": "Active",
       "xp_total": 54,
-      "created_at": "2026-08-10T11:37:26.654Z"
+      "created_at": "2026-08-10T11:37:26.654Z",
+      "raw_password": "123456"
     },
     {
       "_id": "wijw5853mmsn61d9f",
@@ -82,7 +89,8 @@
       "locked_course_id": "kjx0k9x51msd3o1gr",
       "status": "Active",
       "xp_total": 81,
-      "created_at": "2026-08-10T11:46:19.107Z"
+      "created_at": "2026-08-10T11:46:19.107Z",
+      "raw_password": "123456"
     },
     {
       "_id": "auw3ct49omsop5el6",
@@ -92,7 +100,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-11T13:29:06.330Z"
+      "created_at": "2026-08-11T13:29:06.330Z",
+      "raw_password": "123456"
     },
     {
       "_id": "xy1jghu99mspyzonl",
@@ -102,7 +111,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-12T10:52:21.777Z"
+      "created_at": "2026-08-12T10:52:21.777Z",
+      "raw_password": "123456"
     },
     {
       "_id": "p82xngs9amsr1cksi",
@@ -112,7 +122,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "1339osvcems5xpvjb",
-      "created_at": "2026-08-13T04:46:08.706Z"
+      "created_at": "2026-08-13T04:46:08.706Z",
+      "raw_password": "123456"
     },
     {
       "_id": "lbghyex2dmt04bnzq",
@@ -123,7 +134,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:21.822Z"
+      "created_at": "2026-08-19T13:19:21.822Z",
+      "raw_password": "123456"
     },
     {
       "_id": "6qo0pow7mmt04c076",
@@ -134,7 +146,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-19T13:19:37.227Z"
+      "created_at": "2026-08-19T13:19:37.227Z",
+      "raw_password": "123456"
     },
     {
       "_id": "ijcngxv5omt04habe",
@@ -145,7 +158,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:23:43.286Z"
+      "created_at": "2026-08-19T13:23:43.286Z",
+      "raw_password": "123456"
     },
     {
       "_id": "ymtpm8rsamt04j5y0",
@@ -156,7 +170,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "a2dmfatfwmszyy4et",
-      "created_at": "2026-08-19T13:25:10.857Z"
+      "created_at": "2026-08-19T13:25:10.857Z",
+      "raw_password": "123456"
     },
     {
       "_id": "6d6rta7u1mt04vnnd",
@@ -167,7 +182,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": null,
-      "created_at": "2026-08-19T13:34:53.577Z"
+      "created_at": "2026-08-19T13:34:53.577Z",
+      "raw_password": "123456"
     },
     {
       "_id": "gt7j46snmmt8f7qd0",
@@ -199,7 +215,8 @@
         "drivingLicence": "BR0120220010509",
         "eaadhaar": "",
         "linkedAt": "2026-08-25T09:34:36.949Z"
-      }
+      },
+      "raw_password": "123456"
     },
     {
       "_id": "xi4usngprmt8h694p",
@@ -231,7 +248,8 @@
         "drivingLicence": "BR0120220010509",
         "eaadhaar": "",
         "linkedAt": "2026-08-25T09:43:11.764Z"
-      }
+      },
+      "raw_password": "123456"
     },
     {
       "_id": "ha132aetxmtcwz33e",
@@ -242,7 +260,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-08-28T12:14:37.413Z"
+      "created_at": "2026-08-28T12:14:37.413Z",
+      "raw_password": "123456"
     },
     {
       "_id": "1rbwivg8nmtcx3krm",
@@ -254,7 +273,8 @@
       "locked_course_id": "a2dmfatfwmszyy4et",
       "status": "Active",
       "xp_total": 0,
-      "created_at": "2026-08-28T12:18:06.329Z"
+      "created_at": "2026-08-28T12:18:06.329Z",
+      "raw_password": "123456"
     },
     {
       "_id": "do29rlwcmmv2554g8",
@@ -266,67 +286,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "rk0cw5w0imso9pyqz",
-      "created_at": "2026-10-10T08:37:12.119Z"
-    },
-    {
-      "_id": "s81hdoxh0mv3ulbce",
-      "id": "s81hdoxh0mv3ulbce",
-      "name": "Flow Tester",
-      "email": "flow_test_1791724643762@example.com",
-      "password_hash": "$2a$10$mrgzqv/v/gq3CHXvQ.HQKurHg0eMK9s52.LmVOfg9NwGX7hTAVuRm",
-      "status": "Active",
-      "xp_total": 0,
-      "locked_course_id": "rk0cw5w0imso9pyqz",
-      "created_at": "2026-10-11T13:17:24.344Z"
-    },
-    {
-      "_id": "o0s298tu8mv3uwkos",
-      "id": "o0s298tu8mv3uwkos",
-      "name": "Persistent Student",
-      "email": "locktest_1791725167116@example.com",
-      "password_hash": "$2a$10$PRF7f0zayXtO3Y5miWIm6OmdjEzIoQL/r6w3G96WERW.WQWbMvA5C",
-      "status": "Active",
-      "xp_total": 0,
-      "locked_course_id": "rk0cw5w0imso9pyqz",
-      "created_at": "2026-10-11T13:26:09.732Z"
-    },
-    {
-      "_id": "4rigt6f90mv3uwsxo",
-      "id": "4rigt6f90mv3uwsxo",
-      "name": "Google Student",
-      "email": "google_flow_1791725179398@gmail.com",
-      "password_hash": "$2a$10$ZG00IyR6AfH3Up2iKQxWVeaUg47VeavZ6LSQU0gDe/55zsA3/mM96",
-      "auth_provider": "google",
-      "status": "Active",
-      "xp_total": 0,
-      "locked_course_id": "rk0cw5w0imso9pyqz",
-      "created_at": "2026-10-11T13:26:20.164Z"
-    },
-    {
-      "_id": "4zpdeelplmv3wd5y5",
-      "id": "4zpdeelplmv3wd5y5",
-      "name": "Family Primary User",
-      "email": "family_test_1791727621658@examizo.test",
-      "password_hash": "$2a$10$86PrIvZCvYeouWpEbNec6.lKhaYFjqREIpGBPXyLhwtrNiMv22WsK",
-      "status": "Active",
-      "xp_total": 0,
-      "locked_course_id": "rk0cw5w0imso9pyqz",
-      "created_at": "2026-10-11T14:07:03.363Z",
-      "pin": "1122"
-    },
-    {
-      "_id": "ym36ykj3amv3wd6ue",
-      "id": "ym36ykj3amv3wd6ue",
-      "name": "Sub-Student Grade 8",
-      "email": "family_test_1791727621658+profile_4166@examizo.internal",
-      "password_hash": "$2a$10$86PrIvZCvYeouWpEbNec6.lKhaYFjqREIpGBPXyLhwtrNiMv22WsK",
-      "account_email": "family_test_1791727621658@examizo.test",
-      "locked_course_id": "kjx0k9x51msd3o1gr",
-      "pin": "4321",
-      "avatar_color": null,
-      "status": "Active",
-      "xp_total": 0,
-      "created_at": "2026-10-11T14:07:04.166Z"
+      "created_at": "2026-10-10T08:37:12.119Z",
+      "raw_password": "123456"
     },
     {
       "_id": "demo_student_01",
@@ -337,7 +298,8 @@
       "status": "Active",
       "xp_total": 100,
       "locked_course_id": null,
-      "created_at": "2026-10-13T06:58:24.288Z"
+      "created_at": "2026-10-13T06:58:24.288Z",
+      "raw_password": "123456"
     },
     {
       "_id": "teylwkj8qmv99hb44",
@@ -352,7 +314,8 @@
       "status": "Active",
       "xp_total": 0,
       "locked_course_id": "course_jee_2027",
-      "created_at": "2026-10-15T08:13:04.344Z"
+      "created_at": "2026-10-15T08:13:04.344Z",
+      "raw_password": "123456"
     }
   ],
   "courses": [
@@ -3606,18 +3569,18 @@
       "question_text": "Which of the following answer figures will complete the pattern in the question figure marked with \"?\"?",
       "image_url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%20width%3D%22200%22%20height%3D%22200%22%3E%20%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%23334155%22%20stroke-width%3D%223%22%20rx%3D%2210%22%2F%3E%20%3Cline%20x1%3D%22100%22%20y1%3D%220%22%20x2%3D%22100%22%20y2%3D%22200%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-dasharray%3D%224%2C4%22%2F%3E%20%3Cline%20x1%3D%220%22%20y1%3D%22100%22%20x2%3D%22200%22%20y2%3D%22100%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-dasharray%3D%224%2C4%22%2F%3E%20%3C!--%20Top%20Left%3A%20Top-left%20quarter%20shaded%20--%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2230%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpath%20d%3D%22M%2050%2050%20L%2050%2020%20A%2030%2030%200%200%200%2020%2050%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C!--%20Top%20Right%3A%20Top-right%20quarter%20shaded%20--%3E%20%3Ccircle%20cx%3D%22150%22%20cy%3D%2250%22%20r%3D%2230%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpath%20d%3D%22M%20150%2050%20L%20180%2050%20A%2030%2030%200%200%200%20150%2020%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C!--%20Bottom%20Left%3A%20Bottom-left%20quarter%20shaded%20--%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%22150%22%20r%3D%2230%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpath%20d%3D%22M%2050%20150%20L%2020%20150%20A%2030%2030%200%200%200%2050%20180%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C!--%20Bottom%20Right%3A%20Question%20Mark%20--%3E%20%3Crect%20x%3D%22105%22%20y%3D%22105%22%20width%3D%2290%22%20height%3D%2290%22%20fill%3D%22%23fef3c7%22%20stroke%3D%22%23f59e0b%22%20stroke-width%3D%222%22%20rx%3D%226%22%2F%3E%20%3Ctext%20x%3D%22150%22%20y%3D%22162%22%20font-size%3D%2244%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%3E%3F%3C%2Ftext%3E%20%3C%2Fsvg%3E",
       "options": [
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2234%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%2F%3E%20%3Cpath%20d%3D%22M%2050%2050%20L%2050%2084%20A%2034%2034%200%200%200%2084%2050%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2234%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%2F%3E%20%3Cpath%20d%3D%22M%2050%2050%20L%2050%2016%20A%2034%2034%200%200%200%2016%2050%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2234%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%2F%3E%20%3Cpath%20d%3D%22M%2050%2050%20L%2050%2084%20A%2034%2034%200%200%200%2084%2050%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2234%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%2F%3E%20%3Cpath%20d%3D%22M%2050%2050%20L%2084%2050%20A%2034%2034%200%200%200%2050%2016%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2234%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%2F%3E%20%3Cpath%20d%3D%22M%2016%2050%20A%2034%2034%200%200%201%2084%2050%20Z%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E"
       ],
-      "correct_option": 0,
+      "correct_option": 1,
       "marks": 1,
-      "explanation": "Option A is the correct answer. The shaded quarter moves clockwise around the circle in each successive quadrant.",
-      "detailed_explanation": "Step 1: In the top-left quadrant, the top-left sector is shaded.\nStep 2: Moving clockwise to top-right, the shaded sector rotates 90 degrees clockwise.\nStep 3: In the bottom-left quadrant, the bottom-left sector is shaded.\nStep 4: Therefore, the missing 4th quadrant (bottom-right) must have the bottom-right sector shaded, which matches Option A.",
+      "explanation": "Option B is the correct answer. The shaded quarter moves clockwise around the circle in each successive quadrant.",
+      "detailed_explanation": "Step 1: In the top-left quadrant, the top-left sector is shaded.\nStep 2: Moving clockwise to top-right, the shaded sector rotates 90 degrees clockwise.\nStep 3: In the bottom-left quadrant, the bottom-left sector is shaded.\nStep 4: Therefore, the missing 4th quadrant (bottom-right) must have the bottom-right sector shaded, which matches Option B.",
       "_id": "reasoning_c7_q1",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     },
     {
       "id": "reasoning_c7_q2",
@@ -3628,18 +3591,18 @@
       "question_text": "Observe the sequence of figures from left to right. Which figure logically replaces the question mark (?) in the series?",
       "image_url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20100%22%20width%3D%22400%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22400%22%20height%3D%22100%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%2210%22%2F%3E%20%3C!--%20Box%201%3A%20UP%20(0%20deg)%20--%3E%20%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%2280%22%20height%3D%2280%22%20fill%3D%22white%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20rx%3D%226%22%2F%3E%20%3Cline%20x1%3D%2250%22%20y1%3D%2270%22%20x2%3D%2250%22%20y2%3D%2225%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C15%2040%2C32%2060%2C32%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2272%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C!--%20Box%202%3A%20RIGHT%20(90%20deg)%20--%3E%20%3Crect%20x%3D%22105%22%20y%3D%2210%22%20width%3D%2280%22%20height%3D%2280%22%20fill%3D%22white%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20rx%3D%226%22%2F%3E%20%3Cline%20x1%3D%2225%22%20y1%3D%2250%22%20x2%3D%2270%22%20y2%3D%2250%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2285%2C50%2068%2C40%2068%2C60%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2250%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C!--%20Box%203%3A%20DOWN%20(180%20deg)%20--%3E%20%3Crect%20x%3D%22200%22%20y%3D%2210%22%20width%3D%2280%22%20height%3D%2280%22%20fill%3D%22white%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20rx%3D%226%22%2F%3E%20%3Cline%20x1%3D%22240%22%20y1%3D%2225%22%20x2%3D%22240%22%20y2%3D%2270%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%22240%2C85%20230%2C68%20250%2C68%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%22240%22%20cy%3D%2223%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C!--%20Box%204%3A%20%3F%20--%3E%20%3Crect%20x%3D%22295%22%20y%3D%2210%22%20width%3D%2295%22%20height%3D%2280%22%20fill%3D%22%23fef3c7%22%20stroke%3D%22%23f59e0b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Ctext%20x%3D%22342%22%20y%3D%2262%22%20font-size%3D%2244%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%3E%3F%3C%2Ftext%3E%20%3C%2Fsvg%3E",
       "options": [
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2275%22%20y1%3D%2250%22%20x2%3D%2230%22%20y2%3D%2250%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C50%2032%2C40%2032%2C60%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2277%22%20cy%3D%2250%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C%2Fsvg%3E",
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2250%22%20y1%3D%2270%22%20x2%3D%2250%22%20y2%3D%2225%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C15%2040%2C32%2060%2C32%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2272%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2225%22%20y1%3D%2250%22%20x2%3D%2270%22%20y2%3D%2250%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2285%2C50%2068%2C40%2068%2C60%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2285%22%20cy%3D%2250%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2250%22%20y1%3D%2270%22%20x2%3D%2250%22%20y2%3D%2225%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C15%2040%2C32%2060%2C32%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2272%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2275%22%20y1%3D%2250%22%20x2%3D%2230%22%20y2%3D%2250%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C50%2032%2C40%2032%2C60%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2277%22%20cy%3D%2250%22%20r%3D%226%22%20fill%3D%22%2310b981%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cline%20x1%3D%2275%22%20y1%3D%2250%22%20x2%3D%2230%22%20y2%3D%2250%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C50%2032%2C40%2032%2C60%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E"
       ],
-      "correct_option": 0,
+      "correct_option": 2,
       "marks": 1,
-      "explanation": "Option A is correct. The arrow rotates 90° clockwise in each step while keeping the green circle at its tail.",
-      "detailed_explanation": "Step 1: Figure 1 points UP (0°).\nStep 2: Figure 2 points RIGHT (90° clockwise).\nStep 3: Figure 3 points DOWN (180° clockwise).\nStep 4: The 4th figure must point LEFT (270° clockwise) with the green marker at its tail, which is Option A.",
+      "explanation": "Option C is correct. The arrow rotates 90° clockwise in each step while keeping the green circle at its tail.",
+      "detailed_explanation": "Step 1: Figure 1 points UP (0°).\nStep 2: Figure 2 points RIGHT (90° clockwise).\nStep 3: Figure 3 points DOWN (180° clockwise).\nStep 4: The 4th figure must point LEFT (270° clockwise) with the green marker at its tail, which is Option C.",
       "_id": "reasoning_c7_q2",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     },
     {
       "id": "reasoning_c7_q3",
@@ -3650,18 +3613,18 @@
       "question_text": "Find the correct mirror image of the given figure when the mirror is placed on the vertical line MN to its right.",
       "image_url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20120%22%20width%3D%22250%22%20height%3D%22120%22%3E%20%3Crect%20width%3D%22250%22%20height%3D%22120%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%2210%22%2F%3E%20%3C!--%20Question%20Figure%20on%20Left%20--%3E%20%3Crect%20x%3D%2230%22%20y%3D%2225%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2045%2040%20L%2080%2040%20M%2045%2040%20L%2045%2080%20M%2045%2060%20L%2070%2060%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2285%2C40%2073%2C34%2073%2C46%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2280%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C!--%20Mirror%20Line%20MN%20--%3E%20%3Cline%20x1%3D%22160%22%20y1%3D%2210%22%20x2%3D%22160%22%20y2%3D%22110%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%223%22%20stroke-dasharray%3D%226%2C4%22%2F%3E%20%3Ctext%20x%3D%22160%22%20y%3D%2220%22%20font-size%3D%2212%22%20font-weight%3D%22900%22%20fill%3D%22%23ef4444%22%20text-anchor%3D%22middle%22%20dx%3D%2214%22%3EM%3C%2Ftext%3E%20%3Ctext%20x%3D%22160%22%20y%3D%22105%22%20font-size%3D%2212%22%20font-weight%3D%22900%22%20fill%3D%22%23ef4444%22%20text-anchor%3D%22middle%22%20dx%3D%2214%22%3EN%3C%2Ftext%3E%20%3C%2Fsvg%3E",
       "options": [
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2055%2030%20L%2020%2030%20M%2055%2030%20L%2055%2070%20M%2055%2050%20L%2030%2050%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C30%2027%2C24%2027%2C36%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2255%22%20cy%3D%2270%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2030%2030%20L%2065%2030%20M%2030%2030%20L%2030%2070%20M%2030%2050%20L%2055%2050%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2270%2C30%2058%2C24%2058%2C36%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2270%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2055%2030%20L%2020%2030%20M%2055%2030%20L%2055%2070%20M%2055%2050%20L%2030%2050%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C30%2027%2C24%2027%2C36%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2255%22%20cy%3D%2270%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2055%2070%20L%2020%2070%20M%2055%2070%20L%2055%2030%20M%2055%2050%20L%2030%2050%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2215%2C70%2027%2C64%2027%2C76%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2255%22%20cy%3D%2230%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222.5%22%20rx%3D%226%22%2F%3E%20%3Cpath%20d%3D%22M%2030%2070%20L%2065%2070%20M%2030%2070%20L%2030%2030%20M%2030%2050%20L%2055%2050%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%20%3Cpolygon%20points%3D%2270%2C70%2058%2C64%2058%2C76%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%225%22%20fill%3D%22%23f59e0b%22%2F%3E%20%3C%2Fsvg%3E"
       ],
-      "correct_option": 0,
+      "correct_option": 1,
       "marks": 1,
-      "explanation": "Option A is the correct mirror reflection. The arrow pointing right reflects to point left, while vertical positions remain unchanged.",
-      "detailed_explanation": "Step 1: In lateral inversion across vertical mirror line MN, the left side becomes right and right becomes left.\nStep 2: The arrow pointing towards the right in the original figure points towards the left in the mirror image.\nStep 3: The yellow circle at bottom-left moves to bottom-right.\nStep 4: This matches Option A.",
+      "explanation": "Option B is the correct mirror reflection. The arrow pointing right reflects to point left, while vertical positions remain unchanged.",
+      "detailed_explanation": "Step 1: In lateral inversion across vertical mirror line MN, the left side becomes right and right becomes left.\nStep 2: The arrow pointing towards the right in the original figure points towards the left in the mirror image.\nStep 3: The yellow circle at bottom-left moves to bottom-right.\nStep 4: This matches Option B.",
       "_id": "reasoning_c7_q3",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     },
     {
       "id": "reasoning_c7_q4",
@@ -3683,7 +3646,7 @@
       "detailed_explanation": "Step 1: Shape (X) is composed of a top horizontal bar to the right, diagonal sloping down-left, and bottom horizontal bar to the right.\nStep 2: Inspecting Option A reveals the exact Z-path in the center.\nStep 3: Options B, C, and D lack this continuous zigzag line.",
       "_id": "reasoning_c7_q4",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     },
     {
       "id": "reasoning_c7_q5",
@@ -3694,18 +3657,18 @@
       "question_text": "A square paper is folded twice as shown and punched with a circular hole. How will the paper appear when fully unfolded?",
       "image_url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20100%22%20width%3D%22320%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22320%22%20height%3D%22100%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%2210%22%2F%3E%20%3C!--%20Step%201%3A%20Full%20Sheet%20--%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cline%20x1%3D%2250%22%20y1%3D%2215%22%20x2%3D%2250%22%20y2%3D%2285%22%20stroke%3D%22%23ef4444%22%20stroke-dasharray%3D%223%2C3%22%20stroke-width%3D%222%22%2F%3E%20%3C!--%20Arrow%201%20--%3E%20%3Cpath%20d%3D%22M%2092%2050%20L%20108%2050%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%22112%2C50%20104%2C46%20104%2C54%22%20fill%3D%22%2364748b%22%2F%3E%20%3C!--%20Step%202%3A%20Half%20Folded%20--%3E%20%3Crect%20x%3D%22120%22%20y%3D%2215%22%20width%3D%2235%22%20height%3D%2270%22%20fill%3D%22%23e2e8f0%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cline%20x1%3D%22120%22%20y1%3D%2250%22%20x2%3D%22155%22%20y2%3D%2250%22%20stroke%3D%22%23ef4444%22%20stroke-dasharray%3D%223%2C3%22%20stroke-width%3D%222%22%2F%3E%20%3C!--%20Arrow%202%20--%3E%20%3Cpath%20d%3D%22M%20165%2050%20L%20180%2050%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%22184%2C50%20176%2C46%20176%2C54%22%20fill%3D%22%2364748b%22%2F%3E%20%3C!--%20Step%203%3A%20Quarter%20with%20Hole%20Punched%20--%3E%20%3Crect%20x%3D%22195%22%20y%3D%2250%22%20width%3D%2235%22%20height%3D%2235%22%20fill%3D%22%23cbd5e1%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%22212%22%20cy%3D%2267%22%20r%3D%226%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C!--%20Arrow%203%20--%3E%20%3Cpath%20d%3D%22M%20240%2050%20L%20255%2050%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%22260%2C50%20252%2C46%20252%2C54%22%20fill%3D%22%2364748b%22%2F%3E%20%3C!--%20Step%204%3A%20Unfold%20%3F%20--%3E%20%3Crect%20x%3D%22270%22%20y%3D%2215%22%20width%3D%2238%22%20height%3D%2270%22%20fill%3D%22%23fef3c7%22%20stroke%3D%22%23f59e0b%22%20stroke-width%3D%222%22%20rx%3D%224%22%2F%3E%20%3Ctext%20x%3D%22289%22%20y%3D%2258%22%20font-size%3D%2228%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%3E%3F%3C%2Ftext%3E%20%3C%2Fsvg%3E",
       "options": [
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2235%22%20cy%3D%2235%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2235%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2235%22%20cy%3D%2265%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2265%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%227%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2265%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2235%22%20cy%3D%2250%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2250%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E",
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%227%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E"
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2235%22%20cy%3D%2235%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2235%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2235%22%20cy%3D%2265%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3Ccircle%20cx%3D%2265%22%20cy%3D%2265%22%20r%3D%225%22%20fill%3D%22%23dc2626%22%2F%3E%20%3C%2Fsvg%3E"
       ],
-      "correct_option": 0,
+      "correct_option": 3,
       "marks": 1,
-      "explanation": "Option A is correct. Unfolding the quarter sheet across both horizontal and vertical folds creates 4 symmetrical holes.",
-      "detailed_explanation": "Step 1: The paper is folded in half vertically, then in half horizontally (quarter sheet).\nStep 2: One circular hole is punched in this quarter.\nStep 3: Unfolding the first horizontal fold produces 2 holes.\nStep 4: Unfolding the vertical fold duplicates both holes to the other half, creating 4 symmetrical holes (Option A).",
+      "explanation": "Option D is correct. Unfolding the quarter sheet across both horizontal and vertical folds creates 4 symmetrical holes.",
+      "detailed_explanation": "Step 1: The paper is folded in half vertically, then in half horizontally (quarter sheet).\nStep 2: One circular hole is punched in this quarter.\nStep 3: Unfolding the first horizontal fold produces 2 holes.\nStep 4: Unfolding the vertical fold duplicates both holes to the other half, creating 4 symmetrical holes (Option D).",
       "_id": "reasoning_c7_q5",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     },
     {
       "id": "reasoning_c7_q6",
@@ -3716,18 +3679,18 @@
       "question_text": "In the question figure, Figure 1 is related to Figure 2. Which option figure establishes the same relationship with Figure 3?",
       "image_url": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20350%20100%22%20width%3D%22350%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22350%22%20height%3D%22100%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%2210%22%2F%3E%20%3C!--%20Pair%201%3A%20Figure%201%20-%3E%20Figure%202%20--%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2214%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ctext%20x%3D%2296%22%20y%3D%2258%22%20font-size%3D%2224%22%20font-weight%3D%22900%22%20fill%3D%22%2364748b%22%3E%3A%3C%2Ftext%3E%20%3Ccircle%20cx%3D%22145%22%20cy%3D%2250%22%20r%3D%2235%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Crect%20x%3D%22131%22%20y%3D%2236%22%20width%3D%2228%22%20height%3D%2228%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ctext%20x%3D%22195%22%20y%3D%2258%22%20font-size%3D%2224%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%3E%3A%3A%3C%2Ftext%3E%20%3C!--%20Pair%202%3A%20Figure%203%20-%3E%20%3F%20--%3E%20%3Cpolygon%20points%3D%22255%2C15%20290%2C85%20220%2C85%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Ccircle%20cx%3D%22255%22%20cy%3D%2262%22%20r%3D%2212%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ctext%20x%3D%22298%22%20y%3D%2258%22%20font-size%3D%2224%22%20font-weight%3D%22900%22%20fill%3D%22%2364748b%22%3E%3A%3C%2Ftext%3E%20%3Crect%20x%3D%22310%22%20y%3D%2220%22%20width%3D%2230%22%20height%3D%2260%22%20fill%3D%22%23fef3c7%22%20stroke%3D%22%23f59e0b%22%20stroke-width%3D%222%22%20rx%3D%224%22%2F%3E%20%3Ctext%20x%3D%22325%22%20y%3D%2258%22%20font-size%3D%2224%22%20font-weight%3D%22900%22%20fill%3D%22%23dc2626%22%20text-anchor%3D%22middle%22%3E%3F%3C%2Ftext%3E%20%3C%2Fsvg%3E",
       "options": [
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2235%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C30%2068%2C70%2032%2C70%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
-        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C30%2068%2C70%2032%2C70%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2235%22%20fill%3D%22%232563eb%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C30%2068%2C70%2032%2C70%22%20fill%3D%22white%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Crect%20x%3D%2215%22%20y%3D%2215%22%20width%3D%2270%22%20height%3D%2270%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C30%2068%2C70%2032%2C70%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
+        "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2235%22%20fill%3D%22white%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%222%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C30%2068%2C70%2032%2C70%22%20fill%3D%22%232563eb%22%2F%3E%20%3C%2Fsvg%3E",
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22100%22%20height%3D%22100%22%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%222%22%20rx%3D%228%22%2F%3E%20%3Cpolygon%20points%3D%2250%2C15%2085%2C85%2015%2C85%22%20fill%3D%22%232563eb%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2262%22%20r%3D%2212%22%20fill%3D%22white%22%2F%3E%20%3C%2Fsvg%3E"
       ],
-      "correct_option": 0,
+      "correct_option": 2,
       "marks": 1,
-      "explanation": "Option A is correct. The outer container and inner shape swap roles, with the new inner shape becoming solid blue.",
-      "detailed_explanation": "Step 1: Figure 1 has a square outer boundary and a solid blue circle inside.\nStep 2: Figure 2 has a circle outer boundary and a solid blue square inside (roles swapped).\nStep 3: Figure 3 has a triangle outer boundary and a solid blue circle inside.\nStep 4: Therefore, the missing figure must have a circle outer boundary and a solid blue triangle inside (Option A).",
+      "explanation": "Option C is correct. The outer container and inner shape swap roles, with the new inner shape becoming solid blue.",
+      "detailed_explanation": "Step 1: Figure 1 has a square outer boundary and a solid blue circle inside.\nStep 2: Figure 2 has a circle outer boundary and a solid blue square inside (roles swapped).\nStep 3: Figure 3 has a triangle outer boundary and a solid blue circle inside.\nStep 4: Therefore, the missing figure must have a circle outer boundary and a solid blue triangle inside (Option C).",
       "_id": "reasoning_c7_q6",
       "is_active": true,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     }
   ],
   "mockTests": [
@@ -3794,7 +3757,7 @@
         "optics_q_7_mv596tui"
       ],
       "is_active": 1,
-      "created_at": "2026-10-20T10:18:19.669Z"
+      "created_at": "2026-10-20T10:18:19.666Z"
     },
     {
       "_id": "mock_test_c7_reasoning_visual",
@@ -3813,7 +3776,7 @@
         "reasoning_c7_q6"
       ],
       "is_active": 1,
-      "created_at": "2026-10-20T10:42:46.496Z"
+      "created_at": "2026-10-20T10:42:46.493Z"
     }
   ],
   "attempts": [
@@ -4394,7 +4357,8 @@
       ],
       "allowed_courses": [
         "all"
-      ]
+      ],
+      "raw_password": "Admin@123456"
     },
     {
       "_id": "admin_pkumar_2026",
@@ -4418,7 +4382,8 @@
       "allowed_courses": [
         "all"
       ],
-      "created_at": "2026-10-11T12:47:55.170Z"
+      "created_at": "2026-10-11T12:47:55.170Z",
+      "raw_password": "Admin@123456"
     }
   ],
   "auditLogs": [

@@ -2022,7 +2022,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                           />
 
                                           {/* Options Grid */}
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                          <div className={`grid gap-2 pt-1 ${(q.options || []).some(isImageStr) ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'}`}>
                                             {(q.options || []).map((opt: string, optIdx: number) => {
                                               const isCorrectKey = optIdx === q.correct_option;
                                               const isUserSelection = userChoice === optIdx;
