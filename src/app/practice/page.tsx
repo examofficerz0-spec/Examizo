@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useHeader } from '@/context/HeaderContext';
 import { HindiTranslateButton } from '@/components/common/HindiTranslateButton';
 import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
+import { OptionContent, isImageStr } from '@/components/ui/OptionContent';
 import {
   HelpCircle,
   CheckCircle2,
@@ -1406,12 +1407,14 @@ export default function PracticeSetsPage() {
 
                                                       return (
                                                         <div key={optIdx} className={`p-2.5 rounded-lg border text-xs flex justify-between items-center ${style}`}>
-                                                          <span className="flex items-center gap-1.5">
-                                                            <strong className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px]">
+                                                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                            <strong className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] shrink-0">
                                                               {String.fromCharCode(65 + optIdx)}
                                                             </strong>
-                                                            <span>{opt}</span>
-                                                          </span>
+                                                            <div className="flex-1 min-w-0">
+                                                              <OptionContent text={opt} />
+                                                            </div>
+                                                          </div>
                                                           {isCorrectKey && (
                                                             <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                                                               <CheckCircle2 className="w-3.5 h-3.5" /> Correct
@@ -1431,7 +1434,7 @@ export default function PracticeSetsPage() {
                                                   <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
                                                     <span className="flex items-center gap-1.5">
                                                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                                                      Official Answer: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
+                                                      Official Answer: <strong>Option {correctChoiceLetter} {isImageStr(q.options?.[q.correct_option]) ? `(Figure ${correctChoiceLetter})` : `(${q.options?.[q.correct_option] || 'Key Answer'})`}</strong>
                                                     </span>
                                                     {isAttempted ? (
                                                       <span className={`text-[11px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
@@ -1587,7 +1590,7 @@ export default function PracticeSetsPage() {
 
                       {getNormalizedOptions(currentQ).length > 0 ? (
                         /* MCQ Options Grid */
-                        <div className="space-y-3">
+                        <div className={getNormalizedOptions(currentQ).some(isImageStr) ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}>
                           {getNormalizedOptions(currentQ).map((opt: string, optIdx: number) => {
                             const isSelected = userAnswers[currentQ._id] === optIdx;
                             const isChecked = activeSession === 'practice' && checkedQuestions[currentQ._id];
@@ -1612,7 +1615,7 @@ export default function PracticeSetsPage() {
                                 onClick={() => handleSelectOption(currentQ._id, optIdx)}
                                 className={`w-full p-3.5 rounded-xl border text-xs text-left font-medium transition-all flex items-center justify-between gap-3 ${style}`}
                               >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
                                   <span
                                     className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center font-bold shrink-0 ${
                                       isSelected
@@ -1622,7 +1625,9 @@ export default function PracticeSetsPage() {
                                   >
                                     {String.fromCharCode(65 + optIdx)}
                                   </span>
-                                  <span>{hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <OptionContent text={hindiTranslations[currentQ._id]?.options?.[optIdx] ?? opt} />
+                                  </div>
                                 </div>
 
                                 {isChecked && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}

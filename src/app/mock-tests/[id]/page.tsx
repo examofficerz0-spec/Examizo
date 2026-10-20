@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/common/Logo';
 import { HindiTranslateButton, translateToHindi } from '@/components/common/HindiTranslateButton';
 import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
+import { OptionContent, isImageStr } from '@/components/ui/OptionContent';
 import {
   Clock, Bookmark, ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Award,
   AlertTriangle, ShieldCheck, ShieldAlert, RotateCcw, Star, BarChart2, MessageSquare, PieChart,
@@ -2068,7 +2069,9 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                                     }`}>
                                                       {String.fromCharCode(65 + optIdx)}
                                                     </span>
-                                                    <span>{opt}</span>
+                                                    <div className="min-w-0 flex-1">
+                                                      <OptionContent text={opt} />
+                                                    </div>
                                                   </div>
 
                                                   <div className="shrink-0 flex items-center gap-1">
@@ -2092,7 +2095,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                           <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
                                             <span className="flex items-center gap-1.5">
                                               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                                              Official Key: <strong>Option {correctChoiceLetter} ({q.options?.[q.correct_option] || 'Key Answer'})</strong>
+                                              Official Key: <strong>Option {correctChoiceLetter} {isImageStr(q.options?.[q.correct_option]) ? `(Figure ${correctChoiceLetter})` : `(${q.options?.[q.correct_option] || 'Key Answer'})`}</strong>
                                             </span>
                                             {isAttempted ? (
                                               <span className={`text-[10px] px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200' : 'bg-rose-100 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200'}`}>
@@ -2443,40 +2446,49 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     />
 
                     {/* Options Grid */}
-                    <div className="grid grid-cols-1 gap-3 pt-2">
-                      {(activeLanguage === 'hi'
+                    {(() => {
+                      const displayOptions = (activeLanguage === 'hi'
                         ? hindiTranslations[currentQ?._id]?.options || currentQ?.options || []
                         : currentQ?.options || []
-                      ).map((optText: string, optIdx: number) => {
-                        const isSelected = userState[currentQ?._id]?.selectedOption === optIdx;
-                        return (
-                          <button
-                            key={optIdx}
-                              type="button"
-                              onClick={() => handleSelectOption(optIdx)}
-                              className={`w-full p-4 rounded-2xl border-2 text-left text-xs md:text-sm font-bold transition-all flex items-center justify-between cursor-pointer ${
-                                isSelected
-                                  ? 'bg-blue-50/90 border-blue-600 text-blue-950 dark:bg-blue-950/80 dark:border-blue-500 dark:text-blue-100 shadow-md shadow-blue-500/10'
-                                  : 'bg-slate-50/60 border-slate-200/80 hover:border-blue-300 hover:bg-slate-100 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-200'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3.5">
-                                <span
-                                  className={`w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center shrink-0 transition-colors ${
-                                    isSelected
-                                      ? 'bg-blue-600 text-white shadow-xs'
-                                      : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                                  }`}
-                                >
-                                  {String.fromCharCode(65 + optIdx)}
-                                </span>
-                                <span className="leading-snug">{optText}</span>
-                              </div>
-                              {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      );
+                      const hasOptionImages = displayOptions.some(isImageStr);
+
+                      return (
+                        <div className={`grid gap-3 pt-2 ${hasOptionImages ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                          {displayOptions.map((optText: string, optIdx: number) => {
+                            const isSelected = userState[currentQ?._id]?.selectedOption === optIdx;
+                            return (
+                              <button
+                                key={optIdx}
+                                type="button"
+                                onClick={() => handleSelectOption(optIdx)}
+                                className={`w-full p-4 rounded-2xl border-2 text-left text-xs md:text-sm font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-blue-50/90 border-blue-600 text-blue-950 dark:bg-blue-950/80 dark:border-blue-500 dark:text-blue-100 shadow-md shadow-blue-500/10'
+                                    : 'bg-slate-50/60 border-slate-200/80 hover:border-blue-300 hover:bg-slate-100 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-200'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                  <span
+                                    className={`w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center shrink-0 transition-colors ${
+                                      isSelected
+                                        ? 'bg-blue-600 text-white shadow-xs'
+                                        : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                    }`}
+                                  >
+                                    {String.fromCharCode(65 + optIdx)}
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <OptionContent text={optText} />
+                                  </div>
+                                </div>
+                                {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 ml-2" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     </>
                   )}
               </div>
