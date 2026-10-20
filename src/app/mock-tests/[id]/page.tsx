@@ -183,6 +183,12 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const isPracticeRetakeParam = searchParams?.get('retake') === 'true';
   const [isPracticeRetake, setIsPracticeRetake] = useState(isPracticeRetakeParam);
 
+  useEffect(() => {
+    if (searchParams?.get('retake') === 'true') {
+      setIsPracticeRetake(true);
+    }
+  }, [searchParams]);
+
   const [test, setTest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -229,19 +235,20 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         activeLanguage,
         isExamStarted: true,
         hasAcceptedRules: true,
+        isPracticeRetake,
         lastSavedAt: Date.now(),
       };
       localStorage.setItem(`examizo_mock_session_${testId}`, JSON.stringify(sessionData));
     } catch (_) {}
-  }, [testId, test, userState, currentIdx, timeLeft, activeLanguage]);
+  }, [testId, test, userState, currentIdx, timeLeft, activeLanguage, isPracticeRetake]);
 
   // Check sessionStorage on initial load for completed test results
   useEffect(() => {
     if (!testId) return;
-    if (isPracticeRetake) {
+    const isRetake = isPracticeRetake || searchParams?.get('retake') === 'true';
+    if (isRetake) {
       try {
         sessionStorage.removeItem(`mock_result_${testId}`);
-        localStorage.removeItem(`examizo_mock_session_${testId}`);
       } catch (_) {}
       return;
     }
@@ -255,7 +262,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         }
       }
     } catch (_) {}
-  }, [testId, isPracticeRetake]);
+  }, [testId, isPracticeRetake, searchParams]);
 
   const handleStartPracticeRetake = () => {
     if (confirm('Start a practice retake? Your score and mistakes will be saved to your history in SQL, but no points will be added to the leaderboard.')) {
@@ -300,14 +307,19 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   useEffect(() => {
     if (!testId) return;
 
-    const fetchUrl = `/api/mock-tests/${testId}${isPracticeRetake ? '?retake=true' : ''}`;
+    const isRetake = isPracticeRetake || searchParams?.get('retake') === 'true';
+    const fetchUrl = `/api/mock-tests/${testId}${isRetake ? '?retake=true' : ''}`;
     fetch(fetchUrl)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
           alert(data.error);
-          router.push('/dashboard');
+          router.push('/mock-tests');
           return;
+        }
+
+        if (data.isRetakeMode) {
+          setIsPracticeRetake(true);
         }
 
         const currentAttempts = Number(data.attemptsCount || 0);
@@ -341,17 +353,17 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
         // Check if an in-progress session exists in localStorage for recovery
         let sessionToRestore: any = null;
-        if (!isPracticeRetake) {
-          try {
-            const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
-            if (rawSession) {
-              const parsed = JSON.parse(rawSession);
-              if (parsed && String(parsed.testId) === String(testId) && parsed.isExamStarted) {
+        try {
+          const rawSession = localStorage.getItem(`examizo_mock_session_${testId}`);
+          if (rawSession) {
+            const parsed = JSON.parse(rawSession);
+            if (parsed && String(parsed.testId) === String(testId) && parsed.isExamStarted) {
+              if (!isRetake || parsed.isPracticeRetake) {
                 sessionToRestore = parsed;
               }
             }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
 
         let finalReshuffledQuestions: any[] = [];
         let isSessionRestored = false;
@@ -473,7 +485,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
         console.error(err);
       })
       .finally(() => setLoading(false));
-  }, [testId, router]);
+  }, [testId, isPracticeRetake, searchParams, router]);
 
   // Fullscreen Lockdown & Exam Start State
   const [isExamStarted, setIsExamStarted] = useState(false);
@@ -523,6 +535,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           activeLanguage,
           isExamStarted: true,
           hasAcceptedRules: true,
+          isPracticeRetake,
           lastSavedAt: Date.now(),
         })
       );
@@ -1083,15 +1096,34 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               <div className="flex items-center gap-3.5">
                 <Logo size={38} showText={false} />
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-purple-400 bg-blue-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-purple-800/60 inline-flex items-center gap-1.5 shadow-2xs">
-                    <Lock className="w-3 h-3" /> Secure Proctored Examination
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-purple-400 bg-blue-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-purple-800/60 inline-flex items-center gap-1.5 shadow-2xs">
+                      <Lock className="w-3 h-3" /> Secure Proctored Examination
+                    </span>
+                    {isPracticeRetake && (
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60 inline-flex items-center gap-1.5 shadow-2xs">
+                        <RotateCcw className="w-3 h-3 text-indigo-500" /> Practice Retake Mode
+                      </span>
+                    )}
+                  </div>
                   <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
                     {test.title}
                   </h1>
                 </div>
               </div>
             </div>
+
+            {/* Practice Retake Notice */}
+            {isPracticeRetake && (
+              <div className="bg-indigo-50/90 dark:bg-indigo-950/50 p-4 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/60 text-left space-y-1.5 animate-fade-in">
+                <span className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Practice Retake Active
+                </span>
+                <p className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed font-medium">
+                  Your questions, answers, accuracy, and mistake logs will be safely saved in database SQL records. <strong>Leaderboard XP points will not be increased</strong> for retakes to ensure competitive rankings remain fair.
+                </p>
+              </div>
+            )}
 
             {/* Test Overview Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1218,26 +1250,72 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
             {/* Action Buttons */}
             <div className="space-y-2 pt-1">
-              {attemptsCount > 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center space-y-2">
+              {attemptsCount > 0 && !isPracticeRetake ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center space-y-3">
                   <div className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center justify-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Examination Completed &amp; Saved
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     This mock test has already been completed and submitted. Your performance analysis, score, and solutions are saved.
                   </p>
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (result) {
+                          setIsExamStarted(false);
+                        } else {
+                          setLoading(true);
+                          fetch(`/api/mock-tests/${testId}`)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              if (data.latestAttempt) {
+                                setResult({
+                                  score: data.latestAttempt.score,
+                                  accuracyPercent: data.latestAttempt.accuracyPercent,
+                                  correctCount: data.latestAttempt.correctCount,
+                                  incorrectCount: data.latestAttempt.incorrectCount,
+                                  unattemptedCount: data.latestAttempt.unattemptedCount,
+                                  totalQuestions: data.latestAttempt.totalQuestions,
+                                  xpEarned: data.latestAttempt.xpEarned || 0,
+                                  cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || false,
+                                  submissionType: data.latestAttempt.submissionType || 'manual',
+                                });
+                              } else {
+                                router.push('/mock-tests');
+                              }
+                            })
+                            .catch(() => router.push('/mock-tests'))
+                            .finally(() => setLoading(false));
+                        }
+                      }}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>View Examination Results</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPracticeRetake(true);
+                        try {
+                          sessionStorage.removeItem(`mock_result_${testId}`);
+                          localStorage.removeItem(`examizo_mock_session_${testId}`);
+                        } catch (_) {}
+                        window.history.replaceState(null, '', `/mock-tests/${testId}?lang=${activeLanguage}&retake=true`);
+                      }}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Retake For Practice</span>
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (result) {
-                        setIsExamStarted(false);
-                      } else {
-                        router.push('/dashboard');
-                      }
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors cursor-pointer"
+                    onClick={() => router.push('/mock-tests')}
+                    className="w-full py-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                   >
-                    View Examination Results
+                    ← Back to All Mock Tests
                   </button>
                 </div>
               ) : (
@@ -1255,7 +1333,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                     {hasAcceptedRules ? (
                       <>
                         <ShieldCheck className="w-5 h-5" />
-                        Lock Screen &amp; Start Examination
+                        {isPracticeRetake ? 'Lock Screen & Start Practice Retake' : 'Lock Screen & Start Examination'}
                       </>
                     ) : (
                       <>
