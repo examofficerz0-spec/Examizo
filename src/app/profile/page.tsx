@@ -224,8 +224,8 @@ export default function ProfilePage() {
         {message && (
           <div className={`p-4 border text-xs rounded-xl font-bold transition-all animate-fadeIn ${
             messageType === 'error'
-              ? 'bg-rose-50 border-rose-300 text-rose-800'
-              : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+              ? 'bg-rose-50 border-rose-300 text-rose-800 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-200'
+              : 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-200'
           }`}>
             {message}
           </div>
