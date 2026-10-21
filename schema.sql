@@ -231,6 +231,58 @@ CREATE TABLE IF NOT EXISTS mistake_logs (
 -- Safe migration ALTER statements (for existing databases)
 -- ALTER TABLE attempts ADD COLUMN sub_profile_id TEXT DEFAULT NULL;
 
+-- 14. Real-time Mock Test Sessions (Stateful Proctoring & Resumption)
+CREATE TABLE IF NOT EXISTS mock_test_sessions (
+  id TEXT PRIMARY KEY,
+  student_id TEXT NOT NULL,
+  sub_profile_id TEXT,
+  test_id TEXT NOT NULL,
+  course_id TEXT,
+  status TEXT DEFAULT 'in_progress',
+  resume_count INTEGER DEFAULT 1,
+  focus_violation_count INTEGER DEFAULT 0,
+  time_left_seconds INTEGER DEFAULT 0,
+  current_question_index INTEGER DEFAULT 0,
+  user_responses_json TEXT DEFAULT '{}',
+  question_order_json TEXT DEFAULT '[]',
+  active_language TEXT DEFAULT 'en',
+  is_practice_retake INTEGER DEFAULT 0,
+  started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  submitted_at DATETIME
+);
+
+-- 15. Real-time 1v1 Battle Arena Rooms
+CREATE TABLE IF NOT EXISTS battle_rooms (
+  id TEXT PRIMARY KEY,
+  challenger_id TEXT NOT NULL,
+  challenger_name TEXT,
+  opponent_id TEXT NOT NULL,
+  opponent_name TEXT,
+  status TEXT DEFAULT 'waiting',
+  course_id TEXT,
+  question_ids_json TEXT DEFAULT '[]',
+  questions_data_json TEXT DEFAULT '[]',
+  current_question INTEGER DEFAULT 0,
+  challenger_answers_json TEXT DEFAULT '{}',
+  opponent_answers_json TEXT DEFAULT '{}',
+  challenger_score INTEGER DEFAULT 0,
+  opponent_score INTEGER DEFAULT 0,
+  challenger_ready INTEGER DEFAULT 0,
+  opponent_ready INTEGER DEFAULT 0,
+  winner_id TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME,
+  completed_at DATETIME
+);
+
+-- 16. User Online Presence Status
+CREATE TABLE IF NOT EXISTS user_online_status (
+  user_id TEXT PRIMARY KEY,
+  last_heartbeat DATETIME DEFAULT CURRENT_TIMESTAMP,
+  is_online INTEGER DEFAULT 0
+);
+
 -- Indexes for lightning fast queries & edge performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_account_email ON users(account_email);
@@ -248,4 +300,10 @@ CREATE INDEX IF NOT EXISTS idx_attempts_sub_profile ON attempts(student_id, cour
 CREATE INDEX IF NOT EXISTS idx_mistake_logs_sub_profile ON mistake_logs(sub_profile_id, is_resolved);
 CREATE INDEX IF NOT EXISTS idx_mistake_logs_test ON mistake_logs(test_id, question_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_student_test ON mock_test_sessions(student_id, test_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_status ON mock_test_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_battle_rooms_challenger ON battle_rooms(challenger_id, status);
+CREATE INDEX IF NOT EXISTS idx_battle_rooms_opponent ON battle_rooms(opponent_id, status);
+CREATE INDEX IF NOT EXISTS idx_battle_rooms_status ON battle_rooms(status);
+CREATE INDEX IF NOT EXISTS idx_user_online_heartbeat ON user_online_status(last_heartbeat);
 
