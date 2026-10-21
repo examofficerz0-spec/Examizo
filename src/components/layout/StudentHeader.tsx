@@ -143,7 +143,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   // Close dropdown menus when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+    const handleClickOutside = (event: Event) => {
       const target = event.target as Node;
       if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
         setShowProfileMenu(false);
@@ -153,12 +153,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside, true);
+    document.addEventListener('click', handleClickOutside, true);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside, true);
+      document.removeEventListener('click', handleClickOutside, true);
     };
   }, []);
 
