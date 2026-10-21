@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
@@ -75,6 +75,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [currentCourseName, setCurrentCourseName] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
   const [isDigiLockerVerified, setIsDigiLockerVerified] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return getDigiLockerStatus();
@@ -138,6 +140,48 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  // Close dropdown menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
+        setShowProfileMenu(false);
+      }
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(target)) {
+        setShowNotificationMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
+  // Close menus on Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowProfileMenu(false);
+        setShowNotificationMenu(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Close menus on route navigation
+  useEffect(() => {
+    setShowProfileMenu(false);
+    setShowNotificationMenu(false);
+  }, [pathname]);
 
   const handleMarkAsRead = async (id?: string) => {
     try {
@@ -527,7 +571,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden xl:block" />
 
             {/* Notification Bell Button & Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={notificationMenuRef}>
               <button
                 type="button"
                 onClick={() => {
@@ -658,7 +702,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
 
             {/* Profile Dropdown Pill */}
-            <div className="relative">
+            <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => {
                   fetchProfiles();
