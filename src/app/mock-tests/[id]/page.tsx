@@ -19,6 +19,7 @@ import {
   deduplicateQuestions,
 } from '@/lib/questionDeduplicator';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { toggleQuestionBookmark, isQuestionBookmarked } from '@/lib/bookmarks';
 
 function shuffleArray<T>(arr: T[]): T[] {
   const shuffled = [...arr];
@@ -220,6 +221,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   const [openReviewQuestions, setOpenReviewQuestions] = useState<Record<string, boolean>>({});
   const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
+  const [, setBookmarkRefresh] = useState(0);
 
   // In-progress local storage auto-save helper
   const saveInProgressSession = useCallback((overrideUserState?: any, overrideIdx?: number, overrideTime?: number) => {
@@ -1990,6 +1992,24 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                                             <MinusCircle className="w-3 h-3" /> <span className="hidden sm:inline">Skipped</span> (0)
                                           </span>
                                         )}
+
+                                        {/* Bookmark for Revision Button */}
+                                        <div
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleQuestionBookmark(q, { source: 'mock-test', test_title: test?.title });
+                                            setBookmarkRefresh((v) => v + 1);
+                                          }}
+                                          title={isQuestionBookmarked(q._id) ? 'Remove Bookmark' : 'Bookmark for Revision'}
+                                          className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                                            isQuestionBookmarked(q._id)
+                                              ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#181622] dark:hover:bg-[#242033] text-slate-500 hover:text-purple-600 dark:text-slate-400'
+                                          }`}
+                                        >
+                                          <Bookmark className={`w-3 h-3 ${isQuestionBookmarked(q._id) ? 'fill-purple-600 dark:fill-purple-400 stroke-none' : ''}`} />
+                                          <span className="hidden sm:inline">{isQuestionBookmarked(q._id) ? 'Saved' : 'Save'}</span>
+                                        </div>
 
                                         {/* Solution Dropdown Button */}
                                         <div className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${

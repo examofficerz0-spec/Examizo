@@ -32,9 +32,12 @@ import {
   History,
   Clock,
   FileCheck,
+  Bookmark,
 } from 'lucide-react';
 
 import { QuestionDiagram } from '@/components/ui/QuestionDiagram';
+import { BookmarkedQuestionsModal } from '@/components/ui/BookmarkedQuestionsModal';
+import { getSavedBookmarks } from '@/lib/bookmarks';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 
@@ -63,6 +66,17 @@ export default function StudentDashboardPage() {
   const [openDetailedExplanation, setOpenDetailedExplanation] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showBookmarksModal, setShowBookmarksModal] = useState(false);
+  const [bookmarkCount, setBookmarkCount] = useState(0);
+
+  useEffect(() => {
+    const updateBookmarks = () => {
+      setBookmarkCount(getSavedBookmarks(userData?._id || userData?.id).length);
+    };
+    updateBookmarks();
+    window.addEventListener('examizo:bookmarks-updated', updateBookmarks);
+    return () => window.removeEventListener('examizo:bookmarks-updated', updateBookmarks);
+  }, [userData]);
 
   // Class Promotion & Rollback State
   const [promoteInfo, setPromoteInfo] = useState<{
@@ -693,14 +707,34 @@ export default function StudentDashboardPage() {
             </p>
           </div>
 
-          {/* XP Balance Badge Card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 px-6 flex items-center gap-4 shadow-xs">
-            <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
-              <Star className="w-5 h-5 fill-current stroke-[1]" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">TOTAL XP BALANCE</span>
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white">{xpTotal.toLocaleString()} XP</span>
+          {/* Action Cards: Bookmarks & XP Balance */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Bookmarked Questions Quick Revision Button */}
+            <button
+              type="button"
+              onClick={() => setShowBookmarksModal(true)}
+              className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-600 rounded-2xl p-3.5 px-5 flex items-center gap-3.5 shadow-xs transition-all cursor-pointer group text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Bookmark className="w-5 h-5 fill-purple-600 dark:fill-purple-400 stroke-none" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Saved Questions</span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  {bookmarkCount} <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">for Revision</span>
+                </span>
+              </div>
+            </button>
+
+            {/* XP Balance Badge Card */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 px-5 flex items-center gap-3.5 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                <Star className="w-5 h-5 fill-current stroke-[1]" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">TOTAL XP BALANCE</span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white">{xpTotal.toLocaleString()} XP</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1358,6 +1392,13 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Bookmarked Questions Revision Modal */}
+      <BookmarkedQuestionsModal
+        isOpen={showBookmarksModal}
+        onClose={() => setShowBookmarksModal(false)}
+        studentId={userData?._id || userData?.id}
+      />
     </div>
   );
 }

@@ -210,13 +210,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 pb-24 lg:pb-0">
         
         {/* Header */}
-        <div className="border-b border-slate-200 pb-6">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Account Settings & Profile</h1>
-          <p className="text-xs font-semibold text-slate-500 mt-1">
+        <div className="border-b border-slate-200 dark:border-slate-800 pb-6">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings & Profile</h1>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
             Update your account information and view your active track.
           </p>
         </div>
@@ -307,14 +307,14 @@ export default function ProfilePage() {
         )}
 
         {/* Interface Mode Info Badge */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center font-bold">
               <Sun className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Interface Appearance</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Light Mode (Clean Academic Precision Theme active)</p>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Interface Appearance</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Clean Academic Precision Theme active</p>
             </div>
           </div>
         </div>
@@ -482,12 +482,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Info Form */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
           <form onSubmit={handleSaveProfile} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   Full Legal / Academic Name
                 </label>
                 <input
@@ -495,122 +495,122 @@ export default function ProfilePage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-bold"
+                  className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                   <span>Profile Nickname (Optional)</span>
-                  <span className="text-[10px] text-blue-600 font-bold">Profile Screen</span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Profile Screen</span>
                 </label>
                 <input
                   type="text"
                   disabled
                   value={userData?.nickname || 'None (Showing Full Name)'}
-                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold cursor-not-allowed"
+                  className="w-full text-xs p-3 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-700 dark:text-slate-300 font-bold cursor-not-allowed"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   Date of Birth (DOB)
                 </label>
                 <input
                   type="text"
                   disabled
                   value={userData?.dob || 'Not provided'}
-                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold font-mono cursor-not-allowed"
+                  className="w-full text-xs p-3 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-700 dark:text-slate-300 font-bold font-mono cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
-                  Email Address <span className="text-[10px] text-amber-600 font-extrabold uppercase">(Read-Only)</span>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                  Email Address <span className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase">(Read-Only)</span>
                 </label>
                 <input
                   type="email"
                   disabled
                   value={userData?.email || ''}
-                  className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono cursor-not-allowed font-medium"
+                  className="w-full text-xs p-3 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-500 dark:text-slate-400 font-mono cursor-not-allowed font-medium"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
-                Locked Course <span className="text-[10px] text-amber-600 font-extrabold uppercase">(Permanent Lock)</span>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                Locked Course <span className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold uppercase">(Permanent Lock)</span>
               </label>
               <input
                 type="text"
                 disabled
                 value={userData?.lockedCourse?.name || 'No course locked'}
-                className="w-full text-xs p-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-bold cursor-not-allowed"
+                className="w-full text-xs p-3 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-500 dark:text-slate-400 font-bold cursor-not-allowed"
               />
             </div>
 
             {/* DigiLocker Verification Status in Profile Form */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                 <span>DigiLocker Identity Status</span>
-                <span className={`text-[10px] font-extrabold uppercase ${isDigiLockerVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span className={`text-[10px] font-extrabold uppercase ${isDigiLockerVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                   {isDigiLockerVerified ? '● Verified ✓' : '● Pending Verification'}
                 </span>
               </label>
 
               {isDigiLockerVerified && digilockerProfile ? (
                 /* Verified Detailed KYC Summary */
-                <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/60 pb-2.5">
+                <div className="p-4 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 rounded-2xl space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/60 dark:border-emerald-800/40 pb-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-xs font-black text-emerald-950 block">MeriPehchaan DigiLocker KYC Authenticated</span>
-                        <span className="text-[11px] text-emerald-700 font-medium block">Govt. of India National Academic Depository</span>
+                        <span className="text-xs font-black text-emerald-950 dark:text-emerald-200 block">MeriPehchaan DigiLocker KYC Authenticated</span>
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium block">Govt. of India National Academic Depository</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowDigiLockerModal(true)}
-                      className="px-3 py-1 bg-white hover:bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-lg border border-emerald-300 transition-all cursor-pointer shadow-2xs"
+                      className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-emerald-800 dark:text-emerald-200 text-[11px] font-extrabold rounded-lg border border-emerald-300 dark:border-emerald-700 transition-all cursor-pointer shadow-2xs"
                     >
                       View Details
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
-                      <span className="text-slate-500 font-semibold text-[11px] block">Verified Student Name</span>
-                      <span className="font-black text-slate-900 block mt-0.5 text-xs">{digilockerProfile.name || name}</span>
+                    <div className="p-2.5 bg-white/80 dark:bg-slate-950/60 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] block">Verified Student Name</span>
+                      <span className="font-black text-slate-900 dark:text-white block mt-0.5 text-xs">{digilockerProfile.name || name}</span>
                     </div>
 
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
-                      <span className="text-slate-500 font-semibold text-[11px] block">Date of Birth &amp; Verified Age</span>
-                      <span className="font-black text-slate-900 block mt-0.5 text-xs">
+                    <div className="p-2.5 bg-white/80 dark:bg-slate-950/60 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] block">Date of Birth &amp; Verified Age</span>
+                      <span className="font-black text-slate-900 dark:text-white block mt-0.5 text-xs">
                         {digilockerProfile.formattedDob || digilockerProfile.dob || 'On Record'}{' '}
                         {digilockerProfile.age !== null && digilockerProfile.age !== undefined && (
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-black ml-1">
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] font-black ml-1">
                             {digilockerProfile.age} yrs old
                           </span>
                         )}
                       </span>
                     </div>
 
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
-                      <span className="text-slate-500 font-semibold text-[11px] block">Masked Aadhaar / ID</span>
-                      <span className="font-mono font-bold text-slate-800 block mt-0.5 text-xs">
+                    <div className="p-2.5 bg-white/80 dark:bg-slate-950/60 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] block">Masked Aadhaar / ID</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 block mt-0.5 text-xs">
                         {digilockerProfile.maskedAadhaar || 'Verified via Aadhaar'}
                       </span>
                     </div>
 
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100">
-                      <span className="text-slate-500 font-semibold text-[11px] block">DigiLocker Reference</span>
-                      <span className="font-mono font-bold text-slate-700 block mt-0.5 text-xs truncate">
+                    <div className="p-2.5 bg-white/80 dark:bg-slate-950/60 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                      <span className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] block">DigiLocker Reference</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300 block mt-0.5 text-xs truncate">
                         {digilockerProfile.digilockerid || digilockerProfile.referenceKey || 'DL-PKCE-VERIFIED'}
                       </span>
                     </div>
@@ -618,16 +618,16 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 /* Unverified Prompt */
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center shrink-0">
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-slate-800 block">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                         DigiLocker Verification Gateway
                       </span>
-                      <span className="text-[11px] text-slate-500 font-medium block">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
                         Verify student Aadhaar / Academic marksheets via MeriPehchaan
                       </span>
                     </div>
@@ -645,7 +645,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 New Password (Optional)
               </label>
               <input
@@ -653,7 +653,7 @@ export default function ProfilePage() {
                 placeholder="Leave blank to keep existing password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900"
+                className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
               />
             </div>
 
