@@ -27,6 +27,7 @@ export interface SharedDbData {
   auditLogs: any[];
   notifications?: any[];
   mistake_logs?: any[];
+  mock_test_sessions?: any[];
 }
 
 const initialDb: SharedDbData = {
@@ -42,6 +43,7 @@ const initialDb: SharedDbData = {
   auditLogs: [],
   notifications: [],
   mistake_logs: [],
+  mock_test_sessions: [],
 };
 
 export function readSharedDb(): SharedDbData {

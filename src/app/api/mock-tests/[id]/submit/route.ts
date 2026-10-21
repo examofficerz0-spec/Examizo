@@ -175,6 +175,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           ]
         );
 
+        // Mark any active mock_test_sessions as submitted
+        await executeD1(
+          `UPDATE mock_test_sessions 
+           SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP 
+           WHERE (student_id = ? OR student_id = ?) AND test_id = ? AND status = 'in_progress'`,
+          [userId, String(auth.email || ''), test.id]
+        ).catch(() => {});
+
         // Reliably persist incorrect answers into mistake_logs
         const mistakePromises: Promise<any>[] = [];
         for (const resp of processedResponses) {
@@ -281,6 +289,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
               xp_amount: xpEarned,
               reason: cutoffBonusAwarded ? `+${xpEarned} XP (Cutoff Bonus)` : `+${xpEarned} XP for Mock Test`,
               created_at: new Date().toISOString(),
+            });
+          }
+
+          if (db.mock_test_sessions) {
+            db.mock_test_sessions.forEach((s: any) => {
+              if (
+                (String(s.student_id) === userId || String(s.student_id).toLowerCase() === String(auth.email || '').toLowerCase()) &&
+                String(s.test_id) === String(test.id) &&
+                s.status === 'in_progress'
+              ) {
+                s.status = 'submitted';
+                s.submitted_at = new Date().toISOString();
+              }
             });
           }
           writeSharedDb(db);
@@ -460,6 +481,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         finalSubmissionType,
       ]
     ).catch(() => {});
+
+    // Mark any active session as submitted in D1 fallback
+    executeD1(
+      `UPDATE mock_test_sessions 
+       SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP 
+       WHERE (student_id = ? OR student_id = ?) AND test_id = ? AND status = 'in_progress'`,
+      [userId, String(auth.email || ''), String(test._id || test.id)]
+    ).catch(() => {});
+
+    if (db.mock_test_sessions) {
+      db.mock_test_sessions.forEach((s: any) => {
+        if (
+          (String(s.student_id) === userId || String(s.student_id).toLowerCase() === String(auth.email || '').toLowerCase()) &&
+          String(s.test_id) === String(test._id || test.id) &&
+          s.status === 'in_progress'
+        ) {
+          s.status = 'submitted';
+          s.submitted_at = new Date().toISOString();
+        }
+      });
+    }
 
     if (!isPracticeRetake && xpEarned > 0) {
       user.xp_total = (user.xp_total || 0) + xpEarned;

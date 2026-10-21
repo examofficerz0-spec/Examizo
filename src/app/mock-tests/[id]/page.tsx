@@ -202,6 +202,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   // Attempts count (maximum 3 tries limit)
   const [attemptsCount, setAttemptsCount] = useState<number>(0);
   const [maxAttempts, setMaxAttempts] = useState<number>(3);
+  const [resumeCount, setResumeCount] = useState<number>(1);
+  const [focusViolationCount, setFocusViolationCount] = useState<number>(0);
   const [restoredSessionNotification, setRestoredSessionNotification] = useState<string | null>(null);
 
   // Question Response State
@@ -249,7 +251,11 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
   useEffect(() => {
     if (!testId) return;
     const isRetake = isPracticeRetake || searchParams?.get('retake') === 'true';
-    if (isRetake) {
+    const isExplicitResume = searchParams?.get('resume') === 'true';
+    const isViewResult = searchParams?.get('viewResult') === 'true';
+
+    // If retaking, resuming, or starting fresh (not explicitly viewing previous result), discard cached result
+    if (isRetake || isExplicitResume || !isViewResult) {
       try {
         sessionStorage.removeItem(`mock_result_${testId}`);
       } catch (_) {}
@@ -426,7 +432,59 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           }
         });
 
-        if (isSessionRestored && sessionToRestore) {
+        const isExplicitResume = searchParams?.get('resume') === 'true';
+        const isViewResult = searchParams?.get('viewResult') === 'true';
+
+        if (data.activeSession && data.activeSession.hasActiveSession) {
+          const s = data.activeSession;
+          setResumeCount(Number(s.resumeCount || 1));
+          setFocusViolationCount(Number(s.focusStrikes || 0));
+          fullscreenViolationRef.current = Number(s.focusStrikes || 0);
+
+          let finalQs = finalReshuffledQuestions;
+          if (Array.isArray(s.questionOrder) && s.questionOrder.length > 0) {
+            const qOrderMap = new Map<string, number>(s.questionOrder.map((id: string, idx: number) => [String(id), idx]));
+            finalQs = [...normalizedQuestions].sort((a: any, b: any) => {
+              const idxA = Number(qOrderMap.get(String(a._id || a.id)) ?? 9999);
+              const idxB = Number(qOrderMap.get(String(b._id || b.id)) ?? 9999);
+              return idxA - idxB;
+            });
+          }
+
+          setTest({
+            ...data.test,
+            question_ids: finalQs,
+          });
+
+          const restoredUserState = { ...initial, ...(s.userResponses || {}) };
+          setUserState(restoredUserState);
+          setTimeLeft(Math.max(1, Number(s.timeLeftSeconds || 0)));
+          setCurrentIdx(Math.min(finalQs.length - 1, Math.max(0, Number(s.currentQuestionIndex || 0))));
+          setIsExamStarted(true);
+          setHasAcceptedRules(true);
+
+          if (isExplicitResume) {
+            fetch(`/api/mock-tests/${testId}/session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ isRetake }),
+            })
+              .then((r) => r.json())
+              .then((resData) => {
+                if (resData.session) {
+                  setResumeCount(Number(resData.session.resume_count || 1));
+                  setFocusViolationCount(Number(resData.session.focus_violation_count || 0));
+                }
+                if (resData.terminated) {
+                  alert(resData.message || 'Maximum resume limit (3 of 3 tries) exceeded. Test is auto-submitting now.');
+                  handleFinalSubmit('auto');
+                }
+              })
+              .catch(() => {});
+          }
+
+          setRestoredSessionNotification(`⚡ Active Exam Resumed from SQL! (Resume: ${s.resumeCount}/3 • Focus Strikes: ${s.focusStrikes}/3)`);
+        } else if (isSessionRestored && sessionToRestore) {
           // Compute remaining time accounting for power off / disconnection time
           const elapsedSecs = Math.max(0, Math.floor((Date.now() - Number(sessionToRestore.lastSavedAt || Date.now())) / 1000));
           const restoredTimeLeft = Math.max(0, Number(sessionToRestore.timeLeft || 0) - elapsedSecs);
@@ -446,8 +504,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           } else {
             setRestoredSessionNotification('⚡ Active Exam Resumed! Your answers and remaining time have been safely recovered.');
           }
-        } else if (data.latestAttempt) {
-          // Restore latest completed attempt from server if available
+        } else if (data.latestAttempt && isViewResult) {
+          // Restore latest completed attempt only if explicitly viewing result
           setResult((prev: any) => {
             if (prev) return prev;
             return {
@@ -527,6 +585,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     setShowLockWarning(false);
     try {
       const qIds = (test?.question_ids || []).map((q: any) => String(q._id || q.id || '')).filter(Boolean);
+      const initialTime = timeLeft > 0 ? timeLeft : (test?.duration_minutes || 60) * 60;
       localStorage.setItem(
         `examizo_mock_session_${testId}`,
         JSON.stringify({
@@ -534,7 +593,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           questionOrder: qIds,
           userState,
           currentIdx: 0,
-          timeLeft: timeLeft > 0 ? timeLeft : (test?.duration_minutes || 60) * 60,
+          timeLeft: initialTime,
           activeLanguage,
           isExamStarted: true,
           hasAcceptedRules: true,
@@ -542,8 +601,50 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           lastSavedAt: Date.now(),
         })
       );
+
+      // Register or update active session in SQL
+      const res = await fetch(`/api/mock-tests/${testId}/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isRetake: isPracticeRetake,
+          timeLeftSeconds: initialTime,
+          questionOrder: qIds,
+          currentQuestionIndex: 0,
+          userResponses: userState,
+        }),
+      });
+      const data = await res.json();
+      if (data.session) {
+        setResumeCount(Number(data.session.resume_count || 1));
+        setFocusViolationCount(Number(data.session.focus_violation_count || 0));
+        fullscreenViolationRef.current = Number(data.session.focus_violation_count || 0);
+        if (data.terminated) {
+          alert('Maximum allowed limit reached. Test is automatically submitting.');
+          handleFinalSubmit('auto');
+        }
+      }
     } catch (_) {}
   };
+
+  // Heartbeat to SQL table every 15 seconds
+  useEffect(() => {
+    if (!isExamStarted || result || submitting || !testId) return;
+
+    const interval = setInterval(() => {
+      fetch(`/api/mock-tests/${testId}/session`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timeLeftSeconds: timeLeft,
+          currentQuestionIndex: currentIdx,
+          userResponses: userState,
+        }),
+      }).catch(() => {});
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [isExamStarted, result, submitting, testId, timeLeft, currentIdx, userState]);
 
   const exitFullscreen = () => {
     try {
@@ -613,21 +714,49 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     if (!test || result || !isExamStarted) return;
 
     // ─── Shared violation trigger ───────────────────────────────────
-    const triggerViolation = (reason?: string) => {
-      if (fullscreenViolationRef.current >= 3) return; // already submitted
+    const triggerViolation = async (reason?: string) => {
+      if (fullscreenViolationRef.current >= 3 || submitting || result) return; // already submitted
 
       const now = Date.now();
-      if (now - lastViolationTimeRef.current < 1200) return; // debounce multi-event bursts
+      if (now - lastViolationTimeRef.current < 1500) return; // debounce multi-event bursts
       lastViolationTimeRef.current = now;
 
-      fullscreenViolationRef.current += 1;
-      const vCount = fullscreenViolationRef.current;
-      setFullscreenViolationCount(vCount);
-      setIsFullscreen(false);
-      setShowLockWarning(true);
+      try {
+        const res = await fetch(`/api/mock-tests/${testId}/proctor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: reason || 'window_blur',
+            timeLeftSeconds: timeLeft,
+            currentQuestionIndex: currentIdx,
+            userResponses: userState,
+          }),
+        });
+        const data = await res.json();
+        const vCount = Number(data.strikesCount || (fullscreenViolationRef.current + 1));
+        fullscreenViolationRef.current = vCount;
+        setFullscreenViolationCount(vCount);
+        setFocusViolationCount(vCount);
+        setIsFullscreen(false);
+        setShowLockWarning(true);
 
-      if (vCount >= 3) {
-        handleFinalSubmit('auto');
+        if (data.terminated || vCount >= 3) {
+          setRestoredSessionNotification('🚨 Maximum screen focus violations reached (3 of 3 strikes). Exam auto-submitting now.');
+          setTimeout(() => {
+            handleFinalSubmit('auto');
+          }, 600);
+        }
+      } catch (_) {
+        fullscreenViolationRef.current += 1;
+        const vCount = fullscreenViolationRef.current;
+        setFullscreenViolationCount(vCount);
+        setFocusViolationCount(vCount);
+        setIsFullscreen(false);
+        setShowLockWarning(true);
+
+        if (vCount >= 3) {
+          handleFinalSubmit('auto');
+        }
       }
     };
 
@@ -1152,7 +1281,7 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
             )}
 
-            {/* Security & Screen Lock Rules */}
+            {/* Exam Lockdown & Proctoring Rules */}
             <div className="bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl p-4 sm:p-5 space-y-3">
               <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <ShieldAlert className="w-5 h-5 shrink-0" />
@@ -1162,16 +1291,16 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
               <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-2.5 leading-relaxed">
                 <li className="flex items-start gap-2">
-                  <span className="text-blue-600 dark:text-blue-400 font-black shrink-0">•</span>
-                  <span><strong className="text-slate-900 dark:text-white">Full-Screen Lock:</strong> Clicking the button below will immediately lock your screen into fullscreen mode.</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-black shrink-0">1.</span>
+                  <span><strong className="text-slate-900 dark:text-white">Max 3 Resumes Allowed:</strong> If you accidentally close your browser, get disconnected, or log out, you may resume this mock exam up to <strong>3 times</strong>. On the 4th resume attempt, the exam automatically submits.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-600 dark:text-amber-400 font-black shrink-0">•</span>
-                  <span><strong className="text-slate-900 dark:text-white">Anti-Switching Guard:</strong> Pressing Esc, switching tabs, minimizing the window, or pressing Windows/Alt-Tab will record a violation.</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-black shrink-0">2.</span>
+                  <span><strong className="text-slate-900 dark:text-white">Screen Focus Lockdown (3 Strikes):</strong> Switching browser tabs, minimizing the screen, pressing Esc/Alt-Tab, or clicking out records a focus violation. You receive at most <strong>3 strikes</strong>.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-rose-600 dark:text-rose-400 font-black shrink-0">•</span>
-                  <span><strong className="text-slate-900 dark:text-white">3 Strike Limit:</strong> After 3 violations, the test will be immediately and irreversibly auto-submitted.</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-black shrink-0">3.</span>
+                  <span><strong className="text-rose-600 dark:text-rose-400">Dual Auto-Submission Contract:</strong> <em>Whichever limit reaches 3 first (3 resumes OR 3 focus strikes)</em>, the exam <strong>automatically terminates and permanently submits</strong> to the SQL database.</span>
                 </li>
               </ul>
             </div>
@@ -1225,10 +1354,10 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               </div>
               <div className="space-y-0.5">
                 <span className="text-xs font-black text-slate-900 dark:text-white block">
-                  I agree to the Examination Guidelines &amp; Proctoring Conditions
+                  I agree to the Exam Lockdown &amp; Proctoring Rules
                 </span>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                  I confirm that I will not switch tabs, minimize the window, or exit fullscreen. I understand that violations will be logged and 3 strikes will result in automatic submission.
+                  I understand that my test permits at most 3 resumes and at most 3 focus violation strikes. Whichever limit reaches 3 first will permanently auto-submit my exam to the SQL database.
                 </p>
               </div>
             </label>
@@ -2291,16 +2420,37 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
               <p className="text-[10px] text-slate-500">Course: {test.course_id?.name}</p>
             </div>
           </div>
-          {backPressCount > 0 && !result && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700">
-              <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-              <span className="text-[10px] font-black text-amber-700 dark:text-amber-300">{backPressCount}/3 Violations</span>
-            </div>
-          )}
           {!result && (
-            <div className="flex items-center gap-1.5 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-4 py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
-              <Clock className="w-4 h-4 text-brand-700 dark:text-brand-400" />
-              <span className="font-mono text-sm font-bold">{formatTime(timeLeft)}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Resume Count Indicator */}
+              <div
+                title="Resumes Used: You are allowed at most 3 resumes. Exceeding 3 auto-submits the test."
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 shadow-2xs"
+              >
+                <RotateCcw className="w-3 h-3 text-blue-500" />
+                <span>Resumes: {resumeCount}/3</span>
+              </div>
+
+              {/* Proctor Focus Violation Strikes Indicator */}
+              <div
+                title="Screen Focus Strikes: Tab switching, window blur, or minimizing gives strikes. 3 strikes auto-submits the test."
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black border transition-all ${
+                  focusViolationCount >= 2
+                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 dark:border-rose-700 animate-pulse'
+                    : focusViolationCount === 1
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                }`}
+              >
+                <ShieldAlert className="w-3 h-3" />
+                <span>Strikes: {focusViolationCount}/3</span>
+              </div>
+
+              {/* Timer Clock */}
+              <div className="flex items-center gap-1.5 bg-brand-50 dark:bg-slate-800 border border-brand-200 dark:border-slate-700 px-3 sm:px-4 py-1.5 rounded-xl text-brand-900 dark:text-brand-300">
+                <Clock className="w-4 h-4 text-brand-700 dark:text-brand-400" />
+                <span className="font-mono text-xs sm:text-sm font-bold">{formatTime(timeLeft)}</span>
+              </div>
             </div>
           )}
           {!result && (
@@ -3069,15 +3219,15 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
 
             <div>
               <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300 tracking-wider">
-                {fullscreenViolationCount >= 3 ? 'Auto-Submitting...' : `Violation ${fullscreenViolationCount} of 3`}
+                {fullscreenViolationCount >= 3 ? 'Auto-Submitting to SQL...' : `Focus Strike ${fullscreenViolationCount} of 3`}
               </span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-2">
-                {fullscreenViolationCount >= 3 ? 'Test Submitted' : 'Examination Screen Locked'}
+                {fullscreenViolationCount >= 3 ? 'Exam Terminated & Submitted' : 'Screen Focus Loss Detected'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                 {fullscreenViolationCount >= 3
-                  ? 'You had 3 security violations (exiting full screen, tab switching, or app switching). Your test has been automatically submitted.'
-                  : `Security Alert: Exiting full screen, switching tabs, or opening other apps is strictly prohibited. You have ${3 - fullscreenViolationCount} warning${3 - fullscreenViolationCount !== 1 ? 's' : ''} remaining before automatic submission.`
+                  ? 'Maximum screen focus violations (3 strikes) reached. Your exam has been locked and automatically submitted to the SQL database.'
+                  : `Security Alert: Switching tabs, minimizing windows, or clicking outside is strictly prohibited. You have ${3 - fullscreenViolationCount} strike${3 - fullscreenViolationCount !== 1 ? 's' : ''} remaining. Whichever fills first (3 focus strikes OR 3 resumes) permanently auto-submits the exam.`
                 }
               </p>
             </div>

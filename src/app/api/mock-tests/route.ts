@@ -44,7 +44,56 @@ export async function GET() {
         String(user.email || '').toLowerCase(),
         String(user.account_email || '').toLowerCase(),
       ].filter(Boolean);
-      const placeholdersUser = userAliases.map(() => '?').join(',');
+        const placeholdersUser = userAliases.map(() => '?').join(',');
+
+      let activeSessionsMap: Record<string, any> = {};
+      try {
+        const d1Sessions = await queryD1(
+          `SELECT * FROM mock_test_sessions 
+           WHERE (student_id IN (${placeholdersUser})) AND status = 'in_progress' AND time_left_seconds > 5`,
+          userAliases
+        );
+        (d1Sessions || []).forEach((s: any) => {
+          activeSessionsMap[String(s.test_id)] = {
+            hasActiveSession: true,
+            sessionId: s.id,
+            resumeCount: Number(s.resume_count || 1),
+            maxResumes: 3,
+            resumesRemaining: Math.max(0, 3 - Number(s.resume_count || 1)),
+            focusStrikes: Number(s.focus_violation_count || 0),
+            maxFocusStrikes: 3,
+            strikesRemaining: Math.max(0, 3 - Number(s.focus_violation_count || 0)),
+            timeLeftSeconds: Number(s.time_left_seconds || 0),
+            startedAt: s.started_at,
+          };
+        });
+      } catch (_) {}
+
+      try {
+        const db = readSharedDb();
+        (db.mock_test_sessions || []).forEach((s: any) => {
+          if (
+            userAliases.includes(String(s.student_id)) &&
+            s.status === 'in_progress' &&
+            Number(s.time_left_seconds || 0) > 5
+          ) {
+            if (!activeSessionsMap[String(s.test_id)]) {
+              activeSessionsMap[String(s.test_id)] = {
+                hasActiveSession: true,
+                sessionId: s.id,
+                resumeCount: Number(s.resume_count || 1),
+                maxResumes: 3,
+                resumesRemaining: Math.max(0, 3 - Number(s.resume_count || 1)),
+                focusStrikes: Number(s.focus_violation_count || 0),
+                maxFocusStrikes: 3,
+                strikesRemaining: Math.max(0, 3 - Number(s.focus_violation_count || 0)),
+                timeLeftSeconds: Number(s.time_left_seconds || 0),
+                startedAt: s.started_at,
+              };
+            }
+          }
+        });
+      } catch (_) {}
 
       let d1UserAttempts: any[] = [];
       try {
@@ -87,6 +136,7 @@ export async function GET() {
           const attemptsCount = testAttempts.length;
           const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
           const isAttempted = attemptsCount > 0;
+          const activeSession = activeSessionsMap[String(m.id)] || null;
 
           return {
             _id: m.id,
@@ -105,6 +155,7 @@ export async function GET() {
             highest_score: highestScore,
             is_attempted: isAttempted,
             is_active: m.is_active !== 0,
+            active_session: activeSession,
           };
         });
 
@@ -138,6 +189,29 @@ export async function GET() {
         const highestScore = testAttempts.reduce((max: number, a: any) => Math.max(max, Number(a.score || 0)), 0);
         const isAttempted = attemptsCount > 0;
 
+        const activeMemSession = (db.mock_test_sessions || []).find(
+          (s: any) =>
+            (String(s.student_id) === currentSubProfileId || (user.email && String(s.student_id) === String(user.email))) &&
+            String(s.test_id) === String(m._id || m.id) &&
+            s.status === 'in_progress' &&
+            Number(s.time_left_seconds || 0) > 5
+        );
+
+        const activeSession = activeMemSession
+          ? {
+              hasActiveSession: true,
+              sessionId: activeMemSession.id,
+              resumeCount: Number(activeMemSession.resume_count || 1),
+              maxResumes: 3,
+              resumesRemaining: Math.max(0, 3 - Number(activeMemSession.resume_count || 1)),
+              focusStrikes: Number(activeMemSession.focus_violation_count || 0),
+              maxFocusStrikes: 3,
+              strikesRemaining: Math.max(0, 3 - Number(activeMemSession.focus_violation_count || 0)),
+              timeLeftSeconds: Number(activeMemSession.time_left_seconds || 0),
+              startedAt: activeMemSession.started_at,
+            }
+          : null;
+
         return {
           ...m,
           question_ids: [],
@@ -148,6 +222,7 @@ export async function GET() {
           maxAttempts: 3,
           highest_score: highestScore,
           is_attempted: isAttempted,
+          active_session: activeSession,
         };
       });
 

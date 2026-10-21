@@ -279,7 +279,66 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           }
         } catch (_) {}
 
-        const shouldSanitize = attemptsCount === 0 || isRetakeReq;
+        let activeSession: any = null;
+        try {
+          const sessionRows = await queryD1(
+            `SELECT * FROM mock_test_sessions 
+             WHERE (student_id = ? OR student_id = ? OR sub_profile_id = ? OR student_id = ? OR sub_profile_id = ?) 
+               AND test_id = ? 
+               AND status = 'in_progress' 
+             ORDER BY started_at DESC LIMIT 1`,
+            [userId, String(auth.email || ''), userId, String(user.account_email || ''), String(user.account_email || ''), params.id]
+          );
+          if (sessionRows && sessionRows.length > 0) {
+            const s = sessionRows[0];
+            activeSession = {
+              hasActiveSession: true,
+              sessionId: s.id,
+              resumeCount: Number(s.resume_count || 1),
+              maxResumes: 3,
+              resumesRemaining: Math.max(0, 3 - Number(s.resume_count || 1)),
+              focusStrikes: Number(s.focus_violation_count || 0),
+              maxFocusStrikes: 3,
+              strikesRemaining: Math.max(0, 3 - Number(s.focus_violation_count || 0)),
+              timeLeftSeconds: Number(s.time_left_seconds || 0),
+              currentQuestionIndex: Number(s.current_question_index || 0),
+              userResponses: typeof s.user_responses_json === 'string' ? JSON.parse(s.user_responses_json || '{}') : (s.user_responses_json || {}),
+              questionOrder: typeof s.question_order_json === 'string' ? JSON.parse(s.question_order_json || '[]') : (s.question_order_json || []),
+              startedAt: s.started_at,
+            };
+          }
+        } catch (_) {}
+
+        if (!activeSession) {
+          try {
+            const db = readSharedDb();
+            const memSession = (db.mock_test_sessions || []).find(
+              (s: any) =>
+                (String(s.student_id) === userId || String(s.student_id).toLowerCase() === String(auth.email || '').toLowerCase()) &&
+                String(s.test_id) === params.id &&
+                s.status === 'in_progress'
+            );
+            if (memSession) {
+              activeSession = {
+                hasActiveSession: true,
+                sessionId: memSession.id,
+                resumeCount: Number(memSession.resume_count || 1),
+                maxResumes: 3,
+                resumesRemaining: Math.max(0, 3 - Number(memSession.resume_count || 1)),
+                focusStrikes: Number(memSession.focus_violation_count || 0),
+                maxFocusStrikes: 3,
+                strikesRemaining: Math.max(0, 3 - Number(memSession.focus_violation_count || 0)),
+                timeLeftSeconds: Number(memSession.time_left_seconds || 0),
+                currentQuestionIndex: Number(memSession.current_question_index || 0),
+                userResponses: typeof memSession.user_responses_json === 'string' ? JSON.parse(memSession.user_responses_json || '{}') : (memSession.user_responses_json || {}),
+                questionOrder: typeof memSession.question_order_json === 'string' ? JSON.parse(memSession.question_order_json || '[]') : (memSession.question_order_json || []),
+                startedAt: memSession.started_at,
+              };
+            }
+          } catch (_) {}
+        }
+
+        const shouldSanitize = attemptsCount === 0 || isRetakeReq || Boolean(activeSession);
         const sanitizedOrderedQs = shouldSanitize
           ? orderedQs.map((q: any) => {
               const { correct_option, explanation, detailed_explanation, ...rest } = q;
@@ -302,7 +361,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         return NextResponse.json({
           test,
-          latestAttempt: isRetakeReq ? null : latestAttempt,
+          latestAttempt: (isRetakeReq || activeSession) ? null : latestAttempt,
+          activeSession: activeSession || null,
           attemptsCount,
           maxAttempts: 3,
           isRetakeMode: isRetakeReq,
@@ -358,7 +418,32 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       };
     }
 
-    const sanitizedFallbackQs = (attemptsCount > 0 && !isRetakeReq)
+    const activeMemSession = (db.mock_test_sessions || []).find(
+      (s: any) =>
+        (String(s.student_id) === userId || String(s.student_id).toLowerCase() === String(auth.email || '').toLowerCase()) &&
+        String(s.test_id) === String(rawTest._id || rawTest.id) &&
+        s.status === 'in_progress'
+    );
+
+    const activeSession = activeMemSession
+      ? {
+          hasActiveSession: true,
+          sessionId: activeMemSession.id,
+          resumeCount: Number(activeMemSession.resume_count || 1),
+          maxResumes: 3,
+          resumesRemaining: Math.max(0, 3 - Number(activeMemSession.resume_count || 1)),
+          focusStrikes: Number(activeMemSession.focus_violation_count || 0),
+          maxFocusStrikes: 3,
+          strikesRemaining: Math.max(0, 3 - Number(activeMemSession.focus_violation_count || 0)),
+          timeLeftSeconds: Number(activeMemSession.time_left_seconds || 0),
+          currentQuestionIndex: Number(activeMemSession.current_question_index || 0),
+          userResponses: typeof activeMemSession.user_responses_json === 'string' ? JSON.parse(activeMemSession.user_responses_json || '{}') : (activeMemSession.user_responses_json || {}),
+          questionOrder: typeof activeMemSession.question_order_json === 'string' ? JSON.parse(activeMemSession.question_order_json || '[]') : (activeMemSession.question_order_json || []),
+          startedAt: activeMemSession.started_at,
+        }
+      : null;
+
+    const sanitizedFallbackQs = (attemptsCount > 0 && !isRetakeReq && !activeSession)
       ? question_ids
       : question_ids.map((q: any) => {
           const { correct_option, explanation, detailed_explanation, ...rest } = q;
@@ -373,7 +458,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     return NextResponse.json({
       test,
-      latestAttempt: isRetakeReq ? null : latestAttempt,
+      latestAttempt: (isRetakeReq || activeSession) ? null : latestAttempt,
+      activeSession: activeSession || null,
       attemptsCount,
       maxAttempts: 3,
       isRetakeMode: isRetakeReq,
