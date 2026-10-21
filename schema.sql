@@ -283,6 +283,34 @@ CREATE TABLE IF NOT EXISTS user_online_status (
   is_online INTEGER DEFAULT 0
 );
 
+-- 17. Test Presets (Custom Subject Distribution & Dynamic Exam Engine)
+CREATE TABLE IF NOT EXISTS test_presets (
+  id TEXT PRIMARY KEY,
+  course_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  duration_minutes INTEGER DEFAULT 180,
+  cutoff_marks REAL DEFAULT 120,
+  subject_allocations_json TEXT DEFAULT '{}',
+  is_dynamic_reshuffle INTEGER DEFAULT 1,
+  is_active INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- 18. Campus & Facility Gallery Showcase
+CREATE TABLE IF NOT EXISTS gallery (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT NOT NULL,
+  category TEXT DEFAULT 'General',
+  display_order INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for lightning fast queries & edge performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_account_email ON users(account_email);
@@ -306,4 +334,6 @@ CREATE INDEX IF NOT EXISTS idx_battle_rooms_challenger ON battle_rooms(challenge
 CREATE INDEX IF NOT EXISTS idx_battle_rooms_opponent ON battle_rooms(opponent_id, status);
 CREATE INDEX IF NOT EXISTS idx_battle_rooms_status ON battle_rooms(status);
 CREATE INDEX IF NOT EXISTS idx_user_online_heartbeat ON user_online_status(last_heartbeat);
+CREATE INDEX IF NOT EXISTS idx_test_presets_course ON test_presets(course_id);
+CREATE INDEX IF NOT EXISTS idx_gallery_order ON gallery(display_order, created_at);
 

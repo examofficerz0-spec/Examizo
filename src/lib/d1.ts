@@ -358,6 +358,35 @@ export async function ensureD1Tables() {
       )
     `);
 
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS test_presets (
+        id TEXT PRIMARY KEY,
+        course_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        duration_minutes INTEGER DEFAULT 180,
+        cutoff_marks REAL DEFAULT 120,
+        subject_allocations_json TEXT DEFAULT '{}',
+        is_dynamic_reshuffle INTEGER DEFAULT 1,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    await executeD1(`
+      CREATE TABLE IF NOT EXISTS gallery (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        image_url TEXT NOT NULL,
+        category TEXT DEFAULT 'General',
+        display_order INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
     // Ensure all critical columns exist even if table was pre-created with an older schema
     await Promise.allSettled([
       executeD1('ALTER TABLE users ADD COLUMN full_name TEXT'),
@@ -409,6 +438,8 @@ export async function ensureD1Tables() {
       executeD1('CREATE INDEX IF NOT EXISTS idx_battle_rooms_opponent ON battle_rooms(opponent_id, status)'),
       executeD1('CREATE INDEX IF NOT EXISTS idx_battle_rooms_status ON battle_rooms(status)'),
       executeD1('CREATE INDEX IF NOT EXISTS idx_user_online_heartbeat ON user_online_status(last_heartbeat)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_test_presets_course ON test_presets(course_id)'),
+      executeD1('CREATE INDEX IF NOT EXISTS idx_gallery_order ON gallery(display_order, created_at)'),
     ]).catch(() => {});
   } catch (_) {}
 }
