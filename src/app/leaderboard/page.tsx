@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import {
-  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock
+  Trophy, Star, Crown, Lock, Zap, ArrowRight, Users, Check, Copy, Trash2, X, Swords, Share2, BarChart2, Eye, Clock, Wifi
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
@@ -50,6 +50,14 @@ export default function LeaderboardPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Battle system state
+  const [onlineStatuses, setOnlineStatuses] = useState<Record<string, boolean>>({});
+  const [pendingBattles, setPendingBattles] = useState<any[]>([]);
+  const [battleCreating, setBattleCreating] = useState<string | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const battlePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onlinePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -296,11 +304,97 @@ export default function LeaderboardPage() {
     }
   };
 
-  // Challenge Friend Action
-  const handleChallengeFriend = (friendName: string) => {
-    const challengeMsg = `Hey ${friendName}! I challenge you to compete on Examizo! Check my XP on our custom leaderboard: ${getShareUrl()}`;
-    copyToClipboard(challengeMsg);
-    showToast(`⚔️ Challenge link copied for ${friendName}! Send it to them now.`);
+  // ── BATTLE SYSTEM: Heartbeat + Polling ──
+
+  // Send heartbeat every 30s to keep online status alive
+  useEffect(() => {
+    const sendHeartbeat = () => {
+      fetch('/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'heartbeat' }),
+      }).catch(() => {});
+    };
+    sendHeartbeat(); // Immediate
+    heartbeatRef.current = setInterval(sendHeartbeat, 30000);
+    return () => { if (heartbeatRef.current) clearInterval(heartbeatRef.current); };
+  }, []);
+
+  // Poll for incoming battle challenges every 5s
+  useEffect(() => {
+    const checkPending = () => {
+      fetch('/api/battle?check=pending')
+        .then(r => r.json())
+        .then(data => {
+          if (data.pendingBattles) setPendingBattles(data.pendingBattles);
+        })
+        .catch(() => {});
+    };
+    checkPending();
+    battlePollRef.current = setInterval(checkPending, 5000);
+    return () => { if (battlePollRef.current) clearInterval(battlePollRef.current); };
+  }, []);
+
+  // Poll online status for friends every 15s
+  useEffect(() => {
+    if (friendsList.length <= 1) return;
+    const friendIds = friendsList.filter(f => !f.isCurrentUser).map(f => f.id || f.user_id || f._id).filter(Boolean);
+    if (friendIds.length === 0) return;
+
+    const checkOnline = () => {
+      fetch(`/api/battle?check=online&userIds=${friendIds.join(',')}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.onlineUsers) setOnlineStatuses(data.onlineUsers);
+        })
+        .catch(() => {});
+    };
+    checkOnline();
+    onlinePollRef.current = setInterval(checkOnline, 15000);
+    return () => { if (onlinePollRef.current) clearInterval(onlinePollRef.current); };
+  }, [friendsList]);
+
+  // Challenge Friend — Create actual battle room
+  const handleChallengeFriend = async (friendId: string, friendName: string) => {
+    setBattleCreating(friendId);
+    try {
+      const res = await fetch('/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', opponentId: friendId }),
+      });
+      const data = await res.json();
+      if (data.success && data.roomId) {
+        showToast(`⚔️ Battle room created! Redirecting...`);
+        router.push(`/battle/${data.roomId}`);
+      } else {
+        showToast(data.error || 'Failed to create battle');
+      }
+    } catch {
+      showToast('Error creating battle room');
+    } finally {
+      setBattleCreating(null);
+    }
+  };
+
+  // Accept incoming battle challenge
+  const handleAcceptBattle = (roomId: string) => {
+    router.push(`/battle/${roomId}`);
+  };
+
+  // Decline incoming battle challenge
+  const handleDeclineBattle = async (roomId: string) => {
+    try {
+      await fetch('/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'decline', roomId }),
+      });
+      setPendingBattles(prev => prev.filter(b => b.id !== roomId));
+      showToast('Challenge declined');
+    } catch {
+      showToast('Failed to decline');
+    }
   };
 
   // Leaderboard is locked when the current user has 0 XP
@@ -314,6 +408,46 @@ export default function LeaderboardPage() {
         <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-bounce">
           <Trophy className="w-4 h-4 text-amber-400" />
           {toastMessage}
+        </div>
+      )}
+
+      {/* ⚔️ Incoming Battle Challenge Banner */}
+      {pendingBattles.length > 0 && (
+        <div className="fixed top-0 left-0 right-0 z-40 animate-fade-in">
+          {pendingBattles.map((battle) => (
+            <div
+              key={battle.id}
+              className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
+                  <Swords className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider opacity-80">Incoming Battle Challenge!</p>
+                  <p className="text-sm font-extrabold">
+                    <span className="underline decoration-2 decoration-white/60">{battle.challenger_name}</span> wants to battle you!
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleAcceptBattle(battle.id)}
+                  className="px-5 py-2 bg-white text-orange-600 font-black text-xs rounded-xl shadow-lg hover:bg-orange-50 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Swords className="w-4 h-4" /> Accept Battle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeclineBattle(battle.id)}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -693,6 +827,7 @@ export default function LeaderboardPage() {
                     <tr>
                       <th className="p-4 pl-6 w-20 text-center">Arena Rank</th>
                       <th className="p-4">Student Name</th>
+                      <th className="p-4 text-center hidden sm:table-cell">Status</th>
                       <th className="p-4 text-center">Total XP</th>
                       <th className="p-4 pr-6 text-right">Actions</th>
                     </tr>
@@ -712,6 +847,19 @@ export default function LeaderboardPage() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
+                              {/* Online status dot (inline for mobile) */}
+                              {!friend.isCurrentUser && (
+                                <span className="sm:hidden shrink-0">
+                                  {onlineStatuses[friendId] ? (
+                                    <span className="relative flex h-2.5 w-2.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex rounded-full h-2.5 w-2.5 bg-slate-300 dark:bg-slate-600" />
+                                  )}
+                                </span>
+                              )}
                               {!friend.isCurrentUser ? (
                                 <button
                                   type="button"
@@ -734,6 +882,30 @@ export default function LeaderboardPage() {
                               )}
                             </div>
                           </td>
+                          {/* Online Status Column (desktop) */}
+                          <td className="p-4 text-center hidden sm:table-cell">
+                            {!friend.isCurrentUser ? (
+                              onlineStatuses[friendId] ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black border border-emerald-200 dark:border-emerald-900">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                  </span>
+                                  Online
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-[10px] font-bold border border-slate-200 dark:border-slate-700">
+                                  <span className="inline-flex rounded-full h-2 w-2 bg-slate-300 dark:bg-slate-600" />
+                                  Offline
+                                </span>
+                              )
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 text-[10px] font-black border border-blue-200 dark:border-blue-900">
+                                <Wifi className="w-3 h-3" />
+                                You
+                              </span>
+                            )}
+                          </td>
                           <td className="p-4 text-center font-extrabold text-slate-900 dark:text-white">
                             <span className="inline-flex items-center gap-1">
                               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -748,15 +920,28 @@ export default function LeaderboardPage() {
                                   onClick={() => setSelectedStudentStatsId(friendId)}
                                   className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] rounded-xl transition-all border border-blue-200 dark:border-blue-800 flex items-center gap-1 cursor-pointer"
                                 >
-                                  <BarChart2 className="w-3.5 h-3.5" /> View Stats
+                                  <BarChart2 className="w-3.5 h-3.5" /> Stats
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleChallengeFriend(friend.name)}
-                                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:hover:bg-amber-900/60 rounded-xl font-bold text-[11px] transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900 cursor-pointer"
-                                >
-                                  <Swords className="w-3.5 h-3.5" /> Challenge
-                                </button>
+                                {onlineStatuses[friendId] ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleChallengeFriend(friendId, friend.name)}
+                                    disabled={battleCreating === friendId}
+                                    className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-black text-[11px] transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 disabled:opacity-50"
+                                  >
+                                    <Swords className="w-3.5 h-3.5" />
+                                    {battleCreating === friendId ? 'Creating...' : '⚔️ Battle!'}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl font-bold text-[11px] flex items-center gap-1 cursor-not-allowed border border-slate-200 dark:border-slate-700 opacity-60"
+                                    title="This friend is currently offline"
+                                  >
+                                    <Swords className="w-3.5 h-3.5" /> Offline
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveFriend(friend.id, friend.name)}

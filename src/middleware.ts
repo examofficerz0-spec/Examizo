@@ -74,6 +74,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/gallery',
   '/api/digilocker',
   '/api/resources',
+  '/api/battle',
   ...(process.env.NODE_ENV !== 'production' ? ['/api/seed'] : []),
 ];
 
