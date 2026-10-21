@@ -73,6 +73,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/reset-password',
   '/api/gallery',
   '/api/digilocker',
+  '/api/resources',
   ...(process.env.NODE_ENV !== 'production' ? ['/api/seed'] : []),
 ];
 
