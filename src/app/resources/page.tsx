@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 import {
@@ -20,8 +20,20 @@ import {
   X,
   FileCheck,
   ChevronRight,
-  Bookmark
+  ChevronLeft,
+  Bookmark,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  HelpCircle,
+  Lightbulb,
+  Check,
+  Copy,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
+import { CURATED_ACADEMIC_RESOURCES, CuratedResource, StudyChapter } from '@/lib/academicResourceData';
 
 interface ResourceItem {
   id: string;
@@ -46,7 +58,7 @@ const RESOURCE_CATEGORIES = [
   { id: 'Previous Year Paper', label: 'PYQ Papers', icon: FileText },
 ];
 
-// Curated default high-yield resources for courses if database entries are pending
+// Curated default high-yield resources pointing to the same-origin PDF generator
 const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
   {
     id: 'res-def-1',
@@ -54,7 +66,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Comprehensive compendium of algebra formulas, mensuration geometries, ratios, and quick shortcut methods.',
     subject: 'Mathematics',
     resource_type: 'Formula Sheet',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-1',
     file_size: '3.4 MB',
     page_count: 28,
   },
@@ -64,7 +76,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Diagram-intensive chapter summaries, labeled anatomical/physical illustrations, and solved NCERT exemplar exercises.',
     subject: 'Science',
     resource_type: 'Study Module',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-2',
     file_size: '8.1 MB',
     page_count: 64,
   },
@@ -74,7 +86,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Direction tests, pattern completions, coding-decoding, series, and non-verbal reasoning test models.',
     subject: 'Reasoning',
     resource_type: 'PDF Book',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-3',
     file_size: '5.2 MB',
     page_count: 52,
   },
@@ -84,7 +96,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Previous 5-year solved assessment questions with step-by-step marking schemes and analytical tips.',
     subject: 'General Science',
     resource_type: 'Previous Year Paper',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-4',
     file_size: '6.7 MB',
     page_count: 46,
   },
@@ -94,7 +106,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Tenses matrix, active-passive voice rules, sentence correction rules, and high-frequency academic vocabulary.',
     subject: 'English',
     resource_type: 'Formula Sheet',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-5',
     file_size: '2.1 MB',
     page_count: 18,
   },
@@ -104,7 +116,7 @@ const DEFAULT_COURSE_RESOURCES: ResourceItem[] = [
     description: 'Chronological timeline tables, geographic topographical maps, and civics concept maps for rapid exam recall.',
     subject: 'Social Science',
     resource_type: 'Study Module',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    file_url: '/api/resources/pdf?id=res-def-6',
     file_size: '4.8 MB',
     page_count: 36,
   },
@@ -117,8 +129,20 @@ export default function ResourcesListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubject, setSelectedSubject] = useState('all');
-  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState<string>('');
+
+  // Preview Modal State
+  const [previewResource, setPreviewResource] = useState<ResourceItem | null>(null);
+  const [previewMode, setPreviewMode] = useState<'study' | 'pdf'>('study');
+  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [docSearchQuery, setDocSearchQuery] = useState('');
+  const [fontSizeMultiplier, setFontSizeMultiplier] = useState<number>(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [revealedDrillIndex, setRevealedDrillIndex] = useState<Record<number, boolean>>({});
+  const [copiedFormula, setCopiedFormula] = useState<string | null>(null);
+  const [expandedSolutions, setExpandedSolutions] = useState<Record<number, boolean>>({ 0: true });
+
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/resources')
@@ -128,9 +152,16 @@ export default function ResourcesListPage() {
           setCourseName(data.course.name);
         }
         if (Array.isArray(data.resources) && data.resources.length > 0) {
-          setResources(data.resources);
+          // Normalize file_url if pointing to broken dummy url
+          const sanitized = data.resources.map((r: any) => {
+            let url = r.file_url;
+            if (!url || url.includes('w3.org') || url.includes('dummy.pdf')) {
+              url = `/api/resources/pdf?id=${r._id || r.id}`;
+            }
+            return { ...r, file_url: url };
+          });
+          setResources(sanitized);
         } else {
-          // Fallback to high-yield starter course materials
           setResources(DEFAULT_COURSE_RESOURCES);
         }
       })
@@ -141,7 +172,18 @@ export default function ResourcesListPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Compute distinct subjects from resource collection
+  // Keyboard shortcut listener for preview modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && previewResource) {
+        setPreviewResource(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewResource]);
+
+  // Distinct subjects
   const distinctSubjects = useMemo(() => {
     const subs = new Set<string>();
     resources.forEach((r) => {
@@ -150,7 +192,7 @@ export default function ResourcesListPage() {
     return Array.from(subs);
   }, [resources]);
 
-  // Filtered list based on search, category, and subject
+  // Filtered resources list
   const filteredResources = useMemo(() => {
     return resources.filter((item) => {
       const matchesSearch =
@@ -171,9 +213,71 @@ export default function ResourcesListPage() {
     });
   }, [resources, searchQuery, selectedCategory, selectedSubject]);
 
-  const handleOpenPdf = (url: string, title: string) => {
-    setPreviewTitle(title);
-    setPreviewPdfUrl(url);
+  const handleOpenPreview = (item: ResourceItem, preferredMode: 'study' | 'pdf' = 'study') => {
+    setPreviewResource(item);
+    setPreviewMode(preferredMode);
+    setActiveChapterIndex(0);
+    setDocSearchQuery('');
+    setIframeLoading(true);
+    setRevealedDrillIndex({});
+    setExpandedSolutions({ 0: true });
+  };
+
+  // Resolve structured content for active preview
+  const activeCuratedData: CuratedResource | null = useMemo(() => {
+    if (!previewResource) return null;
+    return (
+      CURATED_ACADEMIC_RESOURCES[previewResource.id] ||
+      CURATED_ACADEMIC_RESOURCES['res-def-2']
+    );
+  }, [previewResource]);
+
+  const activeChapter: StudyChapter | null = useMemo(() => {
+    if (!activeCuratedData || !activeCuratedData.chapters) return null;
+    return activeCuratedData.chapters[activeChapterIndex] || activeCuratedData.chapters[0];
+  }, [activeCuratedData, activeChapterIndex]);
+
+  // Filtered chapter sections based on in-document search
+  const filteredFormulas = useMemo(() => {
+    if (!activeChapter) return [];
+    if (!docSearchQuery.trim()) return activeChapter.formulas;
+    const q = docSearchQuery.toLowerCase();
+    return activeChapter.formulas.filter(
+      (f) =>
+        f.title.toLowerCase().includes(q) ||
+        f.expr.toLowerCase().includes(q) ||
+        f.notes.toLowerCase().includes(q)
+    );
+  }, [activeChapter, docSearchQuery]);
+
+  const filteredPrinciples = useMemo(() => {
+    if (!activeChapter) return [];
+    if (!docSearchQuery.trim()) return activeChapter.keyPrinciples;
+    const q = docSearchQuery.toLowerCase();
+    return activeChapter.keyPrinciples.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tag?.toLowerCase().includes(q)
+    );
+  }, [activeChapter, docSearchQuery]);
+
+  const filteredExemplars = useMemo(() => {
+    if (!activeChapter) return [];
+    if (!docSearchQuery.trim()) return activeChapter.exemplarProblems;
+    const q = docSearchQuery.toLowerCase();
+    return activeChapter.exemplarProblems.filter(
+      (ex) =>
+        ex.question.toLowerCase().includes(q) ||
+        ex.examTip.toLowerCase().includes(q) ||
+        ex.solutionSteps.some((step) => step.toLowerCase().includes(q))
+    );
+  }, [activeChapter, docSearchQuery]);
+
+  const handleCopyFormula = (expr: string) => {
+    navigator.clipboard?.writeText(expr);
+    setCopiedFormula(expr);
+    setTimeout(() => setCopiedFormula(null), 2000);
   };
 
   return (
@@ -197,13 +301,16 @@ export default function ResourcesListPage() {
                       🎓 {courseName}
                     </span>
                   )}
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    ⚡ Instant Fast Previews
+                  </span>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
                   Academic Resources &amp; E-Books
                 </h1>
                 <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed font-medium">
-                  Official syllabus-aligned PDF textbooks, revision formula cheat sheets, solved previous year papers, and high-yield study modules.
+                  Official syllabus-aligned PDF textbooks, revision formula cheat sheets, solved previous year papers, and high-yield study modules with lightning-fast interactive reading.
                 </p>
               </div>
 
@@ -232,7 +339,7 @@ export default function ResourcesListPage() {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search resources, topics, or subjects (e.g., Mathematics, Algebra, Physics)..."
+                  placeholder="Search resources, topics, or subjects (e.g., Mathematics, Algebra, Optics, Grammar)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-xs transition-all font-medium"
@@ -339,7 +446,7 @@ export default function ResourcesListPage() {
                   No matching resources found
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                  Try adjusting your search query, clearing filters, or switching to "All Resources".
+                  Try adjusting your search query, clearing filters, or switching to &ldquo;All Resources&rdquo;.
                 </p>
               </div>
               <button
@@ -432,7 +539,7 @@ export default function ResourcesListPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
-                          onClick={() => handleOpenPdf(item.file_url, item.title)}
+                          onClick={() => handleOpenPreview(item, 'study')}
                           className="w-full py-2.5 px-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                         >
                           <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
@@ -440,7 +547,7 @@ export default function ResourcesListPage() {
                         </button>
 
                         <a
-                          href={item.file_url}
+                          href={`${item.file_url}${item.file_url.includes('?') ? '&' : '?'}download=true`}
                           target="_blank"
                           rel="noopener noreferrer"
                           download
@@ -459,49 +566,557 @@ export default function ResourcesListPage() {
         </main>
       </DigiLockerGuard>
 
-      {/* In-Browser PDF Preview Modal */}
-      {previewPdfUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/50">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4" />
+      {/* DUAL-ENGINE HIGH-PERFORMANCE PREVIEW MODAL */}
+      {previewResource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div
+            ref={modalRef}
+            className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full flex flex-col shadow-2xl overflow-hidden transition-all duration-300 ${
+              isFullscreen ? 'fixed inset-2 z-50 h-[calc(100vh-16px)]' : 'max-w-5xl h-[92vh]'
+            }`}
+          >
+            {/* Modal Top Navigation Bar */}
+            <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/80 dark:bg-slate-950/80">
+              
+              {/* Document Identity */}
+              <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/30">
+                  <BookOpen className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
-                  {previewTitle}
-                </h3>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                      {previewResource.title}
+                    </h3>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/40 shrink-0">
+                      {previewResource.subject}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                    {previewResource.page_count} Pages &bull; {previewResource.resource_type} &bull; Official Curriculum
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Mode Switcher & Action Controls */}
+              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                
+                {/* Engine Mode Switcher Tabs */}
+                <div className="flex items-center p-1 bg-slate-200/70 dark:bg-slate-800 rounded-xl border border-slate-300/50 dark:border-slate-700/50 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('study')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                      previewMode === 'study'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span>Study Reader</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewMode('pdf');
+                      setIframeLoading(true);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                      previewMode === 'pdf'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <FileText className="w-3 h-3" />
+                    <span>Native PDF</span>
+                  </button>
+                </div>
+
+                {/* Font Scaling (for Study Mode) */}
+                {previewMode === 'study' && (
+                  <div className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                    <button
+                      type="button"
+                      title="Decrease font size"
+                      onClick={() => setFontSizeMultiplier((prev) => Math.max(0.85, prev - 0.1))}
+                      className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <ZoomOut className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-black px-1 text-slate-600 dark:text-slate-300">
+                      {Math.round(fontSizeMultiplier * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      title="Increase font size"
+                      onClick={() => setFontSizeMultiplier((prev) => Math.min(1.35, prev + 0.1))}
+                      className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Fullscreen Toggle */}
+                <button
+                  type="button"
+                  title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 transition-colors cursor-pointer"
+                >
+                  {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+
+                {/* Download Direct Button */}
                 <a
-                  href={previewPdfUrl}
+                  href={`${previewResource.file_url}${previewResource.file_url.includes('?') ? '&' : '?'}download=true`}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Download</span>
                 </a>
+
+                {/* Open in New Window */}
+                <a
+                  href={previewResource.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open PDF in new window"
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                {/* Close Button */}
                 <button
                   type="button"
-                  onClick={() => setPreviewPdfUrl(null)}
-                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  onClick={() => setPreviewResource(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Embedded PDF iframe */}
-            <div className="flex-1 bg-slate-100 dark:bg-slate-950 relative">
-              <iframe
-                src={`${previewPdfUrl}#toolbar=0`}
-                title={previewTitle}
-                className="w-full h-full border-none"
-              />
+            {/* MODAL BODY */}
+            <div className="flex-1 overflow-hidden flex flex-col bg-slate-100 dark:bg-slate-950 relative">
+              
+              {/* MODE 1: INTERACTIVE STUDY READER (INSTANT < 5ms, NO EXTERNAL BLOCK) */}
+              {previewMode === 'study' && activeCuratedData && (
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/50 dark:bg-slate-950">
+                  
+                  {/* Left Sidebar / Chapter Navigation */}
+                  <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-3 sm:p-4 flex flex-col gap-3 shrink-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Course Units ({activeCuratedData.chapters.length})
+                      </span>
+                    </div>
+
+                    {/* Chapter Tabs */}
+                    <div className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto scrollbar-none">
+                      {activeCuratedData.chapters.map((chap, idx) => {
+                        const isCurrent = idx === activeChapterIndex;
+                        return (
+                          <button
+                            key={chap.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveChapterIndex(idx);
+                              setDocSearchQuery('');
+                            }}
+                            className={`p-2.5 rounded-2xl text-left transition-all shrink-0 md:w-full flex items-start gap-2.5 cursor-pointer ${
+                              isCurrent
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                                : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <span
+                              className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5 ${
+                                isCurrent ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                              }`}
+                            >
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0 pr-1">
+                              <div className="text-[10px] font-bold opacity-80 uppercase tracking-wider truncate">
+                                {chap.unit}
+                              </div>
+                              <div className="text-xs font-extrabold leading-tight truncate">
+                                {chap.title}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick In-Chapter Search */}
+                    <div className="relative mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 hidden md:block">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search formulas or topics..."
+                        value={docSearchQuery}
+                        onChange={(e) => setDocSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-7 py-2 text-[11px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      {docSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setDocSearchQuery('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Content Area: Structured Interactive Reader */}
+                  <div
+                    className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6"
+                    style={{ fontSize: `${fontSizeMultiplier * 100}%` }}
+                  >
+                    {activeChapter && (
+                      <div className="space-y-6 max-w-3xl mx-auto">
+                        
+                        {/* Chapter Banner */}
+                        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-3xl p-5 sm:p-6 shadow-md border border-blue-800/40 relative overflow-hidden">
+                          <div className="relative z-10 space-y-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-white/15 text-blue-200 border border-white/20">
+                              {activeChapter.unit}
+                            </span>
+                            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                              {activeChapter.title}
+                            </h2>
+                            <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed font-medium">
+                              {activeChapter.overview}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Search Filter Alert if Active */}
+                        {docSearchQuery && (
+                          <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-2xl text-xs font-bold text-blue-700 dark:text-blue-300">
+                            <span>Filtering results for &ldquo;{docSearchQuery}&rdquo;</span>
+                            <button
+                              type="button"
+                              onClick={() => setDocSearchQuery('')}
+                              className="text-blue-600 dark:text-blue-400 underline cursor-pointer"
+                            >
+                              Clear search
+                            </button>
+                          </div>
+                        )}
+
+                        {/* High-Yield Formulas Section */}
+                        {filteredFormulas.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                <Sparkles className="w-3.5 h-3.5" />
+                              </div>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                High-Yield Formulas &amp; Equalities
+                              </h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {filteredFormulas.map((f, i) => (
+                                <div
+                                  key={i}
+                                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs hover:border-amber-500/40 transition-colors space-y-2 relative group"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                                      {f.title}
+                                    </h4>
+                                    <button
+                                      type="button"
+                                      title="Copy formula"
+                                      onClick={() => handleCopyFormula(f.expr)}
+                                      className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                    >
+                                      {copiedFormula === f.expr ? (
+                                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                      ) : (
+                                        <Copy className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                  </div>
+
+                                  <div className="px-3 py-2 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 rounded-xl font-mono text-xs font-black text-amber-950 dark:text-amber-200 tracking-wide">
+                                    {f.expr}
+                                  </div>
+
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    {f.notes}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Core Principles & Rules Section */}
+                        {filteredPrinciples.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <Bookmark className="w-3.5 h-3.5" />
+                              </div>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                Fundamental Principles &amp; Diagram Rules
+                              </h3>
+                            </div>
+
+                            <div className="space-y-3">
+                              {filteredPrinciples.map((p, i) => (
+                                <div
+                                  key={i}
+                                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-1.5"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-blue-100/70 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300">
+                                      {p.tag || 'Core Rule'}
+                                    </span>
+                                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
+                                      {p.title}
+                                    </h4>
+                                  </div>
+                                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                    {p.description}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Solved NCERT / Olympiad Exemplar Problems */}
+                        {filteredExemplars.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <GraduationCap className="w-3.5 h-3.5" />
+                              </div>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                NCERT Exemplar Solved Problems with Marking Scheme
+                              </h3>
+                            </div>
+
+                            <div className="space-y-4">
+                              {filteredExemplars.map((ex, i) => {
+                                const isExpanded = !!expandedSolutions[i];
+                                return (
+                                  <div
+                                    key={i}
+                                    className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 text-[10px] font-black flex items-center justify-center shrink-0">
+                                            Q{i + 1}
+                                          </span>
+                                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                            Exemplar Question
+                                          </span>
+                                        </div>
+                                        <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
+                                          {ex.question}
+                                        </p>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setExpandedSolutions((prev) => ({
+                                            ...prev,
+                                            [i]: !prev[i],
+                                          }))
+                                        }
+                                        className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-extrabold transition-all shrink-0 cursor-pointer"
+                                      >
+                                        {isExpanded ? 'Hide Solution' : 'Show Solution'}
+                                      </button>
+                                    </div>
+
+                                    {/* Step-by-Step Solution Breakdown */}
+                                    {isExpanded && (
+                                      <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+                                        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 space-y-2">
+                                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                                            Step-by-Step Solution
+                                          </div>
+                                          {ex.solutionSteps.map((step, sIdx) => (
+                                            <div
+                                              key={sIdx}
+                                              className="text-xs text-slate-700 dark:text-slate-300 font-mono leading-relaxed"
+                                            >
+                                              {step}
+                                            </div>
+                                          ))}
+                                        </div>
+
+                                        {/* Exam Tip Callout */}
+                                        <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 font-medium">
+                                          <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                          <div>
+                                            <span className="font-black">Examiner Note: </span>
+                                            {ex.examTip}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick Drill / Self Assessment */}
+                        {activeChapter.quickDrills && activeChapter.quickDrills.length > 0 && (
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                <HelpCircle className="w-3.5 h-3.5" />
+                              </div>
+                              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                Rapid Self-Check Drills
+                              </h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {activeChapter.quickDrills.map((drill, dIdx) => {
+                                const isRevealed = !!revealedDrillIndex[dIdx];
+                                return (
+                                  <div
+                                    key={dIdx}
+                                    className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-2 flex flex-col justify-between"
+                                  >
+                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                      {drill.question}
+                                    </p>
+
+                                    {isRevealed ? (
+                                      <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-950 dark:text-purple-200 text-xs font-bold border border-purple-200/60 dark:border-purple-800/40 animate-fade-in">
+                                        Answer: {drill.answer}
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setRevealedDrillIndex((prev) => ({
+                                            ...prev,
+                                            [dIdx]: true,
+                                          }))
+                                        }
+                                        className="py-1.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-[11px] font-black transition-colors self-start cursor-pointer"
+                                      >
+                                        Reveal Answer
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Navigation Footer between Chapters */}
+                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                          <button
+                            type="button"
+                            disabled={activeChapterIndex === 0}
+                            onClick={() => {
+                              setActiveChapterIndex((prev) => Math.max(0, prev - 1));
+                              setDocSearchQuery('');
+                            }}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                              activeChapterIndex === 0
+                                ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400'
+                                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                            <span>Previous Unit</span>
+                          </button>
+
+                          <div className="text-xs font-black text-slate-400">
+                            Unit {activeChapterIndex + 1} of {activeCuratedData.chapters.length}
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={activeChapterIndex === activeCuratedData.chapters.length - 1}
+                            onClick={() => {
+                              setActiveChapterIndex((prev) =>
+                                Math.min(activeCuratedData.chapters.length - 1, prev + 1)
+                              );
+                              setDocSearchQuery('');
+                            }}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                              activeChapterIndex === activeCuratedData.chapters.length - 1
+                                ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400'
+                                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                            }`}
+                          >
+                            <span>Next Unit</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* MODE 2: NATIVE PDF EMBED (SAME ORIGIN, FAST STREAM, NEVER REFUSES CONNECTION) */}
+              {previewMode === 'pdf' && (
+                <div className="flex-1 w-full h-full relative flex flex-col">
+                  {/* Top Notification Bar for PDF Engine */}
+                  <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/60 border-b border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-xs text-blue-800 dark:text-blue-300">
+                    <span className="flex items-center gap-2">
+                      <FileCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span>
+                        Streaming authentic standard PDF binary directly from local server engine.
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode('study')}
+                      className="font-bold underline hover:text-blue-950 dark:hover:text-white cursor-pointer"
+                    >
+                      Switch to Study Reader
+                    </button>
+                  </div>
+
+                  {/* Loading Spinner for PDF iframe */}
+                  {iframeLoading && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs space-y-3">
+                      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <p className="text-xs font-extrabold text-slate-600 dark:text-slate-300">
+                        Loading high-resolution academic document...
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Same-Origin PDF Stream iframe */}
+                  <iframe
+                    src={`${previewResource.file_url}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
+                    title={previewResource.title}
+                    onLoad={() => setIframeLoading(false)}
+                    className="w-full flex-1 border-none bg-slate-200 dark:bg-slate-950"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

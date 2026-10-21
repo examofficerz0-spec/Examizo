@@ -44,19 +44,25 @@ export async function GET(request: Request) {
           d1Resources = d1Resources.filter((r: any) => !r.course_id || String(r.course_id) === String(courseId));
         }
 
-        const formattedResources = d1Resources.map((r: any) => ({
-          _id: r.id,
-          id: r.id,
-          course_id: r.course_id,
-          title: r.title,
-          description: r.description || '',
-          subject: r.subject || 'General',
-          resource_type: r.resource_type || 'PDF Book',
-          file_url: r.file_url,
-          file_size: r.file_size || '2.5 MB',
-          page_count: Number(r.page_count || 100),
-          created_at: r.created_at,
-        }));
+        const formattedResources = d1Resources.map((r: any) => {
+          let fileUrl = r.file_url;
+          if (!fileUrl || fileUrl.includes('w3.org') || fileUrl.includes('dummy.pdf')) {
+            fileUrl = `/api/resources/pdf?id=${r.id}`;
+          }
+          return {
+            _id: r.id,
+            id: r.id,
+            course_id: r.course_id,
+            title: r.title,
+            description: r.description || '',
+            subject: r.subject || 'General',
+            resource_type: r.resource_type || 'PDF Book',
+            file_url: fileUrl,
+            file_size: r.file_size || '2.5 MB',
+            page_count: Number(r.page_count || 100),
+            created_at: r.created_at,
+          };
+        });
 
         return NextResponse.json({
           success: true,
@@ -80,7 +86,13 @@ export async function GET(request: Request) {
     const matchedCourse = courses.find((c: any) => String(c._id || c.id) === String(courseId)) || courses[0] || null;
     const courseResources = resources.filter(
       (r: any) => !courseId || !r.course_id || String(r.course_id) === String(courseId)
-    );
+    ).map((r: any) => {
+      let fileUrl = r.file_url;
+      if (!fileUrl || fileUrl.includes('w3.org') || fileUrl.includes('dummy.pdf')) {
+        fileUrl = `/api/resources/pdf?id=${r._id || r.id}`;
+      }
+      return { ...r, file_url: fileUrl };
+    });
 
     return NextResponse.json({
       success: true,
