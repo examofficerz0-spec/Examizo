@@ -1,19 +1,19 @@
-// Examizo PWA Service Worker for Offline Shell & Chrome Installability
-const CACHE_NAME = 'examizo-pwa-v1';
+// Examizo PWA Service Worker (v2) - Resilient Network-First Engine
+const CACHE_NAME = 'examizo-pwa-v2';
 
-const STATIC_ASSETS = [
-  '/',
+const IMMUTABLE_STATIC_ASSETS = [
   '/manifest.json',
   '/icon.png',
-  '/logo.png'
+  '/logo.png',
+  '/favicon.ico',
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('PWA Pre-cache notice:', err);
+      return cache.addAll(IMMUTABLE_STATIC_ASSETS).catch((err) => {
+        console.warn('[PWA] Asset pre-cache note:', err);
       });
     })
   );
@@ -21,46 +21,86 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => {
+        return Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              console.log('[PWA] Purging obsolete cache:', key);
+              return caches.delete(key);
+            }
+          })
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests from HTTP/HTTPS
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Bypass API and dynamic Cloudflare D1 routes
-  if (url.pathname.startsWith('/api/')) return;
+  // 1. Bypass API endpoints, PDF streaming, and external origins
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.origin !== self.location.origin
+  ) {
+    return;
+  }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses for static assets
-        if (response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache).catch(() => {});
+  // 2. In local development (localhost / 127.0.0.1), always bypass service worker caching
+  const isLocalhost =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname.endsWith('.local');
+
+  if (isLocalhost) {
+    return; // Pass through to normal browser network
+  }
+
+  // 3. For navigation requests (pages like /practice, /dashboard, /resources)
+  // Always use Network-First to guarantee latest updates
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          return networkResponse;
+        })
+        .catch(async () => {
+          // Only if network is truly down
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          return caches.match('/') || new Response('Offline - Please reconnect to access the exam portal.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' },
           });
-        }
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // 4. For static assets (images, icons, manifest), Cache-First with Network fallback
+  if (
+    url.pathname.match(/\.(png|jpg|jpeg|svg|ico|json|woff2)$/)
+  ) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
         if (cached) return cached;
-        // Fallback for navigation requests
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-        return new Response('Offline', { status: 503, statusText: 'Offline' });
+        return fetch(event.request).then((response) => {
+          if (response.status === 200 && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
       })
-  );
+    );
+  }
 });
