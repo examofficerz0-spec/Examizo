@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ShieldCheck,
   Lock,
@@ -44,10 +45,29 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   courseName,
   verifiedProfile,
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [showWarmup, setShowWarmup] = useState(false);
   const [profileData, setProfileData] = useState<any>(verifiedProfile || null);
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock background body scrolling while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -68,7 +88,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleStartLiveVerification = () => {
     setShowWarmup(true);
@@ -79,12 +99,26 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in font-sans">
-        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900 max-h-[92dvh] flex flex-col">
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-2xl animate-fade-in font-sans overflow-x-hidden overflow-y-auto"
+        style={{
+          WebkitBackdropFilter: 'blur(24px)',
+          backdropFilter: 'blur(24px)',
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div
+          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900 max-h-[92dvh] flex flex-col my-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Top DigiLocker Banner Header */}
-          <div className="bg-gradient-to-r from-[#072448] via-[#0b3c68] to-[#144272] p-4 sm:p-6 text-white relative shrink-0">
+          <div className="bg-gradient-to-r from-[#072448] via-[#0b3c68] to-[#144272] p-4 sm:p-5 text-white relative shrink-0">
             <button
               onClick={onClose}
               type="button"
@@ -94,21 +128,21 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
             </button>
 
             <div className="flex items-center gap-3 pr-8 sm:pr-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 backdrop-blur-md flex items-center justify-center text-sky-300 font-bold shrink-0 shadow-inner">
-                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-sky-300" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-sky-500/20 border border-sky-400/30 backdrop-blur-md flex items-center justify-center text-sky-300 font-bold shrink-0 shadow-inner">
+                <Building2 className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-sky-300" />
               </div>
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30 text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                   <ShieldCheck className="w-3 h-3 text-sky-300" />
                   <span>Govt. of India Integration</span>
                 </div>
-                <h2 className="text-base sm:text-xl font-black tracking-tight mt-0.5">DigiLocker Academic Verification</h2>
+                <h2 className="text-base sm:text-lg font-black tracking-tight mt-0.5">DigiLocker Academic Verification</h2>
               </div>
             </div>
           </div>
 
           {/* Modal Body */}
-          <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+          <div className="p-4 sm:p-5 overflow-y-auto overflow-x-hidden flex-1">
             {loadingStatus ? (
               <div className="py-12 text-center space-y-4">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
@@ -192,62 +226,62 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
               </div>
             ) : (
               /* Unverified: Initiate Live Gateway Verification */
-              <div className="space-y-6">
-                <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl flex items-start gap-3">
+              <div className="space-y-3.5 sm:space-y-4">
+                <div className="p-3 sm:p-3.5 bg-sky-50 border border-sky-200 rounded-2xl flex items-start gap-2.5 sm:gap-3">
                   <ShieldCheck className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
                   <div className="text-xs text-sky-950 leading-relaxed font-medium">
-                    <p className="font-extrabold">Official Govt. of India DigiLocker Portal</p>
-                    <p className="mt-1 text-sky-800">
+                    <p className="font-extrabold text-[12px] sm:text-xs">Official Govt. of India DigiLocker Portal</p>
+                    <p className="mt-0.5 text-sky-800 text-[11px] sm:text-xs leading-snug">
                       Verify your student identity securely using your registered Aadhaar / Mobile number with the DigiLocker MeriPehchaan Gateway.
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                <div className="space-y-2 sm:space-y-2.5">
+                  <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold text-xs flex items-center justify-center shrink-0">
                       1
                     </div>
-                    <div className="text-xs">
-                      <span className="font-bold text-slate-800 block">Click Verify with DigiLocker</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Redirects to official MeriPehchaan authentication</span>
+                    <div className="text-xs min-w-0">
+                      <span className="font-bold text-slate-800 block text-[11px] sm:text-xs">Click Verify with DigiLocker</span>
+                      <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate block">Redirects to official MeriPehchaan authentication</span>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                  <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 font-extrabold text-xs flex items-center justify-center shrink-0">
                       2
                     </div>
-                    <div className="text-xs">
-                      <span className="font-bold text-slate-800 block">Authenticate with 6-Digit PIN or OTP</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Secured by 256-bit SSL encryption</span>
+                    <div className="text-xs min-w-0">
+                      <span className="font-bold text-slate-800 block text-[11px] sm:text-xs">Authenticate with 6-Digit PIN or OTP</span>
+                      <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate block">Secured by 256-bit SSL encryption</span>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                  <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 font-extrabold text-xs flex items-center justify-center shrink-0">
                       3
                     </div>
-                    <div className="text-xs">
-                      <span className="font-bold text-slate-800 block">Instant Verification & Unlock</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Verified Name & Age saved directly to account</span>
+                    <div className="text-xs min-w-0">
+                      <span className="font-bold text-slate-800 block text-[11px] sm:text-xs">Instant Verification &amp; Unlock</span>
+                      <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate block">Verified Name &amp; Age saved directly to account</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-1">
                   <button
                     type="button"
                     onClick={handleStartLiveVerification}
-                    className="w-full py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <ShieldCheck className="w-5 h-5 text-sky-200" />
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-sky-200" />
                     <span>Proceed to DigiLocker Verification</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
-                <p className="text-[11px] text-center text-slate-400 font-medium">
+                <p className="text-[10px] sm:text-[11px] text-center text-slate-400 font-medium">
                   Protected by 256-bit SSL Encryption • DigiLocker National Academic Depository
                 </p>
               </div>
@@ -262,7 +296,8 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
         onClose={() => setShowWarmup(false)}
         authorizeUrl="/api/digilocker/authorize"
       />
-    </>
+    </>,
+    document.body
   );
 };
 
