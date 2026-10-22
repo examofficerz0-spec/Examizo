@@ -1028,7 +1028,7 @@ export default function StudentDashboardPage() {
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
                       {item.test_id ? (
                         <Link
-                          href={`/mock-tests/${item.test_id}`}
+                          href={`/mock-tests/${item.test_id}?viewResult=true`}
                           className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                         >
                           <span>View Result</span>

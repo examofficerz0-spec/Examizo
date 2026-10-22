@@ -254,8 +254,8 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
     const isExplicitResume = searchParams?.get('resume') === 'true';
     const isViewResult = searchParams?.get('viewResult') === 'true';
 
-    // If retaking, resuming, or starting fresh (not explicitly viewing previous result), discard cached result
-    if (isRetake || isExplicitResume || !isViewResult) {
+    // If retaking or resuming an in-progress session, discard cached result
+    if (isRetake || isExplicitResume) {
       try {
         sessionStorage.removeItem(`mock_result_${testId}`);
       } catch (_) {}
@@ -504,39 +504,45 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
           } else {
             setRestoredSessionNotification('⚡ Active Exam Resumed! Your answers and remaining time have been safely recovered.');
           }
-        } else if (data.latestAttempt && isViewResult) {
-          // Restore latest completed attempt only if explicitly viewing result
-          setResult((prev: any) => {
-            if (prev) return prev;
-            return {
-              score: data.latestAttempt.score,
-              accuracyPercent: data.latestAttempt.accuracyPercent,
-              correctCount: data.latestAttempt.correctCount,
-              incorrectCount: data.latestAttempt.incorrectCount,
-              unattemptedCount: data.latestAttempt.unattemptedCount,
-              totalQuestions: data.latestAttempt.totalQuestions,
-              xpEarned: data.latestAttempt.xpEarned || 0,
-              cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || false,
-              submissionType: data.latestAttempt.submissionType || 'manual',
-            };
-          });
+        } else if (data.latestAttempt && (!isRetake || isViewResult)) {
+          // Restore latest completed attempt when viewing result or when test is already completed
+          const latestResult = {
+            score: Number(data.latestAttempt.score || 0),
+            accuracyPercent: Number(data.latestAttempt.accuracyPercent || 0),
+            correctCount: Number(data.latestAttempt.correctCount || 0),
+            incorrectCount: Number(data.latestAttempt.incorrectCount || 0),
+            unattemptedCount: Number(data.latestAttempt.unattemptedCount || 0),
+            totalQuestions: Number(data.latestAttempt.totalQuestions || normalizedQuestions.length),
+            xpEarned: Number(data.latestAttempt.xpEarned || 0),
+            cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || (data.test?.cutoff_marks && data.latestAttempt.score >= data.test.cutoff_marks) || false,
+            submissionType: data.latestAttempt.submissionType || 'manual',
+          };
+          setResult(latestResult);
 
+          const reconstructedUserState: Record<string, any> = {};
           if (Array.isArray(data.latestAttempt.responses)) {
-            const reconstructedUserState: Record<string, any> = {};
             data.latestAttempt.responses.forEach((r: any) => {
               if (r.question_id) {
-                reconstructedUserState[r.question_id] = {
+                const qId = String(r.question_id);
+                reconstructedUserState[qId] = {
                   selectedOption: r.selected_option,
                   isMFR: false,
                   isVisited: true,
                 };
               }
             });
-            setUserState((prev) => ({ ...initial, ...prev, ...reconstructedUserState }));
-          } else {
-            setUserState((prev) => ({ ...initial, ...prev }));
           }
+          const mergedUserState = { ...initial, ...reconstructedUserState };
+          setUserState(mergedUserState);
           setTimeLeft((data.test?.duration_minutes || 60) * 60);
+
+          try {
+            sessionStorage.setItem(`mock_result_${testId}`, JSON.stringify({
+              result: latestResult,
+              userState: mergedUserState,
+              submittedAt: Date.now(),
+            }));
+          } catch (_) {}
         } else {
           setUserState((prev) => ({ ...initial, ...prev }));
           setTimeLeft((data.test?.duration_minutes || 60) * 60);
@@ -1384,17 +1390,39 @@ export default function MockTestExecutionPage({ params }: { params: { id: string
                             .then((res) => res.json())
                             .then((data) => {
                               if (data.latestAttempt) {
-                                setResult({
-                                  score: data.latestAttempt.score,
-                                  accuracyPercent: data.latestAttempt.accuracyPercent,
-                                  correctCount: data.latestAttempt.correctCount,
-                                  incorrectCount: data.latestAttempt.incorrectCount,
-                                  unattemptedCount: data.latestAttempt.unattemptedCount,
-                                  totalQuestions: data.latestAttempt.totalQuestions,
-                                  xpEarned: data.latestAttempt.xpEarned || 0,
-                                  cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || false,
+                                const latestRes = {
+                                  score: Number(data.latestAttempt.score || 0),
+                                  accuracyPercent: Number(data.latestAttempt.accuracyPercent || 0),
+                                  correctCount: Number(data.latestAttempt.correctCount || 0),
+                                  incorrectCount: Number(data.latestAttempt.incorrectCount || 0),
+                                  unattemptedCount: Number(data.latestAttempt.unattemptedCount || 0),
+                                  totalQuestions: Number(data.latestAttempt.totalQuestions || questions.length),
+                                  xpEarned: Number(data.latestAttempt.xpEarned || 0),
+                                  cutoffBonusAwarded: data.latestAttempt.cutoffBonusAwarded || (data.test?.cutoff_marks && data.latestAttempt.score >= data.test.cutoff_marks) || false,
                                   submissionType: data.latestAttempt.submissionType || 'manual',
-                                });
+                                };
+                                setResult(latestRes);
+
+                                const reconstructedUserState: Record<string, any> = {};
+                                if (Array.isArray(data.latestAttempt.responses)) {
+                                  data.latestAttempt.responses.forEach((r: any) => {
+                                    if (r.question_id) {
+                                      reconstructedUserState[String(r.question_id)] = {
+                                        selectedOption: r.selected_option,
+                                        isMFR: false,
+                                        isVisited: true,
+                                      };
+                                    }
+                                  });
+                                }
+                                setUserState((prev) => ({ ...prev, ...reconstructedUserState }));
+                                try {
+                                  sessionStorage.setItem(`mock_result_${testId}`, JSON.stringify({
+                                    result: latestRes,
+                                    userState: reconstructedUserState,
+                                    submittedAt: Date.now(),
+                                  }));
+                                } catch (_) {}
                               } else {
                                 router.push('/mock-tests');
                               }
