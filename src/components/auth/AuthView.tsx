@@ -498,22 +498,29 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       {/* Right Form Panel — High-Intensity Deep Drop Shadow */}
       <div className="lg:col-span-5 xl:col-span-5 relative z-10 flex flex-col justify-between
         bg-white dark:bg-slate-900
-        p-5 sm:p-10 lg:p-12
-        pt-[max(env(safe-area-inset-top),24px)]
-        min-h-[100dvh]
+        p-6 sm:p-10 lg:p-12
         shadow-[-20px_0_60px_0_rgba(0,0,0,0.40),-40px_0_100px_0_rgba(0,0,0,0.30),-4px_0_16px_0_rgba(0,0,0,0.25)]
         dark:shadow-[-20px_0_60px_0_rgba(0,0,0,0.85),-40px_0_100px_0_rgba(0,0,0,0.75),-4px_0_16px_0_rgba(0,0,0,0.60)]">
-        <div>
+        <div className="pt-[max(env(safe-area-inset-top),16px)]">
           {/* Centered Mobile-Optimized Brand Header with Bigger Butterfly Crest */}
-          <div className="flex flex-col items-center justify-center text-center pt-2 sm:pt-4">
-            <div className="relative group cursor-pointer mb-2.5 transition-transform duration-300 hover:scale-105 drop-shadow-lg">
-              <ExamizoButterflyIcon size={76} animate={true} interactive={true} autoLoop={true} />
-            </div>
+          <div className="flex flex-col items-center justify-center text-center">
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = '/';
+              }}
+              className="cursor-pointer group mb-2"
+            >
+              <div className="transform transition-transform group-hover:scale-105 drop-shadow-md">
+                <ExamizoButterflyIcon size={76} animate={true} interactive={true} autoLoop={true} />
+              </div>
+            </Link>
             <div className="flex flex-col items-center justify-center">
-              <span className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:via-indigo-300 dark:to-pink-400 bg-clip-text text-transparent">
+              <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                 Examizo
               </span>
-              <span className="text-[10px] sm:text-[11px] tracking-widest uppercase font-extrabold text-slate-400 dark:text-slate-500 mt-0.5">
+              <span className="text-[10.5px] tracking-widest uppercase font-extrabold text-slate-500 dark:text-slate-400 mt-0.5">
                 Academic Precision • Competitive Exam Portal
               </span>
             </div>
@@ -521,13 +528,13 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
 
           <div className="mt-6 sm:mt-8 w-full max-w-lg mx-auto space-y-5">
             <div className="text-center">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white transition-all duration-200">
-                {activeTab === 'signin' ? 'Sign In to Your Account' : 'Create Student Account'}
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white transition-all duration-200">
+                {activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium max-w-sm mx-auto">
                 {activeTab === 'signin'
-                  ? 'Access your timed tests, practice sets, and national rankings.'
-                  : 'Join thousands of students and lock your exam goal.'}
+                  ? 'Access your dashboard and continue your academic journey.'
+                  : 'Create your account to lock your exam course and start practice sets.'}
               </p>
             </div>
 
@@ -609,7 +616,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
-                        placeholder="your.email@example.com or phone"
+                        placeholder="name@institution.edu"
                       />
                     </div>
                   </div>
@@ -844,17 +851,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                   ? 'Sign in with Google'
                   : 'Sign up with Google'}
               </span>
-            </button>
-
-            {/* Quick Guest / Demo Access Button */}
-            <button
-              type="button"
-              onClick={() => {
-                window.location.href = '/dashboard';
-              }}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-100/90 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
-            >
-              <span>⚡ Continue as Guest (Explore Dashboard)</span>
             </button>
 
             <div className="text-center pt-2">

@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Examizo',
   webDir: 'out',
   
-  // NOTE: No remote server.url! The app frontend runs 100% locally on the device!
   server: {
     androidScheme: 'https',
     cleartext: false,
@@ -24,7 +23,7 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: false,
     overrideUserAgent: 'ExamizoApp/2.0.0 (Capacitor/Android)',
     appendUserAgent: 'ExamizoNative/2.0',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
     useLegacyBridge: false,
   },
 
@@ -38,13 +37,13 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       showSpinner: true,
       spinnerColor: '#3B82F6',
-      splashFullScreen: true,
-      splashImmersive: true,
+      splashFullScreen: false,
+      splashImmersive: false,
     },
     StatusBar: {
-      overlays: false,
       style: 'DARK',
-      backgroundColor: '#0F172A',
+      backgroundColor: '#FFFFFF',
+      overlaysWebView: false,
     },
     Keyboard: {
       resize: 'body',
