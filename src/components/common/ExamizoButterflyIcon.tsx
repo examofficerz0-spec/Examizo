@@ -163,19 +163,101 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             <stop offset="100%" stopColor="#040816" />
           </radialGradient>
 
-          <linearGradient id="ezWingPageGradLeft" x1="100%" y1="50%" x2="0%" y2="50%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="60%" stopColor="#f8fafc" />
-            <stop offset="85%" stopColor="#e0f2fe" />
-            <stop offset="100%" stopColor="#bae6fd" />
+          {/* Butterfly Wing Colorful Jewel Gradients */}
+          <linearGradient id="ezWingPageGradLeft" x1="100%" y1="35%" x2="0%" y2="65%">
+            <stop offset="0%" stopColor="#312e81" />
+            <stop offset="14%" stopColor="#7c3aed" />
+            <stop offset="32%" stopColor="#2563eb" />
+            <stop offset="52%" stopColor="#06b6d4" />
+            <stop offset="70%" stopColor="#10b981" />
+            <stop offset="85%" stopColor="#ec4899" />
+            <stop offset="95%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#fde047" />
           </linearGradient>
 
-          <linearGradient id="ezWingPageGradRight" x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="60%" stopColor="#f8fafc" />
-            <stop offset="85%" stopColor="#e0f2fe" />
-            <stop offset="100%" stopColor="#bae6fd" />
+          <linearGradient id="ezWingPageGradRight" x1="0%" y1="35%" x2="100%" y2="65%">
+            <stop offset="0%" stopColor="#312e81" />
+            <stop offset="14%" stopColor="#7c3aed" />
+            <stop offset="32%" stopColor="#2563eb" />
+            <stop offset="52%" stopColor="#06b6d4" />
+            <stop offset="70%" stopColor="#10b981" />
+            <stop offset="85%" stopColor="#ec4899" />
+            <stop offset="95%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#fde047" />
           </linearGradient>
+
+          {/* Secondary Wing Jewel Inlay Gradients */}
+          <radialGradient id="ezWingUpperJewelL" cx="65%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+            <stop offset="25%" stopColor="#38bdf8" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#818cf8" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="ezWingUpperJewelR" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+            <stop offset="25%" stopColor="#38bdf8" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#818cf8" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="ezWingLowerJewelL" cx="70%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.75" />
+            <stop offset="40%" stopColor="#f43f5e" stopOpacity="0.55" />
+            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="ezWingLowerJewelR" cx="30%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.75" />
+            <stop offset="40%" stopColor="#f43f5e" stopOpacity="0.55" />
+            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Specular Glare Arc Gradients */}
+          <linearGradient id="ezWingGlareArcL" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.65" />
+            <stop offset="80%" stopColor="#67e8f9" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          <linearGradient id="ezWingGlareArcR" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.65" />
+            <stop offset="80%" stopColor="#67e8f9" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Glair Lustre Sweep (Iridescent Sheen) */}
+          <linearGradient id="ezLustreSheenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="28%" stopColor="#ffffff" stopOpacity="0.08" />
+            <stop offset="48%" stopColor="#ffffff" stopOpacity="0.75" />
+            <stop offset="50%" stopColor="#fef08a" stopOpacity="0.95" />
+            <stop offset="52%" stopColor="#ffffff" stopOpacity="0.75" />
+            <stop offset="72%" stopColor="#ffffff" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Vein Gold & Diamond Filigree */}
+          <linearGradient id="ezVeinGoldL" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.75" />
+          </linearGradient>
+
+          <linearGradient id="ezVeinGoldR" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.75" />
+          </linearGradient>
+
+          {/* Wings Combined Clip Path for Lustre Sweep */}
+          <clipPath id="ezButterflyWingsClip">
+            <path d="M 296 242 C 275 208 195 168 142 200 C 118 215 110 248 120 282 C 130 315 158 332 176 354 C 152 388 140 425 168 456 C 200 488 255 470 296 445 Z M 304 242 C 325 208 405 168 458 200 C 482 215 490 248 480 282 C 470 315 442 332 424 354 C 448 388 460 425 432 456 C 400 488 345 470 304 445 Z" />
+          </clipPath>
 
           <linearGradient id="ezWingGoldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fffbeb" />
@@ -261,6 +343,16 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             80% { opacity: 0.95; }
             100% { stroke-dashoffset: 0; opacity: 0; }
           }
+          @keyframes ezLustreShine {
+            0% { transform: translateX(-320px) skewX(-24deg); opacity: 0; }
+            15% { opacity: 0.85; }
+            35% { transform: translateX(280px) skewX(-24deg); opacity: 0.85; }
+            45%, 100% { transform: translateX(340px) skewX(-24deg); opacity: 0; }
+          }
+          @keyframes ezGlintTwinkle {
+            0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.65; }
+            50% { transform: scale(1.35) rotate(45deg); opacity: 1; }
+          }
           .ez-star-twinkle {
             transform-origin: 300px 122px;
             animation: ezStarPulse 3s ease-in-out infinite;
@@ -288,6 +380,17 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
           .ez-wind-2 {
             stroke-dasharray: 240 700;
             animation: ezWindDash 2.0s 0.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+          }
+          .ez-lustre-sweep {
+            animation: ezLustreShine 4.2s ease-in-out infinite;
+          }
+          .ez-glint-left {
+            transform-origin: 144px 202px;
+            animation: ezGlintTwinkle 2.8s ease-in-out infinite;
+          }
+          .ez-glint-right {
+            transform-origin: 456px 202px;
+            animation: ezGlintTwinkle 2.8s 1.4s ease-in-out infinite;
           }
         `}</style>
 
@@ -378,7 +481,7 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
           >
             <g filter="url(#ezWingShadow)">
               {/* Back Aura */}
-              <ellipse cx="300" cy="335" rx="145" ry="115" fill="#38bdf8" opacity="0.10" />
+              <ellipse cx="300" cy="335" rx="145" ry="115" fill="#38bdf8" opacity="0.12" />
 
               {/* LEFT WING / BOOK PAGE */}
               <g
@@ -390,6 +493,7 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                     : ''
                 }
               >
+                {/* Main Colorful Wing Base */}
                 <path
                   d="M 296 242 C 275 208 195 168 142 200 C 118 215 110 248 120 282 C 130 315 158 332 176 354 C 152 388 140 425 168 456 C 200 488 255 470 296 445 Z"
                   fill="url(#ezWingPageGradLeft)"
@@ -397,19 +501,46 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                   strokeWidth="8"
                   strokeLinejoin="round"
                 />
+
+                {/* Upper Lobe Jewel Inlay */}
+                <path
+                  d="M 284 254 C 255 228 198 200 155 220 C 136 230 130 252 138 275 C 148 300 172 316 195 330 C 235 305 268 280 284 254 Z"
+                  fill="url(#ezWingUpperJewelL)"
+                />
+
+                {/* Lower Lobe Jewel Inlay */}
+                <path
+                  d="M 282 390 C 248 405 210 415 185 432 C 168 444 180 460 205 462 C 238 464 268 442 288 418 Z"
+                  fill="url(#ezWingLowerJewelL)"
+                />
+
+                {/* Inner Page Shading Contour */}
                 <path
                   d="M 294 252 C 274 222 202 184 152 212 C 132 225 125 252 133 280 C 142 310 168 326 185 348 C 162 382 152 415 178 442 C 205 468 254 454 294 432"
                   fill="none"
-                  stroke="#e0f2fe"
+                  stroke="#ffffff"
                   strokeWidth="2.5"
-                  opacity="0.85"
+                  opacity="0.75"
                 />
-                {/* Book Page Crease Lines */}
-                <path d="M 294 276 C 255 248 202 224 158 238" fill="none" stroke="#93c5fd" strokeWidth="3.5" strokeLinecap="round" opacity="0.85" />
-                <path d="M 294 310 C 250 292 198 278 152 296" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-                <path d="M 294 345 C 255 338 212 336 182 352" fill="none" stroke="#93c5fd" strokeWidth="2.8" strokeLinecap="round" opacity="0.7" />
-                <path d="M 294 380 C 255 388 216 394 182 418" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-                <path d="M 294 415 C 265 426 232 440 205 452" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+
+                {/* Book Page Crease Lines / Luminous Veins */}
+                <path d="M 294 276 C 255 248 202 224 158 238" fill="none" stroke="url(#ezVeinGoldL)" strokeWidth="3.2" strokeLinecap="round" opacity="0.9" />
+                <path d="M 294 310 C 250 292 198 278 152 296" fill="none" stroke="url(#ezVeinGoldL)" strokeWidth="2.8" strokeLinecap="round" opacity="0.85" />
+                <path d="M 294 345 C 255 338 212 336 182 352" fill="none" stroke="url(#ezVeinGoldL)" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+                <path d="M 294 380 C 255 388 216 394 182 418" fill="none" stroke="url(#ezVeinGoldL)" strokeWidth="2.8" strokeLinecap="round" opacity="0.85" />
+                <path d="M 294 415 C 265 426 232 440 205 452" fill="none" stroke="url(#ezVeinGoldL)" strokeWidth="3" strokeLinecap="round" opacity="0.9" />
+
+                {/* Specular Glare / Lustre Gloss Cap (Upper Ridge Reflection) */}
+                <path
+                  d="M 296 242 C 275 208 195 168 142 200 C 132 206 130 216 142 216 C 185 192 260 220 294 250 Z"
+                  fill="url(#ezWingGlareArcL)"
+                />
+
+                {/* Diamond Glint Star Sparkle */}
+                <g className="ez-glint-left" filter="url(#ezStarGlow)">
+                  <path d="M 144 194 Q 144 202 152 202 Q 144 202 144 210 Q 144 202 136 202 Q 144 202 144 194 Z" fill="#ffffff" />
+                  <circle cx="144" cy="202" r="2" fill="#fef08a" />
+                </g>
               </g>
 
               {/* RIGHT WING / BOOK PAGE */}
@@ -422,6 +553,7 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                     : ''
                 }
               >
+                {/* Main Colorful Wing Base */}
                 <path
                   d="M 304 242 C 325 208 405 168 458 200 C 482 215 490 248 480 282 C 470 315 442 332 424 354 C 448 388 460 425 432 456 C 400 488 345 470 304 445 Z"
                   fill="url(#ezWingPageGradRight)"
@@ -429,19 +561,51 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                   strokeWidth="8"
                   strokeLinejoin="round"
                 />
+
+                {/* Upper Lobe Jewel Inlay */}
+                <path
+                  d="M 316 254 C 345 228 402 200 445 220 C 464 230 470 252 462 275 C 452 300 428 316 405 330 C 365 305 332 280 316 254 Z"
+                  fill="url(#ezWingUpperJewelR)"
+                />
+
+                {/* Lower Lobe Jewel Inlay */}
+                <path
+                  d="M 318 390 C 352 405 390 415 415 432 C 432 444 420 460 395 462 C 362 464 332 442 312 418 Z"
+                  fill="url(#ezWingLowerJewelR)"
+                />
+
+                {/* Inner Page Shading Contour */}
                 <path
                   d="M 306 252 C 326 222 398 184 448 212 C 468 225 475 252 467 280 C 458 310 432 326 415 348 C 438 382 448 415 422 442 C 395 468 346 454 306 432"
                   fill="none"
-                  stroke="#e0f2fe"
+                  stroke="#ffffff"
                   strokeWidth="2.5"
-                  opacity="0.85"
+                  opacity="0.75"
                 />
-                {/* Book Page Crease Lines */}
-                <path d="M 306 276 C 345 248 398 224 442 238" fill="none" stroke="#93c5fd" strokeWidth="3.5" strokeLinecap="round" opacity="0.85" />
-                <path d="M 306 310 C 350 292 402 278 448 296" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-                <path d="M 306 345 C 345 338 388 336 418 352" fill="none" stroke="#93c5fd" strokeWidth="2.8" strokeLinecap="round" opacity="0.7" />
-                <path d="M 306 380 C 345 388 384 394 418 418" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
-                <path d="M 306 415 C 335 426 368 440 395 452" fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+
+                {/* Book Page Crease Lines / Luminous Veins */}
+                <path d="M 306 276 C 345 248 398 224 442 238" fill="none" stroke="url(#ezVeinGoldR)" strokeWidth="3.2" strokeLinecap="round" opacity="0.9" />
+                <path d="M 306 310 C 350 292 402 278 448 296" fill="none" stroke="url(#ezVeinGoldR)" strokeWidth="2.8" strokeLinecap="round" opacity="0.85" />
+                <path d="M 306 345 C 345 338 388 336 418 352" fill="none" stroke="url(#ezVeinGoldR)" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+                <path d="M 306 380 C 345 388 384 394 418 418" fill="none" stroke="url(#ezVeinGoldR)" strokeWidth="2.8" strokeLinecap="round" opacity="0.85" />
+                <path d="M 306 415 C 335 426 368 440 395 452" fill="none" stroke="url(#ezVeinGoldR)" strokeWidth="3" strokeLinecap="round" opacity="0.9" />
+
+                {/* Specular Glare / Lustre Gloss Cap (Upper Ridge Reflection) */}
+                <path
+                  d="M 304 242 C 325 208 405 168 458 200 C 468 206 470 216 458 216 C 415 192 340 220 306 250 Z"
+                  fill="url(#ezWingGlareArcR)"
+                />
+
+                {/* Diamond Glint Star Sparkle */}
+                <g className="ez-glint-right" filter="url(#ezStarGlow)">
+                  <path d="M 456 194 Q 456 202 464 202 Q 456 202 456 210 Q 456 202 448 202 Q 456 202 456 194 Z" fill="#ffffff" />
+                  <circle cx="456" cy="202" r="2" fill="#fef08a" />
+                </g>
+              </g>
+
+              {/* Animated Lustre Shine / Glare Light Sweep across Butterfly Wings */}
+              <g clipPath="url(#ezButterflyWingsClip)" opacity="0.7">
+                <rect className="ez-lustre-sweep" x="80" y="150" width="140" height="340" fill="url(#ezLustreSheenGrad)" />
               </g>
 
               {/* BUTTERFLY BODY & SPINE */}
@@ -454,6 +618,8 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                   strokeLinecap="round"
                 />
                 <circle cx="218" cy="204" r="5.5" fill="url(#ezWingGoldTrim)" />
+                <circle cx="219" cy="202" r="1.8" fill="#ffffff" />
+
                 <path
                   d="M 303 228 C 315 194 360 180 384 200 C 392 206 388 216 380 214 C 372 212 370 202 380 198"
                   fill="none"
@@ -462,9 +628,12 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
                   strokeLinecap="round"
                 />
                 <circle cx="382" cy="204" r="5.5" fill="url(#ezWingGoldTrim)" />
+                <circle cx="383" cy="202" r="1.8" fill="#ffffff" />
 
                 {/* Head */}
                 <circle cx="300" cy="232" r="11" fill="url(#ezSpineGold)" />
+                <circle cx="298" cy="229" r="3" fill="#ffffff" opacity="0.75" />
+
                 {/* Spine */}
                 <path
                   d="M 296 240 C 295 285 293 365 294 430 L 300 458 L 306 430 C 307 365 305 285 304 240 Z"
@@ -479,30 +648,31 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
           {/* ================= GOLDEN RIBBON BANNER ================= */}
           <g>
             {/* Left Tail */}
-            <path d="M 68 558 L 130 558 L 130 608 L 68 608 L 95 583 Z" fill="url(#ezRibbonDark)" stroke="#92400e" strokeWidth="1" />
-            <polygon points="120,545 130,558 130,608" fill="#451a03" />
+            <path d="M 68 560 L 130 560 L 130 616 L 68 616 L 95 588 Z" fill="url(#ezRibbonDark)" stroke="#92400e" strokeWidth="1" />
+            <polygon points="120,542 130,560 130,616" fill="#451a03" />
 
             {/* Right Tail */}
-            <path d="M 532 558 L 470 558 L 470 608 L 532 608 L 505 583 Z" fill="url(#ezRibbonDark)" stroke="#92400e" strokeWidth="1" />
-            <polygon points="480,545 470,558 470,608" fill="#451a03" />
+            <path d="M 532 560 L 470 560 L 470 616 L 532 616 L 505 588 Z" fill="url(#ezRibbonDark)" stroke="#92400e" strokeWidth="1" />
+            <polygon points="480,542 470,560 470,616" fill="#451a03" />
 
             {/* Front Curved Ribbon Face */}
             <path
-              d="M 115 545 Q 300 575 485 545 L 475 605 Q 300 635 125 605 Z"
+              d="M 115 542 Q 300 572 485 542 L 475 616 Q 300 648 125 616 Z"
               fill="url(#ezRibbonGold)"
               stroke="#78350f"
               strokeWidth="1.5"
             />
-            <path d="M 116 547 Q 300 577 484 547" fill="none" stroke="#fffbeb" strokeWidth="2.5" />
-            <path d="M 126 603 Q 300 633 474 603" fill="none" stroke="#92400e" strokeWidth="2" />
+            {/* Lustrous Gold Bevel Highlights on Ribbon */}
+            <path d="M 116 544 Q 300 574 484 544" fill="none" stroke="#fffbeb" strokeWidth="2.5" />
+            <path d="M 126 614 Q 300 646 474 614" fill="none" stroke="#92400e" strokeWidth="2" />
 
             {/* EXAMIZO Typography */}
             <text
               x="300"
-              y="588"
+              y="581"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="40"
+              fontSize="35"
               fontWeight="900"
               letterSpacing="0.22em"
               fill="#0a1329"
@@ -511,10 +681,10 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             </text>
             <text
               x="300"
-              y="589"
+              y="582"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="40"
+              fontSize="35"
               fontWeight="900"
               letterSpacing="0.22em"
               fill="none"
@@ -523,6 +693,35 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
               opacity="0.4"
             >
               EXAMIZO
+            </text>
+
+            {/* ESTD Typography in Ribbon */}
+            <text
+              x="300"
+              y="604"
+              textAnchor="middle"
+              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontSize="12.5"
+              fontWeight="800"
+              letterSpacing="0.32em"
+              fill="#451a03"
+            >
+              • ESTD. 2026 •
+            </text>
+            <text
+              x="300"
+              y="604.5"
+              textAnchor="middle"
+              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontSize="12.5"
+              fontWeight="800"
+              letterSpacing="0.32em"
+              fill="none"
+              stroke="#fffbeb"
+              strokeWidth="0.5"
+              opacity="0.5"
+            >
+              • ESTD. 2026 •
             </text>
           </g>
         </g>
