@@ -669,10 +669,10 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             {/* EXAMIZO Typography */}
             <text
               x="300"
-              y="581"
+              y="585"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="35"
+              fontSize="34"
               fontWeight="900"
               letterSpacing="0.22em"
               fill="#0a1329"
@@ -681,10 +681,10 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             </text>
             <text
               x="300"
-              y="582"
+              y="586"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="35"
+              fontSize="34"
               fontWeight="900"
               letterSpacing="0.22em"
               fill="none"
@@ -698,24 +698,24 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
             {/* ESTD Typography in Ribbon */}
             <text
               x="300"
-              y="604"
+              y="607.5"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="12.5"
+              fontSize="15.5"
               fontWeight="800"
-              letterSpacing="0.32em"
+              letterSpacing="0.28em"
               fill="#451a03"
             >
               • ESTD. 2026 •
             </text>
             <text
               x="300"
-              y="604.5"
+              y="608.2"
               textAnchor="middle"
               fontFamily="'Cinzel', 'Playfair Display', serif"
-              fontSize="12.5"
+              fontSize="15.5"
               fontWeight="800"
-              letterSpacing="0.32em"
+              letterSpacing="0.28em"
               fill="none"
               stroke="#fffbeb"
               strokeWidth="0.5"
