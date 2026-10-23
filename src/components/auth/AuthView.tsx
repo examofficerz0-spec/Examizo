@@ -362,7 +362,23 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       }
     }
 
-    // Ensure Google Identity Services SDK is loaded
+    // Register Android Native Google Sign-In listeners
+    if (typeof window !== 'undefined') {
+      (window as any).handleNativeGoogleSignIn = (idToken: string, email: string, name: string) => {
+        setGoogleAuthLoading(false);
+        processGoogleAuth({ credential: idToken, email, name });
+      };
+
+      (window as any).handleNativeGoogleError = (statusCode: string) => {
+        setGoogleAuthLoading(false);
+        // 12501 = user dismissed / cancelled the picker, don't show scary error
+        if (statusCode !== '12501' && statusCode !== 'SIGN_IN_CANCELLED') {
+          setError('Google Sign-In was cancelled or encountered an issue. Code: ' + statusCode);
+        }
+      };
+    }
+
+    // Ensure Google Identity Services SDK is loaded for desktop web
     const scriptId = 'google-gsi-script';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -372,9 +388,28 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       script.defer = true;
       document.head.appendChild(script);
     }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).handleNativeGoogleSignIn;
+        delete (window as any).handleNativeGoogleError;
+      }
+    };
   }, []);
 
   const handleGoogleAuth = () => {
+    // ── Strategy 0: Native Android 1-Tap Google Account Picker ──
+    if (typeof window !== 'undefined' && (window as any).AndroidNativeAuth?.launchGoogleSignIn) {
+      setError('');
+      setGoogleAuthLoading(true);
+      try {
+        (window as any).AndroidNativeAuth.launchGoogleSignIn();
+        return;
+      } catch (err) {
+        console.warn('Native Google Auth call failed, falling back to web flow:', err);
+      }
+    }
+
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
     setError('');

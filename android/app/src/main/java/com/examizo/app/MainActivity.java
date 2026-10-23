@@ -1,10 +1,12 @@
 package com.examizo.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -12,16 +14,27 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+
+import org.json.JSONObject;
 
 /**
  * Examizo Native Android Application
  * 
  * Standalone offline-capable mobile app built with Capacitor 8.
- * Direct login screen on boot with proper system status bar margins and light mode.
+ * Direct login screen on boot with proper system status bar margins, light mode,
+ * and 1-tap Native Google Play Services Account Picker.
  */
 public class MainActivity extends BridgeActivity {
 
     private static final String TAG = "ExamizoApp";
+    private static final int RC_SIGN_IN = 9001;
+    private static final String GOOGLE_SERVER_CLIENT_ID = "342748712178-6tqqq7neiln6vnj2ioofqn1qun9gr0gb.apps.googleusercontent.com";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,7 +109,75 @@ public class MainActivity extends BridgeActivity {
         webView.setHorizontalScrollBarEnabled(false);
         webView.setBackgroundColor(0xFFFFFFFF);
 
-        Log.d(TAG, "WebView configured with native caching, third-party cookies, and light theme");
+        // Expose Native Google Play Services bridge to the web view
+        webView.addJavascriptInterface(new NativeAuthBridge(), "AndroidNativeAuth");
+
+        Log.d(TAG, "WebView configured with native caching, Google Play Services bridge, and light theme");
+    }
+
+    /**
+     * Native JavaScript Interface allowing 1-tap Google Sign-In directly using Android OS accounts
+     */
+    public class NativeAuthBridge {
+        @JavascriptInterface
+        public void launchGoogleSignIn() {
+            runOnUiThread(() -> {
+                try {
+                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(GOOGLE_SERVER_CLIENT_ID)
+                        .requestEmail()
+                        .requestProfile()
+                        .build();
+
+                    GoogleSignInClient client = GoogleSignIn.getClient(MainActivity.this, gso);
+                    
+                    // Clear previous sign-in cache so user can always see/select their on-device Google account
+                    client.signOut().addOnCompleteListener(task -> {
+                        Intent signInIntent = client.getSignInIntent();
+                        startActivityForResult(signInIntent, RC_SIGN_IN);
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to launch native Google Sign-In intent", e);
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                if (account != null) {
+                    String idToken = account.getIdToken();
+                    String email = account.getEmail();
+                    String name = account.getDisplayName();
+
+                    WebView webView = getBridge().getWebView();
+                    if (webView != null && idToken != null) {
+                        String js = String.format(
+                            "if (typeof window.handleNativeGoogleSignIn === 'function') { window.handleNativeGoogleSignIn(%s, %s, %s); }",
+                            JSONObject.quote(idToken),
+                            JSONObject.quote(email != null ? email : ""),
+                            JSONObject.quote(name != null ? name : "")
+                        );
+                        webView.evaluateJavascript(js, null);
+                    }
+                }
+            } catch (ApiException e) {
+                Log.e(TAG, "Native Google Sign-In error code: " + e.getStatusCode(), e);
+                WebView webView = getBridge().getWebView();
+                if (webView != null) {
+                    webView.evaluateJavascript(
+                        "if (typeof window.handleNativeGoogleError === 'function') { window.handleNativeGoogleError('" + e.getStatusCode() + "'); }",
+                        null
+                    );
+                }
+            }
+        }
     }
 
     @Override
