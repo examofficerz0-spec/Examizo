@@ -50,8 +50,14 @@ export default function LandingPage() {
   // Scroll position state for dynamic navbar color transition
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Check if student is already logged in; if so, redirect immediately to dashboard or course-selection
+  // Check if student is in mobile app (redirect to /login) or already logged in (redirect to dashboard)
   useEffect(() => {
+    const isApp = typeof navigator !== 'undefined' && /ExamizoApp|Capacitor/i.test(navigator.userAgent);
+    if (isApp) {
+      window.location.replace('/login');
+      return;
+    }
+
     fetch('/api/auth/me', { cache: 'no-store' })
       .then((res) => {
         if (res.ok) return res.json();

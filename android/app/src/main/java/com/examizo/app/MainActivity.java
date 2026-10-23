@@ -71,6 +71,14 @@ public class MainActivity extends BridgeActivity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
+        // Enable local disk caching to minimize server load
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+        // Enable third-party cookies for secure sessions and Google authentication
+        android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
+
         // JavaScript and Viewport
         settings.setJavaScriptEnabled(true);
         settings.setUseWideViewPort(true);
@@ -88,6 +96,20 @@ public class MainActivity extends BridgeActivity {
         webView.setHorizontalScrollBarEnabled(false);
         webView.setBackgroundColor(0xFFFFFFFF);
 
-        Log.d(TAG, "WebView configured for local offline execution with light theme");
+        Log.d(TAG, "WebView configured with native caching, third-party cookies, and light theme");
+    }
+
+    @Override
+    public void onBackPressed() {
+        WebView webView = getBridge().getWebView();
+        if (webView != null && webView.canGoBack()) {
+            String currentUrl = webView.getUrl();
+            // Don't navigate back into auth if already on dashboard or login root
+            if (currentUrl != null && !currentUrl.endsWith("/login") && !currentUrl.endsWith("/dashboard")) {
+                webView.goBack();
+                return;
+            }
+        }
+        super.onBackPressed();
     }
 }

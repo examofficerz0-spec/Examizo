@@ -6,8 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'out',
   
   server: {
+    url: 'https://www.examizo.com/login',
     androidScheme: 'https',
     cleartext: false,
+    allowNavigation: ['www.examizo.com', '*.examizo.com', 'accounts.google.com'],
   },
 
   android: {
@@ -32,16 +34,16 @@ const config: CapacitorConfig = {
       launchShowDuration: 1800,
       launchAutoHide: true,
       launchFadeOutDuration: 400,
-      backgroundColor: '#0F172A',
+      backgroundColor: '#FFFFFF',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: true,
-      spinnerColor: '#3B82F6',
+      spinnerColor: '#2563EB',
       splashFullScreen: false,
       splashImmersive: false,
     },
     StatusBar: {
-      style: 'DARK',
+      style: 'LIGHT',
       backgroundColor: '#FFFFFF',
       overlaysWebView: false,
     },

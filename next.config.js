@@ -4,22 +4,14 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   swcMinify: true,
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  async headers() {
-    return [
-      {
-        source: '/:all*(svg|jpg|png|webp|woff2|woff)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
+  // Note: headers() is not supported with output: 'export'
+  // Cache headers are handled by Vercel's deployment config
 };
 
 module.exports = nextConfig;

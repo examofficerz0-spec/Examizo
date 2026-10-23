@@ -54,8 +54,26 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
+    // If user is already authenticated, redirect straight to dashboard
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.authenticated && data.user) {
+          const courseId = data.user.locked_course_id || data.user.lockedCourseId;
+          if (courseId) {
+            router.replace('/dashboard');
+          } else {
+            router.replace('/course-selection');
+          }
+        }
+      })
+      .catch(() => {});
+
+    const isApp = typeof navigator !== 'undefined' && /ExamizoApp|Capacitor/i.test(navigator.userAgent);
     const handlePopState = () => {
-      window.location.href = '/';
+      if (!isApp) {
+        window.location.href = '/';
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -82,7 +100,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       router.prefetch('/course-selection');
       router.prefetch('/leaderboard');
     } catch (e) {}
-
 
     return () => window.removeEventListener('popstate', handlePopState);
   }, [router]);
@@ -501,21 +518,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         p-6 sm:p-10 lg:p-12
         shadow-[-20px_0_60px_0_rgba(0,0,0,0.40),-40px_0_100px_0_rgba(0,0,0,0.30),-4px_0_16px_0_rgba(0,0,0,0.25)]
         dark:shadow-[-20px_0_60px_0_rgba(0,0,0,0.85),-40px_0_100px_0_rgba(0,0,0,0.75),-4px_0_16px_0_rgba(0,0,0,0.60)]">
-        <div className="pt-[max(env(safe-area-inset-top),16px)]">
-          {/* Centered Mobile-Optimized Brand Header with Bigger Butterfly Crest */}
+        <div className="pt-[max(env(safe-area-inset-top),20px)]">
+          {/* Centered Mobile-Optimized Brand Header with Enlarged Animated Butterfly Crest */}
           <div className="flex flex-col items-center justify-center text-center">
-            <Link
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = '/';
+            <div
+              onClick={() => {
+                const isApp = typeof navigator !== 'undefined' && /ExamizoApp|Capacitor/i.test(navigator.userAgent);
+                if (!isApp) {
+                  window.location.href = '/';
+                }
               }}
-              className="cursor-pointer group mb-2"
+              className="cursor-pointer group mb-2.5 inline-flex items-center justify-center"
             >
-              <div className="transform transition-transform group-hover:scale-105 drop-shadow-md">
-                <ExamizoButterflyIcon size={76} animate={true} interactive={true} autoLoop={true} />
+              <div className="transform transition-transform group-hover:scale-105 active:scale-95 drop-shadow-lg">
+                <ExamizoButterflyIcon size={88} animate={true} interactive={true} autoLoop={true} />
               </div>
-            </Link>
+            </div>
             <div className="flex flex-col items-center justify-center">
               <span className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                 Examizo
