@@ -695,7 +695,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
-                        placeholder="e.g. Ahmad Faraz"
+                        placeholder="Your name"
                       />
                     </div>
                   </div>
@@ -713,7 +713,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
                       className="w-full px-3.5 py-2.5 text-xs bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xs hover:shadow-sm focus:shadow-md focus:outline-none focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15 text-slate-900 dark:text-white font-medium placeholder-slate-400 transition-all"
-                      placeholder="e.g. Ahmad, Sonu, Champ"
+                      placeholder="Your nickname (optional)"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">
                       💡 If not provided, your full name will be listed on your profile card.

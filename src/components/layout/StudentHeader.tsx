@@ -935,7 +935,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   autoFocus
                   value={newProfileFullName}
                   onChange={(e) => setNewProfileFullName(e.target.value)}
-                  placeholder="e.g. Ahmad Faraz"
+                  placeholder="Your name"
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
                 />
               </div>
@@ -950,7 +950,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   type="text"
                   value={newProfileNickname}
                   onChange={(e) => setNewProfileNickname(e.target.value)}
-                  placeholder="e.g. Ahmad, Sonu, Champ"
+                  placeholder="Your nickname (optional)"
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs font-bold"
                 />
                 <p className="text-[10px] text-slate-400">

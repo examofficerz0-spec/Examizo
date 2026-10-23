@@ -634,7 +634,7 @@ export default function ProfilesPage() {
                   autoFocus
                   value={newProfileFullName}
                   onChange={(e) => setNewProfileFullName(e.target.value)}
-                  placeholder="e.g. Ahmad Faraz"
+                  placeholder="Your name"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
                 />
               </div>
@@ -649,7 +649,7 @@ export default function ProfilesPage() {
                   type="text"
                   value={newProfileNickname}
                   onChange={(e) => setNewProfileNickname(e.target.value)}
-                  placeholder="e.g. Ahmad, Sonu, Champ"
+                  placeholder="Your nickname (optional)"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 font-bold text-xs"
                 />
                 <p className="text-[11px] text-slate-400">
