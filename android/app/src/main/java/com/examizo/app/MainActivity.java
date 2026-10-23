@@ -1,20 +1,27 @@
 package com.examizo.app;
 
 import android.content.Intent;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+
+import androidx.core.view.WindowCompat;
 
 import com.getcapacitor.BridgeActivity;
 
 /**
  * Examizo Native Android Application
  * 
- * Standalone offline-capable mobile app built with Capacitor 8.
- * All core user experiences (Dashboard, Practice Quizzes, Mock Tests,
- * Leaderboard, and Profile) run 100% locally on the device from local assets.
+ * Configured with proper system bar margins:
+ * - Content starts below the Android status bar / notification center (fitsSystemWindows)
+ * - Status bar background colored #0F172A with clear light icons
+ * - Standalone offline-capable mobile app running directly on device
  */
 public class MainActivity extends BridgeActivity {
 
@@ -24,10 +31,35 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Configure WebView settings for optimal native performance
+        // 1. Configure status bar margins so the notification control center NEVER overlaps app content
+        Window window = getWindow();
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(0xFF0F172A); // Dark slate matching header theme
+
+        // 2. Ensure Android decor fits system windows (normal app status bar margin)
+        WindowCompat.setDecorFitsSystemWindows(window, true);
+
+        View root = findViewById(android.R.id.content);
+        if (root != null) {
+            root.setFitsSystemWindows(true);
+        }
+
+        // 3. Configure light icons for status bar on dark background
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                controller.setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            View decor = window.getDecorView();
+            decor.setSystemUiVisibility(0);
+        }
+
+        // 4. Configure WebView settings
         configureWebView();
 
-        Log.i(TAG, "Examizo Native App v2.0.0 initialized successfully");
+        Log.i(TAG, "Examizo Native App initialized with proper status bar margins");
     }
 
     private void configureWebView() {
@@ -58,8 +90,6 @@ public class MainActivity extends BridgeActivity {
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
         webView.setBackgroundColor(0xFF0F172A);
-
-        Log.d(TAG, "WebView configured for local offline execution");
     }
 
     @Override

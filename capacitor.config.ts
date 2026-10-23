@@ -42,7 +42,8 @@ const config: CapacitorConfig = {
       splashImmersive: true,
     },
     StatusBar: {
-      style: 'LIGHT',
+      overlays: false,
+      style: 'DARK',
       backgroundColor: '#0F172A',
     },
     Keyboard: {
