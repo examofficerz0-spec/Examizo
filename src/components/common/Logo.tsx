@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExamizoIcon } from './ExamizoIcon';
+import { ExamizoButterflyIcon } from './ExamizoButterflyIcon';
 
 interface LogoProps {
   className?: string;
@@ -10,6 +11,7 @@ interface LogoProps {
   textSize?: string;
   animate?: boolean;
   interactive?: boolean;
+  variant?: 'butterfly' | 'mascot';
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -21,6 +23,7 @@ export const Logo: React.FC<LogoProps> = ({
   textSize,
   animate = true,
   interactive = true,
+  variant = 'butterfly',
 }) => {
   const calculatedTextSize =
     textSize ||
@@ -35,7 +38,11 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div className={`flex items-center gap-3 group examizo-container select-none ${className}`}>
       <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
-        <ExamizoIcon size={size} animate={animate} interactive={interactive} />
+        {variant === 'butterfly' ? (
+          <ExamizoButterflyIcon size={size} animate={animate} interactive={interactive} />
+        ) : (
+          <ExamizoIcon size={size} animate={animate} interactive={interactive} />
+        )}
       </div>
 
       {showText && (
