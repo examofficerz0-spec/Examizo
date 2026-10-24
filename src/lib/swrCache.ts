@@ -178,7 +178,9 @@ export async function prefetchAllStudentData(force = false): Promise<void> {
             const cacheObj = {
               user: data.user || null,
               mockTests: Array.isArray(data.mockTests) ? data.mockTests : [],
+              mockTestHistory: Array.isArray(data.mockTestHistory) ? data.mockTestHistory : [],
               leaderboard: Array.isArray(data.topLeaderboard) ? data.topLeaderboard : [],
+              levelInfo: data.levelInfo || null,
               incorrectLog: Array.isArray(data.incorrectLog) ? data.incorrectLog : [],
             };
             setSwrCache('dashboard_cache', cacheObj, data.user?.email);

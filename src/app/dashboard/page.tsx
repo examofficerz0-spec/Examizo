@@ -39,6 +39,7 @@ import { BookmarkedQuestionsModal } from '@/components/ui/BookmarkedQuestionsMod
 import { getSavedBookmarks } from '@/lib/bookmarks';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
+import { hideNativeSplashScreen } from '@/lib/nativeApp';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
@@ -117,6 +118,7 @@ export default function StudentDashboardPage() {
       if (cached.levelInfo) setLevelInfo(cached.levelInfo);
       if (Array.isArray(cached.incorrectLog)) setIncorrectLog(cached.incorrectLog);
       setLoading(false);
+      hideNativeSplashScreen();
     }
 
     // Live reactive subscription to dashboard data
@@ -232,6 +234,7 @@ export default function StudentDashboardPage() {
       })
       .finally(() => {
         if (isMounted) setLoading(false);
+        hideNativeSplashScreen();
       });
 
     return () => {

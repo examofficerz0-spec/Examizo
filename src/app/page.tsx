@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/common/Logo';
 import { PublicFooter } from '@/components/layout/PublicFooter';
+import { hasSavedSession } from '@/lib/nativeApp';
 import { 
   BookOpen, 
   Trophy, 
@@ -50,11 +51,15 @@ export default function LandingPage() {
   // Scroll position state for dynamic navbar color transition
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Check if student is in mobile app (redirect to /login) or already logged in (redirect to dashboard)
+  // Check if student is in mobile app (redirect to /dashboard or /login) or already logged in (redirect to dashboard)
   useEffect(() => {
     const isApp = typeof navigator !== 'undefined' && /ExamizoApp|Capacitor/i.test(navigator.userAgent);
     if (isApp) {
-      window.location.replace('/login');
+      if (hasSavedSession()) {
+        window.location.replace('/dashboard');
+      } else {
+        window.location.replace('/login');
+      }
       return;
     }
 

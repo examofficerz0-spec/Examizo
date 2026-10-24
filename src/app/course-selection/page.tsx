@@ -6,6 +6,7 @@ import { Logo } from '@/components/common/Logo';
 import { ShieldAlert, Sparkles, BookOpen } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { hideNativeSplashScreen } from '@/lib/nativeApp';
 import {
   CurriculumPickerModal,
   SelectedCurriculumResult,
@@ -33,7 +34,10 @@ export default function CourseSelectionPage() {
         setCourses(active);
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        hideNativeSplashScreen();
+      });
 
     // 2. Verify Auth State and redirect if course is already locked
     fetch('/api/auth/me', { cache: 'no-store' })

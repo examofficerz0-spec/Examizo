@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { hideNativeSplashScreen } from '@/lib/nativeApp';
 import {
   CurriculumPickerModal,
   SelectedCurriculumResult,
@@ -102,6 +103,7 @@ export default function ProfilesPage() {
       console.error('Failed to load profiles:', err);
     } finally {
       setLoading(false);
+      hideNativeSplashScreen();
     }
   };
 

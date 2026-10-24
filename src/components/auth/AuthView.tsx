@@ -7,6 +7,7 @@ import { Logo } from '@/components/common/Logo';
 import { ExamizoButterflyIcon } from '@/components/common/ExamizoButterflyIcon';
 import { User as UserIcon, Mail, Lock, LogIn, ArrowRight, Quote, Eye, EyeOff, ShieldAlert, AlertTriangle, Calendar, Sparkles } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { markSessionActive, hasSavedSession, hideNativeSplashScreen } from '@/lib/nativeApp';
 
 interface AuthViewProps {
   initialMode?: 'signin' | 'register';
@@ -15,6 +16,10 @@ interface AuthViewProps {
 export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const [resumingSession, setResumingSession] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return pathname !== '/register' && hasSavedSession();
+  });
   const [activeTab, setActiveTab] = useState<'signin' | 'register'>(() => {
     if (pathname === '/register') return 'register';
     if (pathname === '/login') return 'signin';
@@ -54,20 +59,48 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
-    // If user is already authenticated, redirect straight to dashboard
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data && data.authenticated && data.user) {
-          const courseId = data.user.locked_course_id || data.user.lockedCourseId;
-          if (courseId) {
-            router.replace('/dashboard');
+    // Fast-path: if student already has saved credentials/cache, jump straight to destination without flashing login form
+    if (hasSavedSession() && pathname !== '/register') {
+      fetch('/api/auth/me', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.authenticated && data.user) {
+            markSessionActive(data.user.email);
+            const courseId = data.user.locked_course_id || data.user.lockedCourseId;
+            if (courseId) {
+              router.replace('/dashboard');
+            } else {
+              router.replace('/course-selection');
+            }
           } else {
-            router.replace('/course-selection');
+            clearAllClientUserCaches();
+            setResumingSession(false);
+            hideNativeSplashScreen();
           }
-        }
-      })
-      .catch(() => {});
+        })
+        .catch(() => {
+          // If offline or network glitch, proceed to cached dashboard
+          router.replace('/dashboard');
+        });
+    } else {
+      // Unauthenticated state: smoothly dismiss native splash screen to reveal login UI
+      hideNativeSplashScreen();
+
+      fetch('/api/auth/me', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.authenticated && data.user) {
+            markSessionActive(data.user.email);
+            const courseId = data.user.locked_course_id || data.user.lockedCourseId;
+            if (courseId) {
+              router.replace('/dashboard');
+            } else {
+              router.replace('/course-selection');
+            }
+          }
+        })
+        .catch(() => {});
+    }
 
     const isApp = typeof navigator !== 'undefined' && /ExamizoApp|Capacitor/i.test(navigator.userAgent);
     const handlePopState = () => {
@@ -157,6 +190,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
 
+        markSessionActive(data.user?.email);
+
         const shouldShowProfiles = Boolean(
           data.requireProfileSelection ||
           data.hasMultipleProfiles ||
@@ -219,6 +254,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         setError(data.error || 'Registration failed');
       } else {
         clearAllClientUserCaches();
+        markSessionActive(data.user?.email);
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
@@ -296,6 +332,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const joinCode = urlParams?.get('joinCode');
         const joinHostId = urlParams?.get('joinHostId');
+        markSessionActive(data.user?.email);
+
         const shouldShowProfiles = Boolean(
           data.requireProfileSelection ||
           data.hasMultipleProfiles ||
@@ -515,6 +553,23 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'signin' }) =>
       setResetLoading(false);
     }
   };
+
+  if (resumingSession) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#070B16] flex flex-col items-center justify-center p-6 space-y-4 select-none">
+        <div className="transform scale-110 drop-shadow-xl">
+          <ExamizoButterflyIcon size={96} animate={true} interactive={false} autoLoop={true} />
+        </div>
+        <div className="flex flex-col items-center justify-center space-y-2 mt-2">
+          <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Examizo</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span>Opening your workspace...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 font-sans text-slate-900 dark:text-slate-100 select-none bg-slate-100 dark:bg-slate-950">

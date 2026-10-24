@@ -1,9 +1,11 @@
 // Centralized client-side cache manager to prevent cross-account data leakage
 import { clearSwrCache } from './swrCache';
+import { markSessionEnded } from './nativeApp';
 
 export function clearAllClientUserCaches(deletedEmail?: string) {
   if (typeof window === 'undefined') return;
   try {
+    markSessionEnded();
     clearSwrCache();
     delete (window as any).__DASHBOARD_CACHE__;
     delete (window as any).__PRACTICE_CACHE__;
