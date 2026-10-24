@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Logo } from '@/components/common/Logo';
 import {
   Lock,
   Plus,
@@ -338,8 +337,7 @@ export default function ProfilesPage() {
       <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Top Header */}
-      <header className="relative z-10 flex items-center justify-between max-w-6xl w-full mx-auto">
-        <Logo size={42} />
+      <header className="relative z-10 flex items-center justify-end max-w-6xl w-full mx-auto">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -353,10 +351,6 @@ export default function ProfilesPage() {
 
       {/* Main Center "Who's Studying?" Container */}
       <main className="relative z-10 flex flex-col items-center justify-center my-auto py-12 max-w-5xl mx-auto w-full text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider mb-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Multi-Profile Academic Hub
-        </div>
-
         <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-3">
           Who is studying today?
         </h1>
