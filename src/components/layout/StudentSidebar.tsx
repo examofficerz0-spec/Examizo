@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
 import { LayoutDashboard, FileText, HelpCircle, Trophy, LogOut, Award, X } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { SignOutConfirmModal } from '../common/SignOutConfirmModal';
 
 interface StudentSidebarProps {
   courseName?: string;
@@ -25,6 +26,8 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   const [courseName, setCourseName] = useState<string>(propsCourseName || '');
   const [progressPercent, setProgressPercent] = useState<number>(propsProgress !== undefined ? propsProgress : 0);
   const [xpTotal, setXpTotal] = useState<number>(propsXp !== undefined ? propsXp : 0);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const handleToggle = () => setMobileOpen((prev) => !prev);
@@ -71,6 +74,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
   ];
 
   const handleLogout = async () => {
+    setIsSigningOut(true);
     clearAllClientUserCaches();
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -149,7 +153,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
         </div>
 
         <button
-          onClick={handleLogout}
+          onClick={() => setShowSignOutModal(true)}
           type="button"
           className="flex items-center gap-2.5 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors w-full px-3.5 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
         >
@@ -179,6 +183,14 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
           </aside>
         </div>
       )}
+
+      {/* Global Sign Out Confirmation Modal */}
+      <SignOutConfirmModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleLogout}
+        isSigningOut={isSigningOut}
+      />
     </>
   );
 };

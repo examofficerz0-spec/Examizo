@@ -21,6 +21,7 @@ import {
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 import { hideNativeSplashScreen } from '@/lib/nativeApp';
+import { SignOutConfirmModal } from '@/components/common/SignOutConfirmModal';
 import {
   CurriculumPickerModal,
   SelectedCurriculumResult,
@@ -55,6 +56,8 @@ export default function ProfilesPage() {
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isManaging, setIsManaging] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // PIN Verification Modal State
   const [selectedProfileForPin, setSelectedProfileForPin] = useState<ProfileItem | null>(null);
@@ -317,6 +320,7 @@ export default function ProfilesPage() {
   };
 
   const handleLogout = async () => {
+    setIsSigningOut(true);
     clearAllClientUserCaches();
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -343,7 +347,7 @@ export default function ProfilesPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => setShowSignOutModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 bg-white transition-all cursor-pointer shadow-xs"
           >
             <LogOut className="w-3.5 h-3.5" /> Sign Out
@@ -874,6 +878,14 @@ export default function ProfilesPage() {
           </div>
         </div>
       )}
+
+      {/* ── MODAL 4: Sign Out Confirmation Dialog ── */}
+      <SignOutConfirmModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleLogout}
+        isSigningOut={isSigningOut}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { SignOutConfirmModal } from '../common/SignOutConfirmModal';
 import {
   Home,
   FileText,
@@ -75,6 +76,8 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [currentCourseName, setCurrentCourseName] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const [isDigiLockerVerified, setIsDigiLockerVerified] = useState<boolean>(() => {
@@ -334,6 +337,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const displayName = userName || 'Student';
 
   const handleLogout = async () => {
+    setIsSigningOut(true);
     clearAllClientUserCaches();
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -875,7 +879,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                     <Smartphone className="w-4 h-4 text-emerald-500" /> Install App / Shortcut
                   </button>
                   <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setShowSignOutModal(true);
+                    }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out Account
@@ -1188,6 +1195,14 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         onSuccess={() => setIsDigiLockerVerified(true)}
         studentName={userName}
         courseName={currentCourseName || undefined}
+      />
+
+      {/* Global Sign Out Confirmation Modal */}
+      <SignOutConfirmModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleLogout}
+        isSigningOut={isSigningOut}
       />
     </>
   );
