@@ -41,6 +41,7 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
   const animTimeRef = useRef(0);
   const lastWingStateRef = useRef<'idle' | 'flapping' | 'landing'>('idle');
   const lastWindRef = useRef(false);
+  const lastInteractionTimeRef = useRef(0);
 
   const calculateTransform = (time: number) => {
     const tNorm = (time % 9.0) / 9.0;
@@ -105,8 +106,41 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
 
   const triggerFlight = useCallback(() => {
     if (!interactive) return;
+    lastInteractionTimeRef.current = Date.now();
     animTimeRef.current = 0.22 * 9.0;
     isPlayingRef.current = true;
+  }, [interactive]);
+
+  // Global Scroll & Click / Pointer interaction listener
+  useEffect(() => {
+    if (!interactive) return;
+
+    let lastThrottle = 0;
+
+    const handleInteraction = () => {
+      const now = Date.now();
+      lastInteractionTimeRef.current = now;
+
+      // Throttle trigger checks to 200ms
+      if (now - lastThrottle < 200) return;
+      lastThrottle = now;
+
+      // If resting or nearing end of previous flight cycle, start flight immediately
+      if (!isPlayingRef.current || animTimeRef.current < 0.22 * 9.0 || animTimeRef.current > 0.88 * 9.0) {
+        animTimeRef.current = 0.22 * 9.0;
+        isPlayingRef.current = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleInteraction, { capture: true, passive: true });
+    window.addEventListener('pointerdown', handleInteraction, { capture: true, passive: true });
+    window.addEventListener('wheel', handleInteraction, { capture: true, passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleInteraction, { capture: true });
+      window.removeEventListener('pointerdown', handleInteraction, { capture: true });
+      window.removeEventListener('wheel', handleInteraction, { capture: true });
+    };
   }, [interactive]);
 
   useEffect(() => {
@@ -120,11 +154,13 @@ export const ExamizoButterflyIcon: React.FC<ExamizoButterflyIconProps> = ({
         animTimeRef.current += dt;
         const cycle = 9.0;
         if (animTimeRef.current >= cycle) {
-          if (autoLoop) {
-            animTimeRef.current = animTimeRef.current % cycle;
+          if (autoLoop || Date.now() - lastInteractionTimeRef.current < 1500) {
+            animTimeRef.current = 0.22 * cycle;
           } else {
             isPlayingRef.current = false;
             animTimeRef.current = 0;
+            const { x, y, scale, rotate } = calculateTransform(0);
+            applyTransform(x, y, scale, rotate);
             if (onFlightComplete) onFlightComplete();
           }
         }
