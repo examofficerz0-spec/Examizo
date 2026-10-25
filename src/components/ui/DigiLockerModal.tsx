@@ -440,6 +440,12 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
       .then((res) => res.json())
       .then((data) => {
         if (data?.user) {
+          if (data.user.digilocker_verified || data.user.digilockerProfile?.verified) {
+            setIsVerified(true);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('examizo_digilocker_verified', 'true');
+            }
+          }
           const courseObj = data.user.lockedCourse;
           const cName = courseObj?.name || courseName || '';
           const comp = isCompetitiveCourse(courseObj || cName);

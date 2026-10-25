@@ -814,10 +814,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                             setShowProfileMenu(false);
                             setShowDigiLockerModal(true);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/80 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
                           title="DigiLocker KYC Verified - Click to view official KYC details"
                         >
-                          <ShieldCheck className="w-3 h-3 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform" />
+                          <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
                           <span>Verified</span>
                         </button>
                       ) : (
@@ -861,6 +861,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
                   {profiles.map((prof, idx) => {
                     const avatarBg = profileColors[idx % profileColors.length];
+                    const isProfVerified = Boolean(prof.digilocker_verified || isDigiLockerVerified);
                     return (
                       <div
                         key={prof.id}
@@ -884,22 +885,36 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                                     {pDisplayName}
                                     {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
                                   </p>
-                                  {(prof.digilocker_verified || (prof.isActive && isDigiLockerVerified)) && (
+                                  {isProfVerified ? (
                                     <button
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setShowProfileMenu(false);
-                                        if (prof.digilockerProfile) {
-                                          setVerifiedDigiProfile(prof.digilockerProfile);
+                                        if (prof.digilockerProfile || verifiedDigiProfile) {
+                                          setVerifiedDigiProfile(prof.digilockerProfile || verifiedDigiProfile);
                                         }
                                         setShowDigiLockerModal(true);
                                       }}
-                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/70 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[8px] font-black uppercase cursor-pointer transition-all active:scale-95 shadow-2xs"
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[8px] font-black uppercase cursor-pointer transition-all active:scale-95 shadow-2xs"
                                       title="DigiLocker Verified - Click to view official KYC details"
                                     >
-                                      <ShieldCheck className="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" />
+                                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
                                       <span>Verified</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowProfileMenu(false);
+                                        window.location.href = '/api/digilocker/authorize';
+                                      }}
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950 text-slate-500 hover:text-sky-700 dark:text-slate-400 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 text-[8px] font-bold uppercase cursor-pointer transition-all active:scale-95 shadow-2xs"
+                                      title="Click to directly verify profile with DigiLocker"
+                                    >
+                                      <ShieldCheck className="w-2.5 h-2.5 text-slate-400 hover:text-sky-600" />
+                                      <span>Verify</span>
                                     </button>
                                   )}
                                 </div>

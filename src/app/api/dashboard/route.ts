@@ -89,7 +89,7 @@ export async function GET() {
       };
 
       const courseDbId = courseRow ? courseRow.id : courseId;
-      const [d1Qs, rawAttempts, rawMockTests, d1Users] = await Promise.all([
+      const [d1Qs, rawAttempts, rawMockTests, d1Users, d1SubProfiles] = await Promise.all([
         queryD1('SELECT * FROM questions WHERE course_id = ? AND (is_active IS NULL OR is_active != 0)', [courseDbId]),
         queryD1(
           'SELECT * FROM attempts WHERE student_id = ? OR sub_profile_id = ? OR student_id = ? OR student_id = ? OR sub_profile_id = ? ORDER BY submitted_at DESC, started_at DESC',
@@ -99,6 +99,9 @@ export async function GET() {
         queryD1(
           "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM users WHERE status != 'Deleted'"
         ),
+        queryD1(
+          "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM sub_profiles WHERE status != 'Deleted'"
+        ).catch(() => []),
       ]);
 
       let d1Attempts = rawAttempts || [];
@@ -464,8 +467,41 @@ export async function GET() {
       });
 
       const cohort = resolveLeaderboardCohort(courseRow || lockedCourse, d1Courses || []);
-      const cohortStudents = (d1Users || [])
-        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses || []) && Number(u.xp_total || 0) > 0)
+
+      const studentMap = new Map<string, any>();
+      (d1Users || []).forEach((u: any) => {
+        studentMap.set(String(u.id), u);
+      });
+      (d1SubProfiles || []).forEach((sp: any) => {
+        const id = String(sp.id);
+        if (!studentMap.has(id)) {
+          studentMap.set(id, sp);
+        } else {
+          const ex = studentMap.get(id);
+          studentMap.set(id, {
+            ...ex,
+            ...sp,
+            locked_course_id: sp.locked_course_id || ex.locked_course_id,
+            xp_total: sp.xp_total ?? ex.xp_total,
+          });
+        }
+      });
+
+      if (!studentMap.has(userId)) {
+        studentMap.set(userId, {
+          id: userId,
+          name: user.name,
+          full_name: user.full_name || user.name,
+          nickname: user.nickname || null,
+          locked_course_id: user.locked_course_id,
+          xp_total: Number(user.xp_total || 0),
+          created_at: user.created_at || new Date().toISOString(),
+        });
+      }
+
+      const allCombinedStudents = Array.from(studentMap.values());
+      const cohortStudents = allCombinedStudents
+        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses || []))
         .sort((a: any, b: any) => {
           const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
           if (xpDiff !== 0) return xpDiff;
@@ -487,11 +523,7 @@ export async function GET() {
         }
       }
       if (rank === 0) {
-        const selfXp = Number(user.xp_total || 0);
-        if (selfXp > 0) {
-          const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-          rank = higherCount + 1;
-        }
+        rank = cohortStudents.length > 0 ? cohortStudents.length : 1;
       }
 
       const activeDisplayName = user.nickname && String(user.nickname).trim() ? String(user.nickname).trim() : (user.full_name || user.name);
@@ -626,8 +658,46 @@ export async function GET() {
     }).sort((x, y) => new Date(y.date || 0).getTime() - new Date(x.date || 0).getTime());
 
     const fallbackCohort = resolveLeaderboardCohort(lockedCourse, db.courses || []);
-    const fallbackCohortStudents = (db.users || [])
-      .filter((u: any) => u.status !== 'Deleted' && isUserInCohort(u.locked_course_id, fallbackCohort, db.courses || []) && Number(u.xp_total || 0) > 0)
+
+    const memStudentMap = new Map<string, any>();
+    (db.users || []).forEach((u: any) => {
+      if (u.status !== 'Deleted') {
+        memStudentMap.set(String(u._id || u.id), u);
+      }
+    });
+    (db.sub_profiles || []).forEach((sp: any) => {
+      if (sp.status !== 'Deleted') {
+        const id = String(sp._id || sp.id);
+        if (!memStudentMap.has(id)) {
+          memStudentMap.set(id, sp);
+        } else {
+          const ex = memStudentMap.get(id);
+          memStudentMap.set(id, {
+            ...ex,
+            ...sp,
+            locked_course_id: sp.locked_course_id || ex.locked_course_id,
+            xp_total: sp.xp_total ?? ex.xp_total,
+          });
+        }
+      }
+    });
+
+    if (!memStudentMap.has(userId)) {
+      memStudentMap.set(userId, {
+        id: userId,
+        _id: userId,
+        name: user.name,
+        full_name: user.full_name || user.name,
+        nickname: user.nickname || null,
+        locked_course_id: user.locked_course_id,
+        xp_total: Number(user.xp_total || 0),
+        created_at: user.created_at || new Date().toISOString(),
+      });
+    }
+
+    const allMemStudents = Array.from(memStudentMap.values());
+    const fallbackCohortStudents = allMemStudents
+      .filter((u: any) => isUserInCohort(u.locked_course_id, fallbackCohort, db.courses || []))
       .sort((a: any, b: any) => {
         const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
         if (xpDiff !== 0) return xpDiff;
@@ -642,11 +712,7 @@ export async function GET() {
       }
     }
     if (fallbackRank === 0) {
-      const selfXp = Number(user.xp_total || 0);
-      if (selfXp > 0) {
-        const higherCount = fallbackCohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-        fallbackRank = higherCount + 1;
-      }
+      fallbackRank = fallbackCohortStudents.length > 0 ? fallbackCohortStudents.length : 1;
     }
 
     const fallbackLeaderboardStudents = fallbackCohortStudents.map((u: any, idx: number) => ({

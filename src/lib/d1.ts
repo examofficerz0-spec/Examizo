@@ -160,6 +160,7 @@ export async function ensureD1Tables() {
         is_primary INTEGER DEFAULT 0,
         digilocker_verified INTEGER DEFAULT 0,
         digilocker_profile_json TEXT DEFAULT '{}',
+        digilocker_raw_response_json TEXT DEFAULT '{}',
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
       )
@@ -411,6 +412,7 @@ export async function ensureD1Tables() {
       executeD1('ALTER TABLE users ADD COLUMN updated_at TEXT'),
       executeD1('ALTER TABLE sub_profiles ADD COLUMN digilocker_verified INTEGER DEFAULT 0'),
       executeD1("ALTER TABLE sub_profiles ADD COLUMN digilocker_profile_json TEXT DEFAULT '{}'"),
+      executeD1("ALTER TABLE sub_profiles ADD COLUMN digilocker_raw_response_json TEXT DEFAULT '{}'"),
       executeD1('ALTER TABLE courses ADD COLUMN board TEXT DEFAULT "CBSE"'),
       executeD1('ALTER TABLE courses ADD COLUMN curriculum TEXT DEFAULT ""'),
       executeD1('ALTER TABLE courses ADD COLUMN subjects_json TEXT DEFAULT "[]"'),

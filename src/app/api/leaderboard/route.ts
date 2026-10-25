@@ -33,12 +33,61 @@ export async function GET() {
       const d1Courses = (await queryD1('SELECT id, name, category, board, curriculum FROM courses')) || [];
       const cohort = resolveLeaderboardCohort(user.locked_course_id, d1Courses);
 
-      const allActiveUsers = await queryD1(
+      const allActiveUsers = (await queryD1(
         "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM users WHERE status = 'Active'"
-      );
+      )) || [];
 
-      const cohortStudents = (allActiveUsers || [])
-        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses) && Number(u.xp_total || 0) > 0)
+      let allActiveSubProfiles: any[] = [];
+      try {
+        allActiveSubProfiles = (await queryD1(
+          "SELECT id, name, nickname, full_name, locked_course_id, xp_total, created_at FROM sub_profiles WHERE status = 'Active'"
+        )) || [];
+      } catch (_) {}
+
+      // Merge into a map by id so sub-profiles and users are both represented
+      const studentMap = new Map<string, any>();
+      allActiveUsers.forEach((u: any) => {
+        studentMap.set(String(u.id), u);
+      });
+      allActiveSubProfiles.forEach((sp: any) => {
+        const id = String(sp.id);
+        if (!studentMap.has(id)) {
+          studentMap.set(id, sp);
+        } else {
+          const ex = studentMap.get(id);
+          studentMap.set(id, {
+            ...ex,
+            ...sp,
+            locked_course_id: sp.locked_course_id || ex.locked_course_id,
+            xp_total: sp.xp_total ?? ex.xp_total,
+          });
+        }
+      });
+
+      // Always ensure current user / active sub-profile is in the studentMap
+      if (!studentMap.has(currentUserId)) {
+        studentMap.set(currentUserId, {
+          id: currentUserId,
+          name: currentDisplayName,
+          full_name: user.full_name || user.name,
+          nickname: user.nickname || null,
+          locked_course_id: user.locked_course_id,
+          xp_total: Number(user.xp_total || 0),
+          created_at: user.created_at || new Date().toISOString(),
+        });
+      } else {
+        const cur = studentMap.get(currentUserId);
+        studentMap.set(currentUserId, {
+          ...cur,
+          locked_course_id: user.locked_course_id || cur.locked_course_id,
+          xp_total: Number(user.xp_total ?? cur.xp_total ?? 0),
+          nickname: user.nickname || cur.nickname,
+        });
+      }
+
+      const allCombinedStudents = Array.from(studentMap.values());
+      const cohortStudents = allCombinedStudents
+        .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, d1Courses))
         .sort((a: any, b: any) => {
           const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
           if (xpDiff !== 0) return xpDiff;
@@ -65,13 +114,9 @@ export async function GET() {
         };
       });
 
-      // If current user is not in the list (e.g. 0 XP or unranked)
+      // If current user is not in the list, place them at the cohort rank
       if (userRank === null) {
-        const selfXp = Number(user.xp_total || 0);
-        if (selfXp > 0) {
-          const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-          userRank = higherCount + 1;
-        }
+        userRank = cohortStudents.length > 0 ? cohortStudents.length : 1;
       }
 
       return NextResponse.json({
@@ -101,8 +146,45 @@ export async function GET() {
     const fallbackCourses = db.courses || [];
     const cohort = resolveLeaderboardCohort(user.locked_course_id, fallbackCourses);
 
-    const cohortStudents = (db.users || [])
-      .filter((u: any) => u.status === 'Active' && isUserInCohort(u.locked_course_id, cohort, fallbackCourses) && Number(u.xp_total || 0) > 0)
+    const memStudentMap = new Map<string, any>();
+    (db.users || []).forEach((u: any) => {
+      if (u.status === 'Active') {
+        memStudentMap.set(String(u._id || u.id), u);
+      }
+    });
+    (db.sub_profiles || []).forEach((sp: any) => {
+      if (sp.status === 'Active') {
+        const id = String(sp._id || sp.id);
+        if (!memStudentMap.has(id)) {
+          memStudentMap.set(id, sp);
+        } else {
+          const ex = memStudentMap.get(id);
+          memStudentMap.set(id, {
+            ...ex,
+            ...sp,
+            locked_course_id: sp.locked_course_id || ex.locked_course_id,
+            xp_total: sp.xp_total ?? ex.xp_total,
+          });
+        }
+      }
+    });
+
+    if (!memStudentMap.has(currentUserId)) {
+      memStudentMap.set(currentUserId, {
+        id: currentUserId,
+        _id: currentUserId,
+        name: currentDisplayName,
+        full_name: user.full_name || user.name,
+        nickname: user.nickname || null,
+        locked_course_id: user.locked_course_id,
+        xp_total: Number(user.xp_total || 0),
+        created_at: user.created_at || new Date().toISOString(),
+      });
+    }
+
+    const allMemStudents = Array.from(memStudentMap.values());
+    const cohortStudents = allMemStudents
+      .filter((u: any) => isUserInCohort(u.locked_course_id, cohort, fallbackCourses))
       .sort((a: any, b: any) => {
         const xpDiff = Number(b.xp_total || 0) - Number(a.xp_total || 0);
         if (xpDiff !== 0) return xpDiff;
@@ -130,11 +212,7 @@ export async function GET() {
     });
 
     if (userRank === null) {
-      const selfXp = Number(user.xp_total || 0);
-      if (selfXp > 0) {
-        const higherCount = cohortStudents.filter((s: any) => Number(s.xp_total || 0) > selfXp).length;
-        userRank = higherCount + 1;
-      }
+      userRank = cohortStudents.length > 0 ? cohortStudents.length : 1;
     }
 
     return NextResponse.json({

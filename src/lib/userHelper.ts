@@ -85,9 +85,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
           if (p.digilocker_verified && !u.digilocker_verified) {
             u.digilocker_verified = 1;
             u.digilocker_profile_json = p.digilocker_profile_json;
-            u.digilocker_raw_response_json = p.digilocker_raw_response_json;
-            executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ? WHERE id = ?', [p.digilocker_profile_json, u.id]).catch(() => {});
-            executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ? WHERE id = ?', [p.digilocker_profile_json, u.id]).catch(() => {});
+            u.digilocker_raw_response_json = p.digilocker_raw_response_json || '{}';
+            executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [p.digilocker_profile_json, p.digilocker_raw_response_json || '{}', u.id]).catch(() => {});
+            executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [p.digilocker_profile_json, p.digilocker_raw_response_json || '{}', u.id]).catch(() => {});
           }
         }
       }
@@ -157,6 +157,45 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
         isD1: true,
       };
     }
+
+    // Check sub_profiles table if not found directly in users table
+    const d1Sub = await queryD1('SELECT * FROM sub_profiles WHERE id = ? LIMIT 1', [userIdStr]);
+    if (d1Sub && d1Sub.length > 0) {
+      const sp = d1Sub[0];
+      const parentEmail = (sp.parent_email || '').toLowerCase().trim();
+      const parentD1 = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR id = ? LIMIT 1', [parentEmail, sp.parent_user_id]);
+      const parentUser = parentD1 && parentD1.length > 0 ? parentD1[0] : null;
+
+      const isVerified = Boolean(sp.digilocker_verified || parentUser?.digilocker_verified);
+      const profJson = sp.digilocker_profile_json || parentUser?.digilocker_profile_json || '{}';
+      const rawJson = sp.digilocker_raw_response_json || parentUser?.digilocker_raw_response_json || '{}';
+
+      if (parentUser?.digilocker_verified && !sp.digilocker_verified) {
+        executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [profJson, rawJson, sp.id]).catch(() => {});
+      }
+
+      const subDigi = parseDigiProfile(profJson, isVerified ? 1 : 0);
+      return {
+        user: {
+          _id: sp.id,
+          id: sp.id,
+          name: sp.nickname || sp.full_name || sp.name,
+          full_name: sp.full_name || sp.name,
+          nickname: sp.nickname || null,
+          email: `${parentEmail.split('@')[0]}+profile_${sp.id.slice(-6)}@examizo.internal`,
+          account_email: parentEmail,
+          locked_course_id: sp.locked_course_id || auth.lockedCourseId || null,
+          status: sp.status || 'Active',
+          xp_total: sp.xp_total || 0,
+          digilocker_verified: isVerified,
+          digilocker_profile_json: profJson,
+          digilocker_raw_response_json: rawJson,
+          digilockerProfile: subDigi,
+        },
+        isMemoryMode: false,
+        isD1: true,
+      };
+    }
   } catch (e) {
     console.warn('[getUserFromAuth] D1 lookup warning:', e);
   }
@@ -175,6 +214,35 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
             (u.email && u.email.toLowerCase() === emailLower) ||
             (u.account_email && u.account_email.toLowerCase() === emailLower)
         );
+      }
+
+      if (!memUser && db.sub_profiles) {
+        const memSub = db.sub_profiles.find(
+          (sp: any) => String(sp._id || sp.id) === userIdStr
+        );
+        if (memSub) {
+          const parentMem = (db.users || []).find((u: any) => String(u._id || u.id) === String(memSub.parent_user_id) || (u.email && u.email.toLowerCase() === (memSub.parent_email || '').toLowerCase()));
+          const isVerified = Boolean(memSub.digilocker_verified || parentMem?.digilocker_verified);
+          const prof = memSub.digilockerProfile || parentMem?.digilockerProfile || parseDigiProfile(memSub.digilocker_profile_json || parentMem?.digilocker_profile_json, isVerified ? 1 : 0);
+          return {
+            user: {
+              ...memSub,
+              name: memSub.nickname || memSub.full_name || memSub.name,
+              full_name: memSub.full_name || memSub.name,
+              nickname: memSub.nickname || null,
+              email: memSub.email || `${(memSub.parent_email || 'student').split('@')[0]}+profile_${String(memSub._id || memSub.id).slice(-6)}@examizo.internal`,
+              account_email: memSub.parent_email || parentMem?.email,
+              locked_course_id: memSub.locked_course_id || auth.lockedCourseId || null,
+              status: memSub.status || 'Active',
+              xp_total: memSub.xp_total || 0,
+              digilocker_verified: isVerified,
+              digilocker_profile_json: memSub.digilocker_profile_json || parentMem?.digilocker_profile_json || '{}',
+              digilocker_raw_response_json: memSub.digilocker_raw_response_json || parentMem?.digilocker_raw_response_json || '{}',
+              digilockerProfile: prof,
+            },
+            isMemoryMode: true,
+          };
+        }
       }
 
       if (memUser) {

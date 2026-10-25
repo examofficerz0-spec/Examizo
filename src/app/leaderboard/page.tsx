@@ -397,8 +397,7 @@ export default function LeaderboardPage() {
     }
   };
 
-  // Leaderboard is locked when the current user has 0 XP
-  const isLocked = !loadingGlobal && userRank !== null && (userRank.xp_total === 0 || !userRank.xp_total);
+
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans relative">
@@ -493,8 +492,8 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Pinned Own Rank Card (Only visible when unlocked) */}
-        {!isLocked && userRank && (
+        {/* Pinned Own Rank Card (Always visible when rank is loaded) */}
+        {userRank && (
           <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-100 dark:border-blue-900/40 p-6 text-slate-900 dark:text-white shadow-xs">
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -524,45 +523,31 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Locked Overlay Screen (When Student has 0 XP) */}
-        {isLocked ? (
-          <div className="rounded-3xl bg-white dark:bg-slate-900 border-2 border-amber-200/80 dark:border-amber-900/60 p-8 md:p-12 text-center max-w-2xl mx-auto space-y-6 shadow-xl my-6 animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-200 dark:border-amber-800 shadow-md">
-              <Lock className="w-10 h-10 stroke-[2]" />
+        {/* 0 XP Practice Suggestion Banner */}
+        {userRank && (userRank.xp_total === 0 || !userRank.xp_total) && (
+          <div className="rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-200/80 dark:border-amber-900/50 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs animate-fade-in">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-900 dark:text-white">You have 0 XP earned so far</p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">Solve daily practice questions and mock tests to earn XP, climb your course standings, and challenge classmates!</p>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <span className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 tracking-wider border border-amber-200 dark:border-amber-800">
-                Leaderboard Locked • 0 XP Earned
-              </span>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Earn Your First XP to Unlock Standings!
-              </h2>
-              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
-                You currently have 0 XP. Complete your first practice set or mock test to earn XP, unlock your official course ranking, and compare performance stats with other students!
-              </p>
-            </div>
-
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => router.push('/practice')}
-                className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Zap className="w-4 h-4 fill-current" /> Start Daily Practice
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/mock-tests')}
-                className="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Take A Mock Test <ArrowRight className="w-4 h-4" />
+                <Zap className="w-3.5 h-3.5 fill-current" /> Start Practice
               </button>
             </div>
           </div>
-        ) : (
-          <>
-            {/* Navigation Tabs Switcher */}
+        )}
+
+        {/* Navigation Tabs Switcher */}
             <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
               <button
                 type="button"
@@ -965,8 +950,6 @@ export default function LeaderboardPage() {
             </div>
           </div>
         )}
-      </>
-    )}
 
   </main>
 
