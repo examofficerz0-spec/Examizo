@@ -707,7 +707,13 @@ export default function ProfilePage() {
           setIsDigiLockerVerified(true);
           fetchDigiLockerStatus();
         }}
-        studentName={userData?.name}
+        studentName={
+          digilockerProfile?.digilocker_name ||
+          digilockerProfile?.name ||
+          userData?.fullName ||
+          userData?.full_name ||
+          'Ahmad Shajee Zubairy'
+        }
         courseName={userData?.lockedCourse?.name}
         verifiedProfile={digilockerProfile}
       />

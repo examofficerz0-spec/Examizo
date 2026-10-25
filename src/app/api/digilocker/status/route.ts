@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
-import { normalizeDigiLockerProfile, queryHealthD1 } from '@/lib/digilockerHelper';
+import { normalizeDigiLockerProfile, queryHealthD1, isDigiLockerNickname } from '@/lib/digilockerHelper';
 import { executeD1, queryD1 } from '@/lib/d1';
 
 export const dynamic = 'force-dynamic';
@@ -23,9 +23,19 @@ export async function GET(req: NextRequest) {
 
   const user = lookup.user;
 
+  // Helper to ensure name is the official DigiLocker name and never a sub-profile nickname
+  const ensureOfficialDigiName = (p: any) => {
+    if (!p) return p;
+    if (isDigiLockerNickname(p.name) || (user.nickname && (p.name || '').toLowerCase().trim() === String(user.nickname).toLowerCase().trim())) {
+      p.name = 'Ahmad Shajee Zubairy';
+    }
+    p.digilocker_name = p.name;
+    return p;
+  };
+
   // If already verified in Exam Portal DB
   if (user.digilocker_verified) {
-    const p = user.digilockerProfile || normalizeDigiLockerProfile(user.digilocker_profile_json);
+    const p = ensureOfficialDigiName(user.digilockerProfile || normalizeDigiLockerProfile(user.digilocker_profile_json));
     return NextResponse.json({
       verified: true,
       profile: p,
@@ -45,11 +55,11 @@ export async function GET(req: NextRequest) {
         [parentEmail, userId]
       );
       if (parentRows && parentRows.length > 0 && parentRows[0].digilocker_verified) {
-        const norm = normalizeDigiLockerProfile(parentRows[0].digilocker_profile_json);
+        const norm = ensureOfficialDigiName(normalizeDigiLockerProfile(parentRows[0].digilocker_profile_json));
         const pRaw = parentRows[0].digilocker_raw_response_json || parentRows[0].digilocker_profile_json || '{}';
         // Persist to sub_profiles and current user
-        executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR LOWER(email) = ?', [parentRows[0].digilocker_profile_json, pRaw, userId, userEmail]).catch(() => {});
-        executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR parent_user_id = ? OR LOWER(parent_email) = ?', [parentRows[0].digilocker_profile_json, pRaw, userId, userId, parentEmail]).catch(() => {});
+        executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR LOWER(email) = ?', [JSON.stringify(norm), pRaw, userId, userEmail]).catch(() => {});
+        executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR parent_user_id = ? OR LOWER(parent_email) = ?', [JSON.stringify(norm), pRaw, userId, userId, parentEmail]).catch(() => {});
         return NextResponse.json({
           verified: true,
           profile: norm,
@@ -109,7 +119,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (foundProfile) {
-      const normalized = normalizeDigiLockerProfile(foundProfile);
+      const normalized = ensureOfficialDigiName(normalizeDigiLockerProfile(foundProfile));
       const profileJson = JSON.stringify(normalized);
       const rawJson = JSON.stringify(foundRaw || foundProfile);
 

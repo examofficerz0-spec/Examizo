@@ -3,6 +3,7 @@ import { readSharedDb } from '@/lib/sharedDb';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUserFromAuth } from '@/lib/userHelper';
 import { queryD1 } from '@/lib/d1';
+import { normalizeDigiLockerProfile } from '@/lib/digilockerHelper';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -117,7 +118,7 @@ export async function GET() {
           }
           const hasOwnVerification = Boolean(u.digilocker_verified === 1 || u.digilocker_verified === true || u.digilocker_verified === '1');
           const isVerified = Boolean(hasOwnVerification || verifiedItem);
-          const activeDigiProfile = uDigi || sharedDigiProfile || null;
+          const activeDigiProfile = (uDigi || sharedDigiProfile) ? normalizeDigiLockerProfile(uDigi || sharedDigiProfile) : null;
 
           return {
             id: String(u.id),
@@ -203,7 +204,7 @@ export async function GET() {
         try { uDigi = JSON.parse(uDigi); } catch (_) {}
       }
       const isVerified = Boolean(u.digilocker_verified || memVerifiedItem);
-      const activeDigiProfile = uDigi || memSharedDigi || null;
+      const activeDigiProfile = (uDigi || memSharedDigi) ? normalizeDigiLockerProfile(uDigi || memSharedDigi) : null;
 
       return {
         id: String(u._id || u.id),

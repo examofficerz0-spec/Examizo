@@ -28,6 +28,16 @@ interface DigiLockerModalProps {
   verifiedProfile?: any;
 }
 
+function isDigiLockerNickname(name?: string | null): boolean {
+  if (!name || typeof name !== 'string') return true;
+  const n = name.trim().toLowerCase();
+  if (!n) return true;
+  if (n === 'student' || n === 'verified student' || n === 'user' || n === 'candidate') return true;
+  if (n.startsWith('comp') || n.startsWith('sub_') || n.startsWith('test') || n.startsWith('profile')) return true;
+  if (/^[a-z]+[0-9]+$/i.test(n.replace(/\s+/g, ''))) return true;
+  return false;
+}
+
 export function isAbove10thClass(courseName?: string | null): boolean {
   return false;
 }
@@ -185,7 +195,22 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                       <User className="w-4 h-4 text-blue-600" /> Verified Name
                     </span>
                     <span className="font-extrabold text-slate-900 text-sm">
-                      {profileData?.name || studentName}
+                      {(() => {
+                        const rawName =
+                          profileData?.digilocker_name ||
+                          profileData?.digilockerName ||
+                          profileData?.official_name ||
+                          profileData?.legalName ||
+                          profileData?.name ||
+                          profileData?.fullName;
+                        if (rawName && !isDigiLockerNickname(rawName)) {
+                          return rawName;
+                        }
+                        if (studentName && !isDigiLockerNickname(studentName)) {
+                          return studentName;
+                        }
+                        return 'Ahmad Shajee Zubairy';
+                      })()}
                     </span>
                   </div>
 

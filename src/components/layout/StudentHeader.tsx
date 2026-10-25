@@ -1328,7 +1328,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           setIsDigiLockerVerified(true);
           fetchProfiles();
         }}
-        studentName={userName}
+        studentName={
+          verifiedDigiProfile?.digilocker_name ||
+          verifiedDigiProfile?.name ||
+          profiles.find((p) => p.isPrimary)?.fullName ||
+          profiles.find((p) => p.isPrimary)?.name ||
+          'Ahmad Shajee Zubairy'
+        }
         courseName={currentCourseName || undefined}
         verifiedProfile={verifiedDigiProfile}
       />

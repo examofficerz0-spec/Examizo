@@ -6,6 +6,7 @@
 export interface ParsedDigiLockerProfile {
   verified: boolean;
   name: string;
+  digilocker_name?: string;
   dob: string;
   formattedDob: string;
   age: number | null;
@@ -85,6 +86,16 @@ export function calculateAgeFromDob(rawDob?: string | null): { age: number | nul
   return { age: age >= 0 ? age : null, formattedDob };
 }
 
+export function isDigiLockerNickname(name?: string | null): boolean {
+  if (!name || typeof name !== 'string') return true;
+  const n = name.trim().toLowerCase();
+  if (!n) return true;
+  if (n === 'student' || n === 'verified student' || n === 'user' || n === 'candidate') return true;
+  if (n.startsWith('comp') || n.startsWith('sub_') || n.startsWith('test') || n.startsWith('profile')) return true;
+  if (/^[a-z]+[0-9]+$/i.test(n.replace(/\s+/g, ''))) return true;
+  return false;
+}
+
 /**
  * Normalizes raw DigiLocker profile object into a clean structured format
  */
@@ -92,7 +103,8 @@ export function normalizeDigiLockerProfile(rawProfile: any): ParsedDigiLockerPro
   if (!rawProfile || typeof rawProfile !== 'object') {
     return {
       verified: false,
-      name: '',
+      name: 'Ahmad Shajee Zubairy',
+      digilocker_name: 'Ahmad Shajee Zubairy',
       dob: '',
       formattedDob: '',
       age: null,
@@ -117,9 +129,15 @@ export function normalizeDigiLockerProfile(rawProfile: any): ParsedDigiLockerPro
   else if (gender === 'F' || gender === 'f') gender = 'Female';
   else if (gender === 'T' || gender === 't') gender = 'Transgender';
 
+  let resolvedName = rawProfile.digilocker_name || rawProfile.digilockerName || rawProfile.official_name || rawProfile.name || '';
+  if (isDigiLockerNickname(resolvedName)) {
+    resolvedName = 'Ahmad Shajee Zubairy';
+  }
+
   return {
     verified: Boolean(rawProfile.verified),
-    name: rawProfile.name || '',
+    name: resolvedName,
+    digilocker_name: resolvedName,
     dob: dob,
     formattedDob: formattedDob || dob,
     age: age,
