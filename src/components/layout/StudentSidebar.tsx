@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
-import { LayoutDashboard, FileText, HelpCircle, Trophy, LogOut, Award, X } from 'lucide-react';
+import { LayoutDashboard, FileText, HelpCircle, Trophy, LogOut, Award, X, History } from 'lucide-react';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
 import { SignOutConfirmModal } from '../common/SignOutConfirmModal';
 
@@ -69,6 +69,8 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Mock Tests', href: '/mock-tests', icon: FileText },
+    { label: 'Exam History', href: '/history', icon: History },
     { label: 'Daily Practice Paper', href: '/practice', icon: HelpCircle },
     { label: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudentHeader } from '@/components/layout/StudentHeader';
 import Link from 'next/link';
-import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight, Zap, Lock } from 'lucide-react';
+import { FileText, PlayCircle, AlertTriangle, ShieldAlert, RotateCcw, X, BookOpen, ArrowRight, Zap, Lock, History } from 'lucide-react';
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
 
@@ -143,50 +143,60 @@ export default function MockTestsListPage() {
             </p>
           </div>
 
-          {/* Filter Pills with Smooth Sliding Background Pill */}
-          <div className="relative flex items-center bg-white p-1 rounded-xl border border-slate-200/80 shadow-xs select-none">
-            {/* Animated Sliding Background Pill */}
-            <div
-              className="absolute top-1 bottom-1 rounded-lg bg-blue-600 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{
-                width: 'calc(33.333% - 3px)',
-                left: filterType === 'all' ? '4px' : filterType === 'full' ? 'calc(33.333% + 1.5px)' : 'calc(66.666% - 1px)',
-              }}
-            />
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Filter Pills with Smooth Sliding Background Pill */}
+            <div className="relative flex items-center bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs select-none">
+              {/* Animated Sliding Background Pill */}
+              <div
+                className="absolute top-1 bottom-1 rounded-lg bg-blue-600 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                  width: 'calc(33.333% - 3px)',
+                  left: filterType === 'all' ? '4px' : filterType === 'full' ? 'calc(33.333% + 1.5px)' : 'calc(66.666% - 1px)',
+                }}
+              />
 
-            <button
-              type="button"
-              onClick={() => setFilterType('all')}
-              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
-                filterType === 'all'
-                  ? 'text-white font-black'
-                  : 'text-slate-600 hover:text-slate-900 font-bold'
-              }`}
+              <button
+                type="button"
+                onClick={() => setFilterType('all')}
+                className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
+                  filterType === 'all'
+                    ? 'text-white font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold'
+                }`}
+              >
+                All Tests
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('full')}
+                className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
+                  filterType === 'full'
+                    ? 'text-white font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold'
+                }`}
+              >
+                Full Mocks
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType('sectional')}
+                className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
+                  filterType === 'sectional'
+                    ? 'text-white font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold'
+                }`}
+              >
+                Sectional
+              </button>
+            </div>
+
+            <Link
+              href="/history"
+              className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              All Tests
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType('full')}
-              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
-                filterType === 'full'
-                  ? 'text-white font-black'
-                  : 'text-slate-600 hover:text-slate-900 font-bold'
-              }`}
-            >
-              Full Mocks
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType('sectional')}
-              className={`relative z-10 px-3 py-1.5 text-xs transition-colors duration-200 flex-1 text-center ${
-                filterType === 'sectional'
-                  ? 'text-white font-black'
-                  : 'text-slate-600 hover:text-slate-900 font-bold'
-              }`}
-            >
-              Sectional
-            </button>
+              <History className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Attempt History</span>
+            </Link>
           </div>
         </div>
 
