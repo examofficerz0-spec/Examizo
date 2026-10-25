@@ -214,11 +214,26 @@ export default function ProfilePage() {
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 flex-1 pb-24 lg:pb-0">
         
         {/* Header */}
-        <div className="border-b border-slate-200 dark:border-slate-800 pb-6">
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings & Profile</h1>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-            Update your account information and view your active track.
-          </p>
+        <div className="border-b border-slate-200 dark:border-slate-800 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings & Profile</h1>
+              {isDigiLockerVerified && (
+                <button
+                  type="button"
+                  onClick={() => setShowDigiLockerModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/80 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs active:scale-95 group"
+                  title="DigiLocker Verified - Click to view official KYC details"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform" />
+                  <span>Verified</span>
+                </button>
+              )}
+            </div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              Update your account information and view your active track.
+            </p>
+          </div>
         </div>
 
         {message && (
@@ -682,9 +697,13 @@ export default function ProfilePage() {
       <DigiLockerModal
         isOpen={showDigiLockerModal}
         onClose={() => setShowDigiLockerModal(false)}
-        onSuccess={() => setIsDigiLockerVerified(true)}
+        onSuccess={() => {
+          setIsDigiLockerVerified(true);
+          fetchDigiLockerStatus();
+        }}
         studentName={userData?.name}
         courseName={userData?.lockedCourse?.name}
+        verifiedProfile={digilockerProfile}
       />
     </div>
   );

@@ -48,12 +48,24 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
   const [mounted, setMounted] = useState(false);
   const [showWarmup, setShowWarmup] = useState(false);
   const [profileData, setProfileData] = useState<any>(verifiedProfile || null);
-  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(() => {
+    if (verifiedProfile && (verifiedProfile.verified || verifiedProfile.name)) return true;
+    return getDigiLockerStatus();
+  });
   const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (verifiedProfile) {
+      setProfileData(verifiedProfile);
+      if (verifiedProfile.verified !== false) {
+        setIsVerified(true);
+      }
+    }
+  }, [verifiedProfile]);
 
   // Lock background body scrolling while modal is open
   useEffect(() => {
@@ -71,7 +83,9 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setLoadingStatus(true);
+      if (!profileData && !isVerified) {
+        setLoadingStatus(true);
+      }
       fetch('/api/digilocker/status')
         .then((res) => res.json())
         .then((data) => {
@@ -79,7 +93,7 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
             setIsVerified(true);
             setProfileData(data.profile);
             localStorage.setItem('examizo_digilocker_verified', 'true');
-          } else {
+          } else if (!verifiedProfile) {
             setIsVerified(false);
           }
         })

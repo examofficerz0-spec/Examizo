@@ -145,9 +145,40 @@ export async function POST(req: NextRequest) {
 
   // 4. Update Exam Portal D1 Database
   try {
+    // 4a. Update current user in users table
     await executeD1(
-      'UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR LOWER(email) = ?',
+      'UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime("now") WHERE id = ? OR LOWER(email) = ?',
       [profileJson, rawResponseJson, userId, userEmail]
+    );
+
+    // 4b. Find parent email or account email to update all family sub-profiles and users
+    let parentEmail = userEmail;
+    try {
+      const uRows = await queryD1('SELECT id, email, account_email FROM users WHERE id = ? OR LOWER(email) = ? LIMIT 1', [userId, userEmail]);
+      if (uRows && uRows.length > 0) {
+        const u = uRows[0];
+        if (u.account_email) {
+          parentEmail = u.account_email.toLowerCase().trim();
+        } else if (u.email && u.email.includes('+')) {
+          parentEmail = `${u.email.split('+')[0]}@${u.email.split('@')[1]}`.toLowerCase().trim();
+        }
+      }
+    } catch (_) {}
+
+    const baseHandle = (parentEmail || userEmail).split('@')[0].split('+')[0].trim();
+
+    // 4c. Update parent user and linked sub-profiles in users table
+    await executeD1(
+      `UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime('now')
+       WHERE id = ? OR LOWER(email) = ? OR LOWER(account_email) = ? OR LOWER(email) LIKE ? OR LOWER(account_email) LIKE ?`,
+      [profileJson, rawResponseJson, userId, parentEmail, parentEmail, `${baseHandle}@%`, `${baseHandle}+%`]
+    );
+
+    // 4d. Update sub_profiles SQL table
+    await executeD1(
+      `UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, updated_at = datetime('now')
+       WHERE id = ? OR parent_user_id = ? OR LOWER(parent_email) = ? OR LOWER(parent_email) LIKE ?`,
+      [profileJson, userId, userId, parentEmail, `${baseHandle}@%`]
     );
   } catch (d1Err) {
     console.error('[DigiLocker Sync] D1 update error:', d1Err);
@@ -157,14 +188,38 @@ export async function POST(req: NextRequest) {
   try {
     const db = readSharedDb();
     if (db && db.users) {
-      const idx = db.users.findIndex((u: any) => u.id === userId || (u.email && u.email.toLowerCase() === userEmail));
-      if (idx !== -1) {
-        db.users[idx].digilocker_verified = 1;
-        db.users[idx].digilocker_profile_json = profileJson;
-        db.users[idx].digilocker_raw_response_json = rawResponseJson;
-        db.users[idx].digilockerProfile = normalized;
-        writeSharedDb(db);
+      const baseHandle = (userEmail).split('@')[0].split('+')[0].trim();
+      db.users.forEach((u: any) => {
+        const uEmail = (u.email || '').toLowerCase();
+        const uAcct = (u.account_email || '').toLowerCase();
+        if (
+          u.id === userId ||
+          u._id === userId ||
+          uEmail === userEmail ||
+          (baseHandle && (uEmail.startsWith(baseHandle) || uAcct.startsWith(baseHandle)))
+        ) {
+          u.digilocker_verified = 1;
+          u.digilocker_profile_json = profileJson;
+          u.digilocker_raw_response_json = rawResponseJson;
+          u.digilockerProfile = normalized;
+        }
+      });
+      if (db.sub_profiles) {
+        db.sub_profiles.forEach((sp: any) => {
+          const spParent = (sp.parent_email || '').toLowerCase();
+          if (
+            sp.id === userId ||
+            sp._id === userId ||
+            sp.parent_user_id === userId ||
+            (baseHandle && spParent.startsWith(baseHandle))
+          ) {
+            sp.digilocker_verified = 1;
+            sp.digilocker_profile_json = profileJson;
+            sp.digilockerProfile = normalized;
+          }
+        });
       }
+      writeSharedDb(db);
     }
   } catch (memErr) {
     console.warn('[DigiLocker Sync] SharedDb update warning:', memErr);

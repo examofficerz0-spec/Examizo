@@ -96,11 +96,28 @@ export async function GET() {
 
         const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
+        // Check if any profile in family has digilocker verification
+        const verifiedItem = combinedProfiles.find(
+          (p: any) => p.digilocker_verified === 1 || p.digilocker_verified === true || p.digilocker_verified === '1'
+        );
+        let sharedDigiProfile = verifiedItem?.digilocker_profile_json;
+        if (typeof sharedDigiProfile === 'string') {
+          try { sharedDigiProfile = JSON.parse(sharedDigiProfile); } catch (_) {}
+        }
+
         const profiles = sortedD1Users.map((u: any, idx: number) => {
           const isPrimary = Boolean(u.is_primary === 1 || u.is_primary === true || (u.email && !u.email.includes('+')));
           const effectiveFullName = u.full_name || u.name;
           const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
           const displayName = effectiveNickname || effectiveFullName;
+
+          let uDigi = u.digilocker_profile_json;
+          if (typeof uDigi === 'string') {
+            try { uDigi = JSON.parse(uDigi); } catch (_) {}
+          }
+          const hasOwnVerification = Boolean(u.digilocker_verified === 1 || u.digilocker_verified === true || u.digilocker_verified === '1');
+          const isVerified = Boolean(hasOwnVerification || verifiedItem);
+          const activeDigiProfile = uDigi || sharedDigiProfile || null;
 
           return {
             id: String(u.id),
@@ -118,6 +135,8 @@ export async function GET() {
             hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
             avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],
             xp_total: u.xp_total || 0,
+            digilocker_verified: isVerified,
+            digilockerProfile: activeDigiProfile,
           };
         });
 
@@ -164,12 +183,27 @@ export async function GET() {
     const family = Array.from(memProfileMap.values());
     const avatarPalettes = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600'];
 
+    const memVerifiedItem = family.find(
+      (p: any) => p.digilocker_verified === 1 || p.digilocker_verified === true || p.digilocker_verified === '1' || p.digilockerProfile?.verified
+    );
+    let memSharedDigi = memVerifiedItem?.digilockerProfile || memVerifiedItem?.digilocker_profile_json;
+    if (typeof memSharedDigi === 'string') {
+      try { memSharedDigi = JSON.parse(memSharedDigi); } catch (_) {}
+    }
+
     const profiles = family.map((u: any, idx: number) => {
       const lockedCourse = (db.courses || []).find((c: any) => String(c._id) === String(u.locked_course_id) || String(c.id) === String(u.locked_course_id)) || null;
       const isPrimary = Boolean(u.is_primary === 1 || u.is_primary === true || !(u.email || '').includes('+'));
       const effectiveFullName = u.full_name || u.name;
       const effectiveNickname = u.nickname && String(u.nickname).trim() ? String(u.nickname).trim() : null;
       const displayName = effectiveNickname || effectiveFullName;
+
+      let uDigi = u.digilockerProfile || u.digilocker_profile_json;
+      if (typeof uDigi === 'string') {
+        try { uDigi = JSON.parse(uDigi); } catch (_) {}
+      }
+      const isVerified = Boolean(u.digilocker_verified || memVerifiedItem);
+      const activeDigiProfile = uDigi || memSharedDigi || null;
 
       return {
         id: String(u._id || u.id),
@@ -187,6 +221,8 @@ export async function GET() {
         hasPin: Boolean(u.pin && String(u.pin).trim().length === 4),
         avatarColor: u.avatar_color || avatarPalettes[idx % avatarPalettes.length],
         xp_total: u.xp_total || 0,
+        digilocker_verified: isVerified,
+        digilockerProfile: activeDigiProfile,
       };
     });
 
@@ -211,6 +247,8 @@ export async function GET() {
         hasPin: Boolean(currentUser.pin && String(currentUser.pin).trim().length === 4),
         avatarColor: currentUser.avatar_color || 'bg-blue-600',
         xp_total: currentUser.xp_total || 0,
+        digilocker_verified: Boolean(currentUser.digilocker_verified),
+        digilockerProfile: currentUser.digilockerProfile || null,
       };
       return NextResponse.json({ success: true, profiles: [defaultProfile] });
     }

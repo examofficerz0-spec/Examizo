@@ -80,6 +80,15 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
               isD1: true,
             };
           }
+
+          // If parent is verified and sub-profile is not, inherit and persist
+          if (p.digilocker_verified && !u.digilocker_verified) {
+            u.digilocker_verified = 1;
+            u.digilocker_profile_json = p.digilocker_profile_json;
+            u.digilocker_raw_response_json = p.digilocker_raw_response_json;
+            executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ? WHERE id = ?', [p.digilocker_profile_json, u.id]).catch(() => {});
+            executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ? WHERE id = ?', [p.digilocker_profile_json, u.id]).catch(() => {});
+          }
         }
       }
 
@@ -186,6 +195,12 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
             if (isSubDeleted || isSubSuspended) {
               // Sub-profile suspended: Fallback to active parent user
               return { user: parentMem, isMemoryMode: true };
+            }
+
+            if (parentMem && (parentMem.digilocker_verified || parentMem.digilockerProfile?.verified) && !memUser.digilocker_verified) {
+              memUser.digilocker_verified = 1;
+              memUser.digilocker_profile_json = parentMem.digilocker_profile_json || JSON.stringify(parentMem.digilockerProfile || {});
+              memUser.digilockerProfile = parentMem.digilockerProfile || parseDigiProfile(parentMem.digilocker_profile_json, 1);
             }
           }
         }

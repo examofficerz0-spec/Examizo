@@ -68,6 +68,8 @@ interface ProfileItem {
   hasPin?: boolean;
   avatarColor?: string;
   xp_total: number;
+  digilocker_verified?: boolean;
+  digilockerProfile?: any;
 }
 
 export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUserName, onBack, hideNav }) => {
@@ -85,8 +87,9 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
     if (typeof window !== 'undefined') {
       return getDigiLockerStatus();
     }
-    return true;
+    return false;
   });
+  const [verifiedDigiProfile, setVerifiedDigiProfile] = useState<any>(null);
   const [showDigiLockerModal, setShowDigiLockerModal] = useState<boolean>(false);
 
   const [textSize, setTextSize] = useState<number>(100);
@@ -244,6 +247,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               localStorage.setItem('examizo_cached_course_name', active.lockedCourseName);
               localStorage.setItem('examizo_is_competitive', isCompetitiveCourse(active.lockedCourseName) ? 'true' : 'false');
             }
+            if (active.digilocker_verified || active.digilockerProfile?.verified) {
+              setIsDigiLockerVerified(true);
+              if (active.digilockerProfile) {
+                setVerifiedDigiProfile(active.digilockerProfile);
+              }
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('examizo_digilocker_verified', 'true');
+              }
+            }
           }
         }
       }
@@ -272,6 +284,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         if (data?.user) {
           setUserName(data.user.name);
           setCurrentUserEmail(data.user.email);
+          if (data.user.digilocker_verified || data.user.digilockerProfile?.verified) {
+            setIsDigiLockerVerified(true);
+            if (data.user.digilockerProfile) {
+              setVerifiedDigiProfile(data.user.digilockerProfile);
+            }
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('examizo_digilocker_verified', 'true');
+            }
+          }
           if (data.user.lockedCourse?.name) {
             const cName = data.user.lockedCourse.name;
             setCurrentCourseName(cName);
@@ -290,6 +311,22 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
   useEffect(() => {
     fetchProfiles();
+
+    // Also check DigiLocker status endpoint directly
+    fetch('/api/digilocker/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.verified) {
+          setIsDigiLockerVerified(true);
+          if (data.profile) {
+            setVerifiedDigiProfile(data.profile);
+          }
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('examizo_digilocker_verified', 'true');
+          }
+        }
+      })
+      .catch(() => {});
 
     try {
       const saved = localStorage.getItem('exammaster_text_scale');
@@ -743,10 +780,39 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-900 dark:text-white truncate">{displayName}</p>
                     <p className="text-[10px] text-slate-400 font-mono truncate">{currentUserEmail || 'Active Student Account'}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold tracking-wider uppercase">
                         ✓ Active Profile
                       </span>
+                      {isDigiLockerVerified ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowProfileMenu(false);
+                            setShowDigiLockerModal(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/80 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                          title="DigiLocker KYC Verified - Click to view official KYC details"
+                        >
+                          <ShieldCheck className="w-3 h-3 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform" />
+                          <span>Verified</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowProfileMenu(false);
+                            setShowDigiLockerModal(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/50 text-slate-600 hover:text-sky-700 dark:text-slate-400 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer group"
+                          title="Click to verify student profile with DigiLocker"
+                        >
+                          <ShieldCheck className="w-3 h-3 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                          <span>Verify</span>
+                        </button>
+                      )}
                       {currentCourseName ? (
                         <span className="inline-block px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[9px] font-extrabold truncate max-w-[110px]">
                           {currentCourseName}
@@ -791,10 +857,30 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                                 {pDisplayName.charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate flex items-center gap-1">
-                                  {pDisplayName}
-                                  {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
-                                </p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate flex items-center gap-1">
+                                    {pDisplayName}
+                                    {prof.hasPin && <Lock className="w-2.5 h-2.5 text-amber-500 inline shrink-0" />}
+                                  </p>
+                                  {(prof.digilocker_verified || (prof.isActive && isDigiLockerVerified)) && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowProfileMenu(false);
+                                        if (prof.digilockerProfile) {
+                                          setVerifiedDigiProfile(prof.digilockerProfile);
+                                        }
+                                        setShowDigiLockerModal(true);
+                                      }}
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/70 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[8px] font-black uppercase cursor-pointer transition-all active:scale-95 shadow-2xs"
+                                      title="DigiLocker Verified - Click to view official KYC details"
+                                    >
+                                      <ShieldCheck className="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" />
+                                      <span>Verified</span>
+                                    </button>
+                                  )}
+                                </div>
                                 {prof.nickname && prof.fullName && prof.nickname !== prof.fullName ? (
                                   <p className="text-[10px] text-slate-400 font-medium truncate">
                                     {prof.fullName}
@@ -1201,9 +1287,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       <DigiLockerModal
         isOpen={showDigiLockerModal}
         onClose={() => setShowDigiLockerModal(false)}
-        onSuccess={() => setIsDigiLockerVerified(true)}
+        onSuccess={() => {
+          setIsDigiLockerVerified(true);
+          fetchProfiles();
+        }}
         studentName={userName}
         courseName={currentCourseName || undefined}
+        verifiedProfile={verifiedDigiProfile}
       />
 
       {/* Global Sign Out Confirmation Modal */}

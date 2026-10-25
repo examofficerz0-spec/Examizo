@@ -132,8 +132,11 @@ export async function POST(req: Request) {
         const profileId = generateId();
         const profileEmail = `${mainEmail.split('@')[0]}+profile_${Date.now() % 10000}_${Math.floor(Math.random() * 1000)}@examizo.internal`;
 
+        const parentDigiVerified = currentUser.digilocker_verified ? 1 : 0;
+        const parentDigiJson = currentUser.digilocker_profile_json || '{}';
+
         await executeD1(
-          `INSERT INTO users (id, name, full_name, nickname, dob, email, account_email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO users (id, name, full_name, nickname, dob, email, account_email, password_hash, status, xp_total, friends_json, friend_requests_json, created_at, locked_course_id, pin, avatar_color, digilocker_verified, digilocker_profile_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             profileId,
             cleanFullName,
@@ -151,13 +154,15 @@ export async function POST(req: Request) {
             cleanCourseId,
             cleanPin,
             cleanAvatarColor,
+            parentDigiVerified,
+            parentDigiJson,
           ]
         );
 
         // Also insert into dedicated sub_profiles table
         executeD1(
-          `INSERT OR REPLACE INTO sub_profiles (id, parent_user_id, parent_email, name, full_name, nickname, dob, pin, avatar_color, locked_course_id, xp_total, status, is_primary)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'Active', 0)`,
+          `INSERT OR REPLACE INTO sub_profiles (id, parent_user_id, parent_email, name, full_name, nickname, dob, pin, avatar_color, locked_course_id, xp_total, status, is_primary, digilocker_verified, digilocker_profile_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'Active', 0, ?, ?)`,
           [
             profileId,
             String(currentUser._id || currentUser.id || auth.userId),
@@ -169,6 +174,8 @@ export async function POST(req: Request) {
             cleanPin,
             cleanAvatarColor,
             cleanCourseId,
+            parentDigiVerified,
+            parentDigiJson,
           ]
         ).catch(() => {});
 
@@ -191,6 +198,9 @@ export async function POST(req: Request) {
               avatar_color: cleanAvatarColor,
               status: 'Active',
               xp_total: 0,
+              digilocker_verified: parentDigiVerified,
+              digilocker_profile_json: parentDigiJson,
+              digilockerProfile: currentUser.digilockerProfile || null,
               created_at: new Date().toISOString(),
             });
             if (!db.sub_profiles) db.sub_profiles = [];
@@ -209,6 +219,9 @@ export async function POST(req: Request) {
               xp_total: 0,
               status: 'Active',
               is_primary: 0,
+              digilocker_verified: parentDigiVerified,
+              digilocker_profile_json: parentDigiJson,
+              digilockerProfile: currentUser.digilockerProfile || null,
               created_at: new Date().toISOString(),
             });
             writeSharedDb(db);
@@ -287,6 +300,9 @@ export async function POST(req: Request) {
       avatar_color: cleanAvatarColor,
       status: 'Active',
       xp_total: 0,
+      digilocker_verified: currentUser.digilocker_verified ? 1 : 0,
+      digilocker_profile_json: currentUser.digilocker_profile_json || '{}',
+      digilockerProfile: currentUser.digilockerProfile || null,
       created_at: new Date().toISOString(),
     };
 
@@ -311,6 +327,9 @@ export async function POST(req: Request) {
       xp_total: 0,
       status: 'Active',
       is_primary: 0,
+      digilocker_verified: currentUser.digilocker_verified ? 1 : 0,
+      digilocker_profile_json: currentUser.digilocker_profile_json || '{}',
+      digilockerProfile: currentUser.digilockerProfile || null,
       created_at: new Date().toISOString(),
     });
     writeSharedDb(db);
