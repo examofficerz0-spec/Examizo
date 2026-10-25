@@ -17,6 +17,7 @@ import {
   AlertCircle,
   X,
   ChevronDown,
+  ChevronUp,
   Search,
   Maximize2,
   CheckCircle2,
@@ -59,7 +60,9 @@ export default function StudentDashboardPage() {
   const [incorrectLog, setIncorrectLog] = useState<any[]>([]);
   const [showLogModal, setShowLogModal] = useState(false);
   const [logSearch, setLogSearch] = useState('');
-  const [isMistakeCardExpanded, setIsMistakeCardExpanded] = useState(false);
+  const [isMistakeCardExpanded, setIsMistakeCardExpanded] = useState(true);
+  const [showAllMistakeSets, setShowAllMistakeSets] = useState(false);
+  const [expandedTestQuestions, setExpandedTestQuestions] = useState<Record<string, boolean>>({});
   const [openTestGroups, setOpenTestGroups] = useState<Record<string, boolean>>({});
   const [openQuestions, setOpenQuestions] = useState<Record<string, boolean>>({});
   const [activeLogTab, setActiveLogTab] = useState<'all' | 'mock' | 'practice'>('all');
@@ -294,8 +297,20 @@ export default function StudentDashboardPage() {
         };
         groupMap.set(testId, newGroup);
         groups.push(newGroup);
+      } else if (item.attemptedAt) {
+        const existing = groupMap.get(testId)!;
+        if (!existing.attemptedAt || new Date(item.attemptedAt).getTime() > new Date(existing.attemptedAt).getTime()) {
+          existing.attemptedAt = item.attemptedAt;
+        }
       }
       groupMap.get(testId)!.items.push(item);
+    });
+
+    // Ensure groups are sorted with latest attempted sets first
+    groups.sort((a, b) => {
+      const timeA = a.attemptedAt ? new Date(a.attemptedAt).getTime() : 0;
+      const timeB = b.attemptedAt ? new Date(b.attemptedAt).getTime() : 0;
+      return timeB - timeA;
     });
 
     return groups;
@@ -679,7 +694,41 @@ export default function StudentDashboardPage() {
         >
           <div className="overflow-hidden">
             <div className="p-3 sm:p-4 space-y-2.5 bg-slate-50/30 dark:bg-slate-950/30">
-              {group.items.map((item, qIdx) => renderQuestionItem(item, qIdx, group.testId))}
+              {(() => {
+                const showAllQs = Boolean(expandedTestQuestions[group.testId]);
+                const visibleItems = showAllQs ? group.items : group.items.slice(0, 5);
+                return (
+                  <>
+                    {visibleItems.map((item, qIdx) => renderQuestionItem(item, qIdx, group.testId))}
+                    {group.items.length > 5 && (
+                      <div className="pt-1.5 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTestQuestions((prev) => ({
+                              ...prev,
+                              [group.testId]: !prev[group.testId],
+                            }));
+                          }}
+                          className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-black text-blue-600 dark:text-blue-400 border border-slate-200/80 dark:border-slate-800 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <span>
+                            {showAllQs
+                              ? 'Show Fewer Questions'
+                              : `Show More Questions (${group.items.length - 5} remaining)`}
+                          </span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                              showAllQs ? 'rotate-180' : 'rotate-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1095,7 +1144,31 @@ export default function StudentDashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {groupedTestLogs.map((group) => renderTestGroupAccordion(group))}
+                  {(showAllMistakeSets ? groupedTestLogs : groupedTestLogs.slice(0, 5)).map((group) =>
+                    renderTestGroupAccordion(group)
+                  )}
+
+                  {/* Show More / Show Less Button */}
+                  {groupedTestLogs.length > 5 && (
+                    <div className="pt-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowAllMistakeSets(!showAllMistakeSets)}
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-xs font-black text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center gap-2 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs cursor-pointer active:scale-95"
+                      >
+                        <span>
+                          {showAllMistakeSets
+                            ? 'Show Less Test Sets'
+                            : `Show More (${groupedTestLogs.length - 5} More Test Sets)`}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-200 ${
+                            showAllMistakeSets ? 'rotate-180' : 'rotate-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
