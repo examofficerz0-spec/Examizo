@@ -312,6 +312,28 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   useEffect(() => {
     fetchProfiles();
 
+    // Check for ?digilocker=success in URL query after returning from DigiLocker Gateway
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dlParam = urlParams.get('digilocker');
+      if (dlParam === 'success') {
+        fetch('/api/digilocker/sync', { method: 'POST' })
+          .then((res) => res.json())
+          .then((syncData) => {
+            if (syncData && syncData.verified) {
+              setIsDigiLockerVerified(true);
+              setVerifiedDigiProfile(syncData.profile);
+              localStorage.setItem('examizo_digilocker_verified', 'true');
+              window.dispatchEvent(new Event('digilocker_status_change'));
+              fetchProfiles();
+            }
+          })
+          .catch(console.error);
+
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     // Also check DigiLocker status endpoint directly
     fetch('/api/digilocker/status')
       .then((res) => res.json())
@@ -804,10 +826,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowProfileMenu(false);
-                            setShowDigiLockerModal(true);
+                            window.location.href = '/api/digilocker/authorize';
                           }}
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/50 text-slate-600 hover:text-sky-700 dark:text-slate-400 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer group"
-                          title="Click to verify student profile with DigiLocker"
+                          title="Click to directly verify student profile with DigiLocker"
                         >
                           <ShieldCheck className="w-3 h-3 text-slate-400 group-hover:text-sky-500 transition-colors" />
                           <span>Verify</span>

@@ -484,7 +484,13 @@ export default function ProfilePage() {
 
           <button
             type="button"
-            onClick={() => setShowDigiLockerModal(true)}
+            onClick={() => {
+              if (isDigiLockerVerified) {
+                setShowDigiLockerModal(true);
+              } else {
+                window.location.href = '/api/digilocker/authorize';
+              }
+            }}
             className={`w-full sm:w-auto px-6 py-3.5 font-extrabold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer relative z-10 ${
               isDigiLockerVerified
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-950/30'

@@ -284,15 +284,14 @@ export const DigiLockerModal: React.FC<DigiLockerModalProps> = ({
                 </div>
 
                 <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={handleStartLiveVerification}
-                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  <a
+                    href="/api/digilocker/authorize"
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
                   >
                     <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-sky-200" />
                     <span>Proceed to DigiLocker Verification</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </a>
                 </div>
 
                 <p className="text-[10px] sm:text-[11px] text-center text-slate-400 font-medium">
@@ -402,7 +401,7 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
     if (typeof window !== 'undefined') {
       return getDigiLockerStatus();
     }
-    return true;
+    return false;
   });
 
   const [isComp, setIsComp] = useState<boolean>(() => {
@@ -422,6 +421,19 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
       setIsVerified(getDigiLockerStatus());
     };
     syncStatus();
+
+    // Check status API directly
+    fetch('/api/digilocker/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.verified) {
+          setIsVerified(true);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('examizo_digilocker_verified', 'true');
+          }
+        }
+      })
+      .catch(() => {});
 
     // Background silent cache sync
     fetch('/api/auth/me')
@@ -504,11 +516,11 @@ export const DigiLockerGuard: React.FC<DigiLockerGuardProps> = ({
         {/* Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
           <a
-            href="/profile"
-            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            href="/api/digilocker/authorize"
+            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Verify on Profile Page</span>
+            <span>Verify with DigiLocker</span>
             <ArrowRight className="w-4 h-4 ml-0.5" />
           </a>
           <a
