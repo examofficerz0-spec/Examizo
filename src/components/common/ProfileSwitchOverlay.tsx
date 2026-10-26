@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, ShieldCheck, Check, ArrowRight } from 'lucide-react';
 
 export interface ProfileSwitchItem {
+  id?: string;
   name: string;
   fullName?: string;
   nickname?: string;
@@ -31,6 +32,15 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
   const [stage, setStage] = useState<'enter' | 'loading' | 'exit'>('enter');
   const [statusText, setStatusText] = useState('Authenticating student profile...');
 
+  const isDifferentProfile = Boolean(
+    target &&
+      target.from &&
+      (target.id && target.from.id
+        ? target.id !== target.from.id
+        : ((target.nickname || target.fullName || target.name || '').trim().toLowerCase() !==
+          (target.from.nickname || target.from.fullName || target.from.name || '').trim().toLowerCase()))
+  );
+
   useEffect(() => {
     if (!target) {
       setProgress(0);
@@ -38,14 +48,16 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
       return;
     }
 
+    const toName = (target.nickname && target.nickname.trim()) || target.name;
+
     // Phase 1: Mount & start progress immediately
     const startTimer = setTimeout(() => {
       setProgress(25);
       setStage('loading');
       setStatusText(
-        target.from
+        isDifferentProfile && target.from
           ? `Connecting from ${target.from.nickname || target.from.name}...`
-          : 'Connecting to student profile...'
+          : `Opening ${toName}'s workspace...`
       );
     }, 60);
 
@@ -62,7 +74,6 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
     // Phase 3: Progress to 100% and ready
     const readyTimer = setTimeout(() => {
       setProgress(100);
-      const toName = (target.nickname && target.nickname.trim()) || target.name;
       setStatusText(`Workspace ready! Welcome back, ${toName}!`);
     }, durationMs * 0.72);
 
@@ -83,7 +94,7 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
       clearTimeout(exitTimer);
       clearTimeout(completeTimer);
     };
-  }, [target, durationMs, onComplete]);
+  }, [target, isDifferentProfile, durationMs, onComplete]);
 
   if (!target) return null;
 
@@ -109,7 +120,7 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Switching profile to ${toDisplayName}`}
+      aria-label={isDifferentProfile ? `Switching profile to ${toDisplayName}` : `Loading profile ${toDisplayName}`}
       className={`fixed inset-0 z-[99999] flex items-center justify-center pointer-events-auto select-none overflow-hidden transition-all duration-300 ${
         stage === 'exit'
           ? 'opacity-0 scale-102 backdrop-blur-2xl'
@@ -137,11 +148,11 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
         {/* Mode Pill Badge */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[11px] font-extrabold uppercase tracking-wider mb-4 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
-          Switching Profile
+          {isDifferentProfile ? 'Switching Profile' : 'Loading Profile'}
         </div>
 
-        {/* From -> To Visual Comparison Journey */}
-        {fromProfile ? (
+        {/* Visual Presentation: Two Profiles for switch, Single for same profile */}
+        {isDifferentProfile && fromProfile ? (
           <div className="flex items-center justify-center gap-3 sm:gap-6 w-full mb-6 px-1">
             {/* FROM PROFILE */}
             <div className="flex flex-col items-center max-w-[125px] sm:max-w-[145px] text-center min-w-0">
@@ -217,18 +228,21 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
             </div>
           </div>
         ) : (
-          /* Single Profile Showcase fallback */
-          <div className="relative mb-6">
-            <div className="absolute -inset-2.5 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-emerald-400 opacity-60 blur-md animate-pulse" />
-            <div className="relative p-1 rounded-full bg-gradient-to-tr from-blue-400 via-indigo-300 to-emerald-300 shadow-xl">
+          /* Single Profile Showcase (Same profile or direct entry) */
+          <div className="relative mb-5 mt-1">
+            <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-emerald-400 opacity-55 blur-lg animate-pulse" />
+            <div className="relative p-1 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-400 to-emerald-400 shadow-xl">
               <div
-                className={`w-24 h-24 sm:w-26 sm:h-26 rounded-full ${toAvatarBg} text-white font-black text-4xl flex items-center justify-center shadow-inner relative overflow-hidden`}
+                className={`w-22 h-22 sm:w-24 sm:h-24 rounded-full ${toAvatarBg} text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-inner relative overflow-hidden`}
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none" />
                 <span className="relative z-10 drop-shadow-md">{toInitial}</span>
                 {target.isVerified && (
-                  <div className="absolute bottom-1 right-1 p-1 rounded-full bg-emerald-600 text-white shadow-md border-2 border-white">
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                  <div
+                    className="absolute bottom-1 right-1 p-1 rounded-full bg-emerald-600 text-white shadow-md border-2 border-white"
+                    title="DigiLocker Verified"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
                 )}
               </div>
@@ -237,35 +251,40 @@ export const ProfileSwitchOverlay: React.FC<ProfileSwitchOverlayProps> = ({
               className="absolute -top-1.5 -right-1.5 text-amber-400 animate-spin"
               style={{ animationDuration: '6s' }}
             >
-              <Sparkles className="w-5 h-5 fill-amber-400/40" />
+              <Sparkles className="w-5 h-5 fill-amber-400/50" />
             </div>
           </div>
         )}
 
         {/* Narrative Heading */}
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-1 truncate max-w-[340px]">
-          {fromProfile ? (
-            <span>
+        {isDifferentProfile ? (
+          <>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-1 truncate max-w-[340px]">
               Switching to <span className="text-blue-600">{toDisplayName}</span>
-            </span>
-          ) : (
-            <span>{toDisplayName}</span>
-          )}
-        </h2>
-
-        {/* Narrative Context Description */}
-        <p className="text-xs font-semibold text-slate-500 mb-5 max-w-[320px]">
-          {fromProfile ? (
-            <span>
+            </h2>
+            <p className="text-xs font-semibold text-slate-500 mb-5 max-w-[320px]">
               Switching from <strong className="text-slate-800">{fromDisplayName}</strong> to{' '}
               <strong className="text-blue-600">{toDisplayName}</strong>
-            </span>
-          ) : target.lockedCourseName ? (
-            <span>📚 {target.lockedCourseName}</span>
-          ) : (
-            <span>Preparing student workspace...</span>
-          )}
-        </p>
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-1.5 truncate max-w-[340px]">
+              {toDisplayName}
+            </h2>
+            <div className="mb-5 flex items-center justify-center">
+              {target.lockedCourseName ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-2xs">
+                  📚 {target.lockedCourseName}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-slate-500">
+                  Preparing student workspace...
+                </span>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Progress Bar Track */}
         <div className="w-full max-w-[260px] h-2 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/90 shadow-inner mb-3">

@@ -196,20 +196,23 @@ export default function ProfilesPage() {
 
         // Current active profile as 'from' source
         const activeProf = profiles.find((p) => p.isActive);
+        const isSameProfile = Boolean(activeProf && activeProf.id === profileId);
         const activeIdx = profiles.findIndex((p) => p.isActive);
         const activeGradientBg =
           activeIdx >= 0 ? AVATAR_PALETTES[activeIdx % AVATAR_PALETTES.length] : undefined;
         const fromAvatarBg = activeGradientBg ? `bg-gradient-to-br ${activeGradientBg}` : undefined;
 
         setSwitchingTarget({
+          id: profileId,
           name: targetProf?.name || data.profile?.name || 'Student',
           fullName: targetProf?.fullName || data.profile?.fullName,
           nickname: targetProf?.nickname || data.profile?.nickname,
           avatarBg,
           lockedCourseName: data.profile?.lockedCourseName || targetProf?.lockedCourseName,
           isVerified: Boolean(targetProf?.digilocker_verified || targetProf?.digilockerProfile?.verified),
-          from: activeProf
+          from: (activeProf && !isSameProfile)
             ? {
+                id: activeProf.id,
                 name: activeProf.name,
                 fullName: activeProf.fullName,
                 nickname: activeProf.nickname || undefined,

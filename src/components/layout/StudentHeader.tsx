@@ -464,19 +464,22 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
         // Current active profile as 'from' source
         const currentActive = profiles.find((p) => p.isActive);
+        const isSameProfile = Boolean(currentActive && currentActive.id === profile.id);
         const currentActiveIdx = profiles.findIndex((p) => p.isActive);
         const fromAvatarBg =
           currentActiveIdx >= 0 ? profileColors[currentActiveIdx % profileColors.length] : undefined;
 
         setSwitchingTarget({
+          id: profile.id,
           name: profile.name,
           fullName: profile.fullName || undefined,
           nickname: profile.nickname || undefined,
           avatarBg,
           lockedCourseName: data.profile?.lockedCourseName || profile.lockedCourseName || undefined,
           isVerified: Boolean(profile.digilocker_verified || profile.digilockerProfile?.verified),
-          from: currentActive
+          from: (currentActive && !isSameProfile)
             ? {
+                id: currentActive.id,
                 name: currentActive.name,
                 fullName: currentActive.fullName || undefined,
                 nickname: currentActive.nickname || undefined,
