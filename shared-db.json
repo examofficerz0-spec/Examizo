@@ -287,6 +287,9 @@
       "xp_total": 0,
       "locked_course_id": "rk0cw5w0imso9pyqz",
       "created_at": "2026-10-10T08:37:12.119Z",
+      "digilocker_verified": 0,
+      "digilocker_profile_json": "{}",
+      "digilocker_raw_response_json": "{\"status\":\"success\",\"source\":\"DigiLocker MeriPehchaan Gateway\",\"profile\":{\"verified\":true,\"name\":\"Ahmad Shajee Zubairy\",\"dob\":\"17102003\",\"formattedDob\":\"17/10/2003\",\"age\":23,\"gender\":\"Male\",\"email\":\"ahmadshajee2016@gmail.com\",\"mobile\":\"9507494785\",\"maskedAadhaar\":\"xxxxxxxx9617\",\"digilockerid\":\"71af51ef-50ac-5507-a34d-1d2ed99814f5\",\"referenceKey\":\"6f5edb6aed2fd2c5de96abeace603921b4c8b092c88dc49ca37da4104df257ee\",\"panNumber\":\"ADSPZ9708R\",\"drivingLicence\":\"BR0120220010509\",\"eaadhaar\":\"\",\"linkedAt\":\"2026-10-25T20:34:42.022Z\"}}",
       "raw_password": "123456"
     },
     {
