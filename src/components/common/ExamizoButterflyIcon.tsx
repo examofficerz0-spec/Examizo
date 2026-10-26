@@ -270,24 +270,18 @@ export const ExamizoButterflyIcon = React.forwardRef<
   };
 
   const triggerFlight = useCallback(
-    (force: boolean = false) => {
+    (_force?: boolean) => {
       if (!interactive) return;
-      const now = performance.now();
-      // Guard against rapid duplicate clicks/invocations (< 250ms)
-      if (now - lastTriggerTickRef.current < 250) return;
-      lastTriggerTickRef.current = now;
 
-      const currentMode = flightModeRef.current;
-      const currentDuration = currentMode === 'spiral-text' ? 7.6 : 4.6;
-      const isMidAir =
-        isPlayingRef.current &&
-        animTimeRef.current > 0.05 * currentDuration &&
-        animTimeRef.current < 0.94 * currentDuration;
-
-      // If mid-air and not forced, let current flight finish smoothly
-      if (isMidAir && !force) {
+      // STRICT LOCK: While animation is running, NO OTHER TRIGGER should be taken until completely finished!
+      if (isPlayingRef.current) {
         return;
       }
+
+      const now = performance.now();
+      // Guard against rapid duplicate clicks/invocations (< 200ms)
+      if (now - lastTriggerTickRef.current < 200) return;
+      lastTriggerTickRef.current = now;
 
       // Alternate: 1st trigger (0) -> crest, 2nd trigger (1) -> spiral-text, etc.
       const count = flightCycleCountRef.current;
@@ -314,10 +308,40 @@ export const ExamizoButterflyIcon = React.forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      triggerFlight: (force: boolean = true) => triggerFlight(force),
+      triggerFlight: () => triggerFlight(),
     }),
     [triggerFlight]
   );
+
+  // Global scroll & click listener:
+  // When scrolling or clicking anywhere on the page, the logo animation should trigger.
+  // Until the animation is completed, any other trigger should NOT be taken.
+  useEffect(() => {
+    if (!interactive || !animate) return;
+
+    let lastActivityThrottle = 0;
+
+    const handleGlobalActivity = () => {
+      // If animation is in progress, ignore all triggers until completely completed!
+      if (isPlayingRef.current) return;
+
+      const now = performance.now();
+      if (now - lastActivityThrottle < 250) return;
+      lastActivityThrottle = now;
+
+      triggerFlight();
+    };
+
+    window.addEventListener('scroll', handleGlobalActivity, { passive: true });
+    window.addEventListener('pointerdown', handleGlobalActivity, { passive: true });
+    window.addEventListener('wheel', handleGlobalActivity, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleGlobalActivity);
+      window.removeEventListener('pointerdown', handleGlobalActivity);
+      window.removeEventListener('wheel', handleGlobalActivity);
+    };
+  }, [interactive, animate, triggerFlight]);
 
   useEffect(() => {
     if (!animate) return;

@@ -48,7 +48,7 @@ export const Logo: React.FC<LogoProps> = ({
 
   const handleContainerClick = () => {
     if (interactive) {
-      butterflyRef.current?.triggerFlight(true);
+      butterflyRef.current?.triggerFlight();
     }
     if (onClick) {
       onClick();
@@ -60,7 +60,7 @@ export const Logo: React.FC<LogoProps> = ({
       onClick={handleContainerClick}
       onMouseEnter={() => {
         if (interactive) {
-          butterflyRef.current?.triggerFlight(false);
+          butterflyRef.current?.triggerFlight();
         }
       }}
       style={{ overflow: 'visible' }}
