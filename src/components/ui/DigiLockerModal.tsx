@@ -350,32 +350,34 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
     category = (courseOrName.category || '').toLowerCase().trim();
   }
 
-  // 1. School Section: Class 11 & Class 12 (Mandatory DigiLocker)
-  const isSeniorSchool =
-    /\b(class|grade|standard|std)\s*(11|12|xi|xii)\b/i.test(name) ||
-    /\b(11th|12th)\b/i.test(name) ||
-    /\b(class\s*11|class\s*12|class\s*xi|class\s*xii)\b/i.test(category);
+  // 1. Any school category, grade, class, standard, or board exam is 100% exempt from DigiLocker
+  if (
+    category === 'school exams' ||
+    category.includes('school') ||
+    category.includes('k-12') ||
+    category.includes('board') ||
+    /\b(class|classs|grade|standard|std)\b/i.test(name) ||
+    /\b(\d+)(st|nd|rd|th)\b/i.test(name) ||
+    name.includes('classs') ||
+    name.includes('cbse') ||
+    name.includes('icse') ||
+    name.includes('kseab') ||
+    name.includes('state board') ||
+    name.includes('matric') ||
+    name.includes('school') ||
+    name.includes('sslc') ||
+    name.includes('hsc')
+  ) {
+    return false;
+  }
 
-  if (isSeniorSchool) {
+  // 2. Competitive Exam Name Keywords
+  const compRegex = /\b(jee|neet|cuet|nda|wbjee|bitsat|iiser|nest|kvpy|olympiad|clat|cat|gate|upsc|ssc|bank|banking|railway|defence|afcat|cds|capf|ias|ips|state psc|wbcsc|tet|ctet|ssc cgl|chsl)\b/i;
+  if (compRegex.test(name)) {
     return true;
   }
 
-  // 2. School Section: Class 3 to Class 10 (Exempt from DigiLocker)
-  const isJuniorSchool =
-    /\b(class|grade|standard|std)\s*(3|4|5|6|7|8|9|10|iii|iv|v|vi|vii|viii|ix|x)\b/i.test(name) ||
-    /\b(3rd|4th|5th|6th|7th|8th|9th|10th)\b/i.test(name) ||
-    /\b(class\s*(3|4|5|6|7|8|9|10)|grade\s*(3|4|5|6|7|8|9|10))\b/i.test(category);
-
-  if (isJuniorSchool) {
-    return false;
-  }
-
-  // 3. Other School Category classes (e.g. primary/kindergarten)
-  if (category === 'school' || category.includes('school')) {
-    return false;
-  }
-
-  // 4. Competitive / Entrance / Govt / Olympiad Categories
+  // 3. Competitive / Entrance / Govt Categories
   if (
     category.includes('competitive') ||
     category.includes('entrance') ||
@@ -385,19 +387,7 @@ export function isCompetitiveCourse(courseOrName?: any): boolean {
     return true;
   }
 
-  // 5. Competitive Exam Name Keywords
-  const compKeywords = [
-    'jee', 'neet', 'cuet', 'nda', 'wbjee', 'bitsat', 'iiser', 'nest', 'kvpy',
-    'olympiad', 'clat', 'cat', 'gate', 'upsc', 'ssc', 'bank', 'railway', 'defence',
-    'afcat', 'cds', 'capf', 'ias', 'ips', 'state psc', 'wbcsc', 'tet', 'ctet', 'ssc cgl', 'chsl'
-  ];
-
-  if (compKeywords.some((k) => name.includes(k))) {
-    return true;
-  }
-
-  // Default: treat other professional/entrance tracks as restricted
-  return true;
+  return false;
 }
 
 export function getCachedIsCompetitive(courseOrName?: any): boolean {

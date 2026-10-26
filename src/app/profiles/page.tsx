@@ -26,6 +26,7 @@ import {
   CurriculumPickerModal,
   SelectedCurriculumResult,
 } from '@/components/curriculum/CurriculumPickerModal';
+import { isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
 
 interface ProfileItem {
   id: string;
@@ -396,8 +397,8 @@ export default function ProfilesPage() {
                     </div>
                   )}
 
-                  {/* DigiLocker Verified Badge */}
-                  {profile.digilocker_verified && !isManaging && (
+                  {/* DigiLocker Verified Badge (Only for competitive profiles) */}
+                  {profile.digilocker_verified && !isManaging && isCompetitiveCourse(profile.lockedCourseName) && (
                     <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-xs border border-emerald-400">
                       <ShieldCheck className="w-2.5 h-2.5" /> Verified
                     </div>

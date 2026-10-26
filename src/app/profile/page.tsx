@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { User as UserIcon, Lock, Mail, BookOpen, Save, ShieldCheck, Sun, RotateCcw, GraduationCap, BarChart2, Activity, TrendingUp, Building2, CheckCircle2, Calendar } from 'lucide-react';
 import { StudentStatsModal } from '@/components/ui/StudentStatsModal';
-import { DigiLockerModal, isAbove10thClass, getDigiLockerStatus } from '@/components/ui/DigiLockerModal';
+import { DigiLockerModal, isAbove10thClass, getDigiLockerStatus, isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
 import { PageLoader } from '@/components/common/PageLoader';
 
 export default function ProfilePage() {
@@ -221,7 +221,7 @@ export default function ProfilePage() {
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Account Settings & Profile</h1>
-              {isDigiLockerVerified && (
+              {isDigiLockerVerified && isCompetitiveCourse(userData?.lockedCourse || userData?.locked_course_name) && (
                 <button
                   type="button"
                   onClick={() => setShowDigiLockerModal(true)}
@@ -402,108 +402,110 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* DigiLocker Identity Verification Card (Available for all courses) */}
-        <div className="bg-gradient-to-br from-[#072448] via-[#0b3c68] to-[#144272] rounded-3xl p-5 sm:p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 relative overflow-hidden border border-white/20">
-          {/* Background Security Hexagon Vault & Guilloche Security Waves */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {/* Hexagonal Vault Honeycomb Mesh */}
-            <svg className="absolute inset-0 w-full h-full text-white/10" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="digilocker-hex" width="36" height="62.35" patternUnits="userSpaceOnUse">
-                  <path
-                    d="M 18,0 L 36,10.39 L 36,31.18 L 18,41.57 L 0,31.18 L 0,10.39 Z M 18,62.35 L 36,51.96 L 36,31.18 L 18,41.57 L 0,31.18 L 0,51.96 Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  />
-                  <circle cx="18" cy="10.39" r="1.5" fill="currentColor" fillOpacity="0.8" />
-                  <circle cx="18" cy="51.96" r="1.5" fill="currentColor" fillOpacity="0.8" />
-                </pattern>
-                <linearGradient id="guilloche-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.05" />
-                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.25" />
-                  <stop offset="80%" stopColor="#818cf8" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.02" />
-                </linearGradient>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#digilocker-hex)" />
-              {/* Guilloche Ribbon Security Waves */}
-              <path
-                d="M-40,90 C160,20 340,160 560,70 C780,-20 960,130 1180,40"
-                fill="none"
-                stroke="url(#guilloche-grad)"
-                strokeWidth="2.5"
-              />
-              <path
-                d="M-40,110 C180,40 360,180 580,90 C800,0 980,150 1200,60"
-                fill="none"
-                stroke="url(#guilloche-grad)"
-                strokeWidth="1.5"
-                strokeDasharray="5 3"
-              />
-              <path
-                d="M-40,70 C140,0 320,140 540,50 C760,-40 940,110 1160,20"
-                fill="none"
-                stroke="url(#guilloche-grad)"
-                strokeWidth="1"
-                strokeOpacity="0.6"
-              />
-            </svg>
+        {/* DigiLocker Identity Verification Card (Only for competitive courses) */}
+        {isCompetitiveCourse(userData?.lockedCourse || userData?.locked_course_name) && (
+          <div className="bg-gradient-to-br from-[#072448] via-[#0b3c68] to-[#144272] rounded-3xl p-5 sm:p-6 md:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6 relative overflow-hidden border border-white/20">
+            {/* Background Security Hexagon Vault & Guilloche Security Waves */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {/* Hexagonal Vault Honeycomb Mesh */}
+              <svg className="absolute inset-0 w-full h-full text-white/10" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="digilocker-hex" width="36" height="62.35" patternUnits="userSpaceOnUse">
+                    <path
+                      d="M 18,0 L 36,10.39 L 36,31.18 L 18,41.57 L 0,31.18 L 0,10.39 Z M 18,62.35 L 36,51.96 L 36,31.18 L 18,41.57 L 0,31.18 L 0,51.96 Z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                    <circle cx="18" cy="10.39" r="1.5" fill="currentColor" fillOpacity="0.8" />
+                    <circle cx="18" cy="51.96" r="1.5" fill="currentColor" fillOpacity="0.8" />
+                  </pattern>
+                  <linearGradient id="guilloche-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.05" />
+                    <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.25" />
+                    <stop offset="80%" stopColor="#818cf8" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#digilocker-hex)" />
+                {/* Guilloche Ribbon Security Waves */}
+                <path
+                  d="M-40,90 C160,20 340,160 560,70 C780,-20 960,130 1180,40"
+                  fill="none"
+                  stroke="url(#guilloche-grad)"
+                  strokeWidth="2.5"
+                />
+                <path
+                  d="M-40,110 C180,40 360,180 580,90 C800,0 980,150 1200,60"
+                  fill="none"
+                  stroke="url(#guilloche-grad)"
+                  strokeWidth="1.5"
+                  strokeDasharray="5 3"
+                />
+                <path
+                  d="M-40,70 C140,0 320,140 540,50 C760,-40 940,110 1160,20"
+                  fill="none"
+                  stroke="url(#guilloche-grad)"
+                  strokeWidth="1"
+                  strokeOpacity="0.6"
+                />
+              </svg>
 
-            {/* Ambient Lighting & Security Watermarks */}
-            <div className="absolute -right-16 -bottom-16 w-72 h-72 bg-sky-500/25 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute left-1/4 -top-16 w-60 h-60 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
-            <Lock className="absolute -right-4 -bottom-6 w-44 h-44 text-white/[0.05] rotate-12 select-none" />
-            <ShieldCheck className="absolute right-60 -top-6 w-36 h-36 text-white/[0.04] select-none" />
-          </div>
-
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
-              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-sky-200 drop-shadow-xs" />
+              {/* Ambient Lighting & Security Watermarks */}
+              <div className="absolute -right-16 -bottom-16 w-72 h-72 bg-sky-500/25 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute left-1/4 -top-16 w-60 h-60 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+              <Lock className="absolute -right-4 -bottom-6 w-44 h-44 text-white/[0.05] rotate-12 select-none" />
+              <ShieldCheck className="absolute right-60 -top-6 w-36 h-36 text-white/[0.04] select-none" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-white/20 text-sky-100 tracking-wider border border-white/25 shadow-2xs flex items-center gap-1.5">
-                  <ShieldCheck className="w-3 h-3 text-sky-300" /> Govt. of India • Academic Depository
-                </span>
-                {isDigiLockerVerified ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/30 text-emerald-200 border border-emerald-300/40 flex items-center gap-1 shadow-2xs">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-300" /> Verified
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400/30 text-amber-200 border border-amber-300/40 flex items-center gap-1 shadow-2xs">
-                    <Lock className="w-3 h-3 text-amber-300" /> Pending Verification
-                  </span>
-                )}
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/30 shadow-lg shadow-black/10">
+                <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-sky-200 drop-shadow-xs" />
               </div>
-              <h2 className="text-lg sm:text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">DigiLocker Identity Verification</h2>
-              <p className="text-xs text-sky-100 mt-1 leading-relaxed max-w-xl font-medium">
-                {isDigiLockerVerified
-                  ? 'Your DigiLocker Academic ID and student credentials have been securely verified with the National Academic Depository.'
-                  : 'Link and verify your student identity, official certificates, and academic credentials securely via the official DigiLocker Gateway.'}
-              </p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase bg-white/20 text-sky-100 tracking-wider border border-white/25 shadow-2xs flex items-center gap-1.5">
+                    <ShieldCheck className="w-3 h-3 text-sky-300" /> Govt. of India • Academic Depository
+                  </span>
+                  {isDigiLockerVerified ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-400/30 text-emerald-200 border border-emerald-300/40 flex items-center gap-1 shadow-2xs">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-300" /> Verified
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400/30 text-amber-200 border border-amber-300/40 flex items-center gap-1 shadow-2xs">
+                      <Lock className="w-3 h-3 text-amber-300" /> Pending Verification
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-lg sm:text-xl font-black tracking-tight mt-1 text-white drop-shadow-xs">DigiLocker Identity Verification</h2>
+                <p className="text-xs text-sky-100 mt-1 leading-relaxed max-w-xl font-medium">
+                  {isDigiLockerVerified
+                    ? 'Your DigiLocker Academic ID and student credentials have been securely verified with the National Academic Depository.'
+                    : 'Link and verify your student identity, official certificates, and academic credentials securely via the official DigiLocker Gateway.'}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (isDigiLockerVerified) {
-                setShowDigiLockerModal(true);
-              } else {
-                window.location.href = '/api/digilocker/authorize';
-              }
-            }}
-            className={`w-full sm:w-auto px-6 py-3.5 font-extrabold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer relative z-10 ${
-              isDigiLockerVerified
-                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-950/30'
-                : 'bg-white hover:bg-sky-50 text-blue-950 shadow-blue-950/30'
-            }`}
-          >
-            <ShieldCheck className={`w-4 h-4 ${isDigiLockerVerified ? 'text-white' : 'text-blue-600'}`} />
-            {isDigiLockerVerified ? 'Verified with DigiLocker' : 'Verify with DigiLocker'}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (isDigiLockerVerified) {
+                  setShowDigiLockerModal(true);
+                } else {
+                  window.location.href = '/api/digilocker/authorize';
+                }
+              }}
+              className={`w-full sm:w-auto px-6 py-3.5 font-extrabold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer relative z-10 ${
+                isDigiLockerVerified
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-950/30'
+                  : 'bg-white hover:bg-sky-50 text-blue-950 shadow-blue-950/30'
+              }`}
+            >
+              <ShieldCheck className={`w-4 h-4 ${isDigiLockerVerified ? 'text-white' : 'text-blue-600'}`} />
+              {isDigiLockerVerified ? 'Verified with DigiLocker' : 'Verify with DigiLocker'}
+            </button>
+          </div>
+        )}
 
         {/* Profile Info Form */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
