@@ -10,8 +10,19 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  // Note: headers() is not supported with output: 'export'
-  // Cache headers are handled by Vercel's deployment config
+  async headers() {
+    return [
+      {
+        source: '/:path*.(png|jpg|jpeg|svg|ico|webp|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

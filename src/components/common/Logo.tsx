@@ -17,7 +17,7 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
-  size = 48,
+  size = 53,
   showText = true,
   subtitle,
   textColor,
@@ -31,13 +31,15 @@ export const Logo: React.FC<LogoProps> = ({
 
   const calculatedTextSize =
     textSize ||
-    (size >= 46
-      ? 'text-2xl sm:text-[26px]'
-      : size >= 38
-      ? 'text-2xl'
-      : size >= 30
-      ? 'text-xl'
-      : 'text-lg');
+    (size >= 50
+      ? 'text-[26px] sm:text-[29px]'
+      : size >= 42
+      ? 'text-[25px] sm:text-[27px]'
+      : size >= 33
+      ? 'text-[22px]'
+      : size >= 26
+      ? 'text-[20px]'
+      : 'text-base');
 
   const handleContainerClick = () => {
     if (interactive) {
@@ -51,7 +53,8 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div
       onClick={handleContainerClick}
-      className={`flex items-center gap-3 group examizo-container select-none ${
+      style={{ contain: 'layout paint' }}
+      className={`flex items-center gap-3.5 group examizo-container select-none ${
         interactive ? 'cursor-pointer' : ''
       } ${className}`}
     >

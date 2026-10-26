@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans, Cinzel } from 'next/font/google';
 import './globals.css';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { GlobalHeader } from '@/components/layout/GlobalHeader';
@@ -11,6 +11,13 @@ import { PwaInstallPrompt } from '@/components/common/PwaInstallPrompt';
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
+});
+
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-cinzel',
+  weight: ['700', '800', '900'],
   display: 'swap',
 });
 
@@ -58,11 +65,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`light ${plusJakartaSans.variable}`}>
+    <html lang="en" className={`light ${plusJakartaSans.variable} ${cinzel.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.cloudflare.com" />
+        <link rel="preload" as="image" href="/logo.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

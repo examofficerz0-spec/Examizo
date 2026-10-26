@@ -30,6 +30,15 @@ export interface ExamizoButterflyIconProps {
  *   Subsequent Triggers: Alternates between crest flight and text spiral flight
  * - Golden Ribbon Banner with "EXAMIZO" serif typography
  */
+// Persistent client-side cache for alternate flight cycle state across navigations
+let globalCachedFlightCycle = 0;
+if (typeof window !== 'undefined') {
+  try {
+    const saved = sessionStorage.getItem('ez_logo_flight_count');
+    if (saved) globalCachedFlightCycle = parseInt(saved, 10) || 0;
+  } catch (_) {}
+}
+
 export const ExamizoButterflyIcon = React.forwardRef<
   ExamizoButterflyIconHandle,
   ExamizoButterflyIconProps
@@ -55,7 +64,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
   const isPlayingRef = useRef(autoLoop);
   const animTimeRef = useRef(0);
   const flightModeRef = useRef<'crest' | 'spiral-text'>('crest');
-  const flightCycleCountRef = useRef<number>(0);
+  const flightCycleCountRef = useRef<number>(globalCachedFlightCycle);
   const lastWingStateRef = useRef<'idle' | 'flapping' | 'landing'>('idle');
   const lastWindRef = useRef(false);
   const lastInteractionTimeRef = useRef(0);
@@ -231,6 +240,12 @@ export const ExamizoButterflyIcon = React.forwardRef<
       flightModeRef.current = nextMode;
       setFlightMode(nextMode);
       flightCycleCountRef.current = count + 1;
+      globalCachedFlightCycle = count + 1;
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('ez_logo_flight_count', String(count + 1));
+        } catch (_) {}
+      }
 
       animTimeRef.current = nextMode === 'spiral-text' ? 0 : 0.22 * 9.0;
       isPlayingRef.current = true;
@@ -305,6 +320,12 @@ export const ExamizoButterflyIcon = React.forwardRef<
             flightModeRef.current = nextMode;
             setFlightMode(nextMode);
             flightCycleCountRef.current = count + 1;
+            globalCachedFlightCycle = count + 1;
+            if (typeof window !== 'undefined') {
+              try {
+                sessionStorage.setItem('ez_logo_flight_count', String(count + 1));
+              } catch (_) {}
+            }
             animTimeRef.current = nextMode === 'spiral-text' ? 0 : 0.22 * 9.0;
           } else {
             isPlayingRef.current = false;
@@ -350,7 +371,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
 
   return (
     <div
-      style={{ width: size, height: (size * 700) / 600, overflow: 'visible' }}
+      style={{ width: size, height: (size * 700) / 600, overflow: 'visible', contain: 'layout paint' }}
       className={`relative inline-flex items-center justify-center shrink-0 select-none overflow-visible group/ezbutterfly ${
         interactive ? 'cursor-pointer' : ''
       } ${className}`}
@@ -1040,7 +1061,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
               x="300"
               y="585"
               textAnchor="middle"
-              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontFamily="var(--font-cinzel), 'Cinzel', 'Playfair Display', serif"
               fontSize="34"
               fontWeight="900"
               letterSpacing="0.22em"
@@ -1052,7 +1073,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
               x="300"
               y="586"
               textAnchor="middle"
-              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontFamily="var(--font-cinzel), 'Cinzel', 'Playfair Display', serif"
               fontSize="34"
               fontWeight="900"
               letterSpacing="0.22em"
@@ -1069,7 +1090,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
               x="300"
               y="607.5"
               textAnchor="middle"
-              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontFamily="var(--font-cinzel), 'Cinzel', 'Playfair Display', serif"
               fontSize="15.5"
               fontWeight="800"
               letterSpacing="0.28em"
@@ -1081,7 +1102,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
               x="300"
               y="608.2"
               textAnchor="middle"
-              fontFamily="'Cinzel', 'Playfair Display', serif"
+              fontFamily="var(--font-cinzel), 'Cinzel', 'Playfair Display', serif"
               fontSize="15.5"
               fontWeight="800"
               letterSpacing="0.28em"
