@@ -56,15 +56,24 @@ export const ExamizoButterflyIcon = React.forwardRef<
   ref
 ) {
   const [showWind, setShowWind] = useState(false);
-  const [flightMode, setFlightMode] = useState<'crest' | 'spiral-text'>('crest');
+  const [flightMode, setFlightMode] = useState<'crest' | 'spiral-text' | 'star-burst'>('crest');
   const butterflyRef = useRef<SVGGElement | null>(null);
   const leftWingRef = useRef<SVGGElement | null>(null);
   const rightWingRef = useRef<SVGGElement | null>(null);
+  const shootingStarsGroupRef = useRef<SVGGElement | null>(null);
+  const starL1Ref = useRef<SVGGElement | null>(null);
+  const starL2Ref = useRef<SVGGElement | null>(null);
+  const starL3Ref = useRef<SVGGElement | null>(null);
+  const starL4Ref = useRef<SVGGElement | null>(null);
+  const starR1Ref = useRef<SVGGElement | null>(null);
+  const starR2Ref = useRef<SVGGElement | null>(null);
+  const starR3Ref = useRef<SVGGElement | null>(null);
+  const starR4Ref = useRef<SVGGElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
   const isPlayingRef = useRef(autoLoop);
   const animTimeRef = useRef(0);
-  const flightModeRef = useRef<'crest' | 'spiral-text'>('crest');
+  const flightModeRef = useRef<'crest' | 'spiral-text' | 'star-burst'>('crest');
   const flightCycleCountRef = useRef<number>(globalCachedFlightCycle);
   const lastWindRef = useRef(false);
   const lastTriggerTickRef = useRef<number>(0);
@@ -125,7 +134,18 @@ export const ExamizoButterflyIcon = React.forwardRef<
       windActive = false;
     }
 
-    return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
+    return {
+      x,
+      y,
+      scale,
+      rotate,
+      isFlapping,
+      isLandingUnfold,
+      unfoldProgress,
+      wingExpandScaleX: 1.0,
+      burstProgress: 0,
+      windActive,
+    };
   };
 
   // Trajectory 2: 3D Helical Spiral weaving across "Examizo" lettering with smooth return spiral (7.6s duration)
@@ -207,13 +227,122 @@ export const ExamizoButterflyIcon = React.forwardRef<
       windActive = p < 0.35;
     }
 
-    return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
+    return {
+      x,
+      y,
+      scale,
+      rotate,
+      isFlapping,
+      isLandingUnfold,
+      unfoldProgress,
+      wingExpandScaleX: 1.0,
+      burstProgress: 0,
+      windActive,
+    };
   };
 
-  const calculateTransform = (time: number, mode: 'crest' | 'spiral-text') => {
-    return mode === 'spiral-text'
-      ? calculateSpiralTransform(time)
-      : calculateCrestTransform(time);
+  // Trajectory 3: Celestial Wing Expansion & Shooting Stars Burst (4.8s duration)
+  const calculateStarBurstTransform = (time: number) => {
+    const DURATION = 4.8;
+    const tNorm = Math.min(0.9999, Math.max(0, time / DURATION));
+    let x = 0;
+    let y = 0;
+    let scale = 1;
+    let rotate = 0;
+    let isFlapping = false;
+    let isLandingUnfold = false;
+    let unfoldProgress = 0;
+    let wingExpandScaleX = 1.0;
+    let burstProgress = 0;
+    let windActive = false;
+
+    if (tNorm < 0.20) {
+      // Phase 1: Majestic Ascent into Center (0 to ~0.96s)
+      const p = tNorm / 0.20;
+      const ease = p * p * (3 - 2 * p);
+      x = 0;
+      y = -ease * 65;
+      scale = 1.0 + ease * 0.15;
+      rotate = Math.sin(p * Math.PI * 2) * 4;
+      isFlapping = true;
+      wingExpandScaleX = 1.0;
+      burstProgress = 0;
+      windActive = true;
+    } else if (tNorm < 0.40) {
+      // Phase 2: Grand Wing Expansion & Starlight Inhale (~0.96s to ~1.92s)
+      const p = (tNorm - 0.20) / 0.20;
+      const ease = p * p * (3 - 2 * p);
+      x = 0;
+      y = -65 - ease * 15; // At y = -80
+      scale = 1.15 + ease * 0.18; // Scales up to 1.33x
+      rotate = 0;
+      isFlapping = false;
+      wingExpandScaleX = 1.0 + ease * 0.48; // Expands wings outward to 1.48x!
+      burstProgress = 0;
+      windActive = true;
+    } else if (tNorm < 0.72) {
+      // Phase 3: THE SHOOTING STARS WING BURST! (~1.92s to ~3.45s)
+      const p = (tNorm - 0.40) / 0.32;
+      burstProgress = p; // 0 to 1
+      const flutter = Math.sin(p * 28 * Math.PI);
+      x = Math.sin(p * Math.PI * 4) * 6;
+      y = -80 + Math.sin(p * Math.PI) * 10;
+      scale = 1.33 + Math.sin(p * Math.PI) * 0.08;
+      rotate = Math.sin(p * Math.PI * 3) * 5;
+      isFlapping = false;
+      wingExpandScaleX = 1.48 + flutter * 0.10 * (1 - p);
+      windActive = true;
+    } else if (tNorm < 0.88) {
+      // Phase 4: Celestial Float & Return Glide Descent (~3.45s to ~4.22s)
+      const p = (tNorm - 0.72) / 0.16;
+      const ease = p * p * (3 - 2 * p);
+      burstProgress = 0;
+      x = 0;
+      y = -80 * (1 - ease);
+      scale = 1.33 * (1 - ease) + 1.05 * ease;
+      rotate = 0;
+      isFlapping = true;
+      wingExpandScaleX = 1.48 * (1 - ease) + 1.0 * ease;
+      windActive = p < 0.5;
+    } else {
+      // Phase 5: Soft Touchdown and Book Page Unfold (~4.22s to 4.80s)
+      const p = (tNorm - 0.88) / 0.12;
+      x = 0;
+      y = 0;
+      scale = 1.0;
+      rotate = 0;
+      isFlapping = false;
+      isLandingUnfold = true;
+      unfoldProgress = p;
+      wingExpandScaleX = 1.0;
+      burstProgress = 0;
+      windActive = false;
+    }
+
+    return {
+      x,
+      y,
+      scale,
+      rotate,
+      isFlapping,
+      isLandingUnfold,
+      unfoldProgress,
+      wingExpandScaleX,
+      burstProgress,
+      windActive,
+    };
+  };
+
+  const getDuration = (mode: 'crest' | 'spiral-text' | 'star-burst') => {
+    if (mode === 'spiral-text') return 7.6;
+    if (mode === 'star-burst') return 4.8;
+    return 4.6;
+  };
+
+  const calculateTransform = (time: number, mode: 'crest' | 'spiral-text' | 'star-burst') => {
+    if (mode === 'spiral-text') return calculateSpiralTransform(time);
+    if (mode === 'star-burst') return calculateStarBurstTransform(time);
+    return calculateCrestTransform(time);
   };
 
   // 100% Native SVG 1.1 transforms: works flawlessly in Safari, Chrome, Firefox, iOS WebKit
@@ -223,7 +352,9 @@ export const ExamizoButterflyIcon = React.forwardRef<
     scale: number,
     rotate: number,
     isFlapping: boolean,
-    unfoldProgress: number
+    unfoldProgress: number,
+    wingExpandScaleX: number = 1.0,
+    burstProgress: number = 0
   ) => {
     if (butterflyRef.current) {
       butterflyRef.current.setAttribute(
@@ -247,6 +378,16 @@ export const ExamizoButterflyIcon = React.forwardRef<
           'transform',
           `translate(304, 340) rotate(${(-flapAngle).toFixed(2)}) scale(${flapScaleX.toFixed(3)}, 1) translate(-304, -340)`
         );
+      } else if (wingExpandScaleX > 1.0) {
+        // Grand Wing Expansion: Spread wings wide open horizontally with jewel radiance
+        leftWingRef.current.setAttribute(
+          'transform',
+          `translate(296, 340) scale(${wingExpandScaleX.toFixed(3)}, 1) translate(-296, -340)`
+        );
+        rightWingRef.current.setAttribute(
+          'transform',
+          `translate(304, 340) scale(${wingExpandScaleX.toFixed(3)}, 1) translate(-304, -340)`
+        );
       } else if (unfoldProgress > 0) {
         // Landing book unfold
         const ease = 1 - Math.pow(1 - unfoldProgress, 3);
@@ -267,6 +408,41 @@ export const ExamizoButterflyIcon = React.forwardRef<
         rightWingRef.current.removeAttribute('transform');
       }
     }
+
+    // Dynamic Shooting Stars Burst from wings
+    if (shootingStarsGroupRef.current) {
+      if (burstProgress > 0) {
+        const ease = 1 - Math.pow(1 - burstProgress, 2.2);
+        const starOpacity = Math.sin(burstProgress * Math.PI);
+        const starScale = 0.6 + Math.sin(burstProgress * Math.PI) * 0.8;
+        shootingStarsGroupRef.current.setAttribute('opacity', starOpacity.toFixed(2));
+
+        const stars = [
+          { ref: starL1Ref, sx: 135, sy: 195, vx: -210, vy: -140 },
+          { ref: starL2Ref, sx: 115, sy: 245, vx: -270, vy: -30 },
+          { ref: starL3Ref, sx: 145, sy: 360, vx: -230, vy: 110 },
+          { ref: starL4Ref, sx: 180, sy: 175, vx: -120, vy: -240 },
+          { ref: starR1Ref, sx: 465, sy: 195, vx: 210, vy: -140 },
+          { ref: starR2Ref, sx: 485, sy: 245, vx: 260, vy: -30 },
+          { ref: starR3Ref, sx: 455, sy: 360, vx: 230, vy: 110 },
+          { ref: starR4Ref, sx: 420, sy: 175, vx: 120, vy: -240 },
+        ];
+
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          if (s.ref.current) {
+            const curX = s.sx + s.vx * ease;
+            const curY = s.sy + s.vy * ease;
+            s.ref.current.setAttribute(
+              'transform',
+              `translate(${curX.toFixed(1)}, ${curY.toFixed(1)}) scale(${starScale.toFixed(2)})`
+            );
+          }
+        }
+      } else {
+        shootingStarsGroupRef.current.setAttribute('opacity', '0');
+      }
+    }
   };
 
   const triggerFlight = useCallback(
@@ -283,10 +459,14 @@ export const ExamizoButterflyIcon = React.forwardRef<
       if (now - lastTriggerTickRef.current < 200) return;
       lastTriggerTickRef.current = now;
 
-      // Alternate: 1st trigger (0) -> crest, 2nd trigger (1) -> spiral-text, etc.
+      // Cycle through 3 distinct trajectories:
+      // 1st Trigger (0) -> 'crest' (loop around shield crest)
+      // 2nd Trigger (1) -> 'spiral-text' (helical spiral across Examizo with return spiral)
+      // 3rd Trigger (2) -> 'star-burst' (wing expansion & shooting stars from wings!)
       const count = flightCycleCountRef.current;
-      const nextMode: 'crest' | 'spiral-text' =
-        allowTextSpiral && count % 2 === 1 ? 'spiral-text' : 'crest';
+      const cycleIdx = allowTextSpiral ? count % 3 : (count % 2 === 0 ? 0 : 2);
+      const nextMode: 'crest' | 'spiral-text' | 'star-burst' =
+        cycleIdx === 0 ? 'crest' : cycleIdx === 1 ? 'spiral-text' : 'star-burst';
 
       flightModeRef.current = nextMode;
       setFlightMode(nextMode);
@@ -355,13 +535,14 @@ export const ExamizoButterflyIcon = React.forwardRef<
       if (isPlayingRef.current) {
         animTimeRef.current += dt;
         const currentMode = flightModeRef.current;
-        const cycle = currentMode === 'spiral-text' ? 7.6 : 4.6;
+        const cycle = getDuration(currentMode);
 
         if (animTimeRef.current >= cycle) {
           if (autoLoop) {
             const count = flightCycleCountRef.current;
-            const nextMode: 'crest' | 'spiral-text' =
-              allowTextSpiral && count % 2 === 1 ? 'spiral-text' : 'crest';
+            const cycleIdx = allowTextSpiral ? count % 3 : (count % 2 === 0 ? 0 : 2);
+            const nextMode: 'crest' | 'spiral-text' | 'star-burst' =
+              cycleIdx === 0 ? 'crest' : cycleIdx === 1 ? 'spiral-text' : 'star-burst';
             flightModeRef.current = nextMode;
             setFlightMode(nextMode);
             flightCycleCountRef.current = count + 1;
@@ -370,7 +551,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
           } else {
             isPlayingRef.current = false;
             animTimeRef.current = 0;
-            applyTransform(0, 0, 1, 0, false, 0);
+            applyTransform(0, 0, 1, 0, false, 0, 1.0, 0);
             if (lastWindRef.current) {
               lastWindRef.current = false;
               setShowWind(false);
@@ -380,10 +561,29 @@ export const ExamizoButterflyIcon = React.forwardRef<
         }
 
         if (isPlayingRef.current) {
-          const { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive } =
-            calculateTransform(animTimeRef.current, flightModeRef.current);
+          const {
+            x,
+            y,
+            scale,
+            rotate,
+            isFlapping,
+            isLandingUnfold,
+            unfoldProgress,
+            wingExpandScaleX,
+            burstProgress,
+            windActive,
+          } = calculateTransform(animTimeRef.current, flightModeRef.current);
 
-          applyTransform(x, y, scale, rotate, isFlapping, isLandingUnfold ? unfoldProgress : 0);
+          applyTransform(
+            x,
+            y,
+            scale,
+            rotate,
+            isFlapping,
+            isLandingUnfold ? unfoldProgress : 0,
+            wingExpandScaleX,
+            burstProgress
+          );
 
           if (windActive !== lastWindRef.current) {
             lastWindRef.current = windActive;
@@ -589,6 +789,21 @@ export const ExamizoButterflyIcon = React.forwardRef<
             <stop offset="75%" stopColor="#ec4899" stopOpacity="0.8" />
             <stop offset="90%" stopColor="#818cf8" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Shooting Star Wing Burst Tail Gradients */}
+          <linearGradient id="ezShootingStarTailGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="35%" stopColor="#fde047" stopOpacity="0.85" />
+            <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </linearGradient>
+
+          <linearGradient id="ezShootingStarTailCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="35%" stopColor="#38bdf8" stopOpacity="0.85" />
+            <stop offset="70%" stopColor="#818cf8" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
           </linearGradient>
 
           <filter id="ezStarGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -831,6 +1046,61 @@ export const ExamizoButterflyIcon = React.forwardRef<
           <g filter="url(#ezWingShadow)">
             {/* Back Aura */}
             <ellipse cx="300" cy="335" rx="145" ry="115" fill="#38bdf8" opacity="0.12" />
+
+            {/* SHOOTING STARS BURST FROM WINGS (Active during 'star-burst' expansion) */}
+            <g ref={shootingStarsGroupRef} opacity="0" filter="url(#ezStarGlow)" pointerEvents="none">
+              {/* Left Wing Shooting Stars */}
+              <g ref={starL1Ref}>
+                <line x1="0" y1="0" x2="55" y2="35" stroke="url(#ezShootingStarTailGold)" strokeWidth="3.5" strokeLinecap="round" />
+                <path d="M 0 -13 Q 0 0 13 0 Q 0 0 0 13 Q 0 0 -13 0 Q 0 0 0 -13 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3.5" fill="#fef08a" />
+                <circle cx="28" cy="18" r="2" fill="#38bdf8" opacity="0.85" />
+              </g>
+              <g ref={starL2Ref}>
+                <line x1="0" y1="0" x2="65" y2="8" stroke="url(#ezShootingStarTailCyan)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M 0 -11 Q 0 0 11 0 Q 0 0 0 11 Q 0 0 -11 0 Q 0 0 0 -11 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3" fill="#38bdf8" />
+                <circle cx="32" cy="4" r="1.8" fill="#fef08a" opacity="0.8" />
+              </g>
+              <g ref={starL3Ref}>
+                <line x1="0" y1="0" x2="50" y2="-25" stroke="url(#ezShootingStarTailGold)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M 0 -10 Q 0 0 10 0 Q 0 0 0 10 Q 0 0 -10 0 Q 0 0 0 -10 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="2.8" fill="#fde047" />
+                <circle cx="25" cy="-12" r="1.6" fill="#ec4899" opacity="0.8" />
+              </g>
+              <g ref={starL4Ref}>
+                <line x1="0" y1="0" x2="25" y2="55" stroke="url(#ezShootingStarTailCyan)" strokeWidth="3.2" strokeLinecap="round" />
+                <path d="M 0 -12 Q 0 0 12 0 Q 0 0 0 12 Q 0 0 -12 0 Q 0 0 0 -12 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3.2" fill="#818cf8" />
+                <circle cx="12" cy="28" r="2" fill="#38bdf8" opacity="0.85" />
+              </g>
+
+              {/* Right Wing Shooting Stars */}
+              <g ref={starR1Ref}>
+                <line x1="0" y1="0" x2="-55" y2="35" stroke="url(#ezShootingStarTailGold)" strokeWidth="3.5" strokeLinecap="round" />
+                <path d="M 0 -13 Q 0 0 13 0 Q 0 0 0 13 Q 0 0 -13 0 Q 0 0 0 -13 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3.5" fill="#fef08a" />
+                <circle cx="-28" cy="18" r="2" fill="#38bdf8" opacity="0.85" />
+              </g>
+              <g ref={starR2Ref}>
+                <line x1="0" y1="0" x2="-65" y2="8" stroke="url(#ezShootingStarTailCyan)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M 0 -11 Q 0 0 11 0 Q 0 0 0 11 Q 0 0 -11 0 Q 0 0 0 -11 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3" fill="#38bdf8" />
+                <circle cx="-32" cy="4" r="1.8" fill="#fef08a" opacity="0.8" />
+              </g>
+              <g ref={starR3Ref}>
+                <line x1="0" y1="0" x2="-50" y2="-25" stroke="url(#ezShootingStarTailGold)" strokeWidth="3" strokeLinecap="round" />
+                <path d="M 0 -10 Q 0 0 10 0 Q 0 0 0 10 Q 0 0 -10 0 Q 0 0 0 -10 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="2.8" fill="#fde047" />
+                <circle cx="-25" cy="-12" r="1.6" fill="#ec4899" opacity="0.8" />
+              </g>
+              <g ref={starR4Ref}>
+                <line x1="0" y1="0" x2="-25" y2="55" stroke="url(#ezShootingStarTailCyan)" strokeWidth="3.2" strokeLinecap="round" />
+                <path d="M 0 -12 Q 0 0 12 0 Q 0 0 0 12 Q 0 0 -12 0 Q 0 0 0 -12 Z" fill="#ffffff" />
+                <circle cx="0" cy="0" r="3.2" fill="#818cf8" />
+                <circle cx="-12" cy="28" r="2" fill="#38bdf8" opacity="0.85" />
+              </g>
+            </g>
 
             {/* LEFT WING / BOOK PAGE (Direct SVG transform driven) */}
             <g ref={leftWingRef}>
