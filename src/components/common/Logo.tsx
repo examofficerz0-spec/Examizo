@@ -53,12 +53,17 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div
       onClick={handleContainerClick}
-      style={{ contain: 'layout paint' }}
-      className={`flex items-center gap-3.5 group examizo-container select-none ${
+      onMouseEnter={() => {
+        if (interactive) {
+          butterflyRef.current?.triggerFlight(false);
+        }
+      }}
+      style={{ overflow: 'visible' }}
+      className={`flex items-center gap-3.5 group examizo-container select-none overflow-visible ${
         interactive ? 'cursor-pointer' : ''
       } ${className}`}
     >
-      <div className="relative shrink-0 z-20 transition-transform duration-300 group-hover:scale-105">
+      <div className="relative shrink-0 z-20 overflow-visible transition-transform duration-300 group-hover:scale-105">
         {variant === 'butterfly' ? (
           <ExamizoButterflyIcon
             ref={butterflyRef}

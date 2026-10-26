@@ -55,87 +55,94 @@ export const ExamizoButterflyIcon = React.forwardRef<
   },
   ref
 ) {
-  const [wingState, setWingState] = useState<'idle' | 'flapping' | 'landing'>('idle');
   const [showWind, setShowWind] = useState(false);
   const [flightMode, setFlightMode] = useState<'crest' | 'spiral-text'>('crest');
   const butterflyRef = useRef<SVGGElement | null>(null);
+  const leftWingRef = useRef<SVGGElement | null>(null);
+  const rightWingRef = useRef<SVGGElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
   const isPlayingRef = useRef(autoLoop);
   const animTimeRef = useRef(0);
   const flightModeRef = useRef<'crest' | 'spiral-text'>('crest');
   const flightCycleCountRef = useRef<number>(globalCachedFlightCycle);
-  const lastWingStateRef = useRef<'idle' | 'flapping' | 'landing'>('idle');
   const lastWindRef = useRef(false);
-  const lastInteractionTimeRef = useRef(0);
+  const lastTriggerTickRef = useRef<number>(0);
 
-  // Trajectory 1: Soaring loop around the Shield Crest
+  // Trajectory 1: Soaring loop around the Shield Crest (4.4s duration, instant takeoff)
   const calculateCrestTransform = (time: number) => {
-    const tNorm = (time % 9.0) / 9.0;
+    const DURATION = 4.4;
+    const tNorm = Math.min(0.9999, Math.max(0, time / DURATION));
     let x = 0;
     let y = 0;
     let scale = 1;
     let rotate = 0;
     let isFlapping = false;
     let isLandingUnfold = false;
+    let unfoldProgress = 0;
     let windActive = false;
 
-    if (tNorm < 0.22) {
-      x = 0;
-      y = 0;
-      scale = 1;
-      rotate = 0;
-      isFlapping = false;
-      isLandingUnfold = false;
-      windActive = false;
-    } else if (tNorm < 0.32) {
-      const p = (tNorm - 0.22) / 0.10;
-      x = Math.sin(p * Math.PI) * 10;
-      y = -p * 24;
-      scale = 1 + p * 0.05;
-      rotate = p * 8;
+    if (tNorm < 0.16) {
+      // Phase 1: Rapid, majestic takeoff from crest (0 to ~0.7s)
+      const p = tNorm / 0.16;
+      const ease = p * p * (3 - 2 * p);
+      x = Math.sin(p * Math.PI) * 14;
+      y = -ease * 45;
+      scale = 1 + ease * 0.10;
+      rotate = ease * 12;
       isFlapping = true;
-      isLandingUnfold = false;
       windActive = true;
     } else if (tNorm < 0.72) {
-      const p = (tNorm - 0.32) / 0.40;
+      // Phase 2: Soaring panoramic loop around the shield crest (0.7s to ~3.15s)
+      const p = (tNorm - 0.16) / 0.56;
       const angle = p * Math.PI * 2;
       x = Math.sin(angle) * 165 + Math.cos(angle * 2) * 35;
       y = -135 - Math.sin(angle) * 75 + Math.sin(angle * 3) * 20;
-      scale = 0.84 + Math.sin(angle + Math.PI / 2) * 0.22;
+      scale = 0.86 + Math.sin(angle + Math.PI / 2) * 0.22;
       rotate = Math.cos(angle) * 26;
       isFlapping = true;
-      isLandingUnfold = false;
       windActive = true;
     } else if (tNorm < 0.88) {
+      // Phase 3: Gliding approach down to the open book base (3.15s to ~3.87s)
       const p = (tNorm - 0.72) / 0.16;
       const ease = 1 - Math.pow(1 - p, 3);
       x = 65 * (1 - ease);
       y = -120 * (1 - ease);
       scale = 0.88 + ease * 0.12;
       rotate = 16 * (1 - ease);
-      isFlapping = p < 0.45;
-      isLandingUnfold = p >= 0.45;
-      windActive = p < 0.55;
+      isFlapping = p < 0.6;
+      windActive = p < 0.5;
+    } else {
+      // Phase 4: Touchdown and book page unfolding (3.87s to 4.4s)
+      const p = (tNorm - 0.88) / 0.12;
+      x = 0;
+      y = 0;
+      scale = 1;
+      rotate = 0;
+      isFlapping = false;
+      isLandingUnfold = true;
+      unfoldProgress = p;
+      windActive = false;
     }
 
-    return { x, y, scale, rotate, isFlapping, isLandingUnfold, windActive };
+    return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
   };
 
-  // Trajectory 2: 3D Helical Spiral weaving across the entire "Examizo" lettering
+  // Trajectory 2: 3D Helical Spiral weaving across the entire "Examizo" lettering (5.6s duration)
   const calculateSpiralTransform = (time: number) => {
-    const T_spiral = 9.2;
-    const tNorm = Math.min(0.9999, (time % T_spiral) / T_spiral);
+    const DURATION = 5.6;
+    const tNorm = Math.min(0.9999, Math.max(0, time / DURATION));
     let x = 0;
     let y = 0;
     let scale = 1;
     let rotate = 0;
     let isFlapping = false;
     let isLandingUnfold = false;
+    let unfoldProgress = 0;
     let windActive = false;
 
     if (tNorm < 0.12) {
-      // Phase 1: Takeoff towards letter 'E'
+      // Phase 1: Takeoff towards letter 'E' (0 to ~0.67s)
       const p = tNorm / 0.12;
       const ease = p * p * (3 - 2 * p);
       x = ease * 450;
@@ -144,25 +151,25 @@ export const ExamizoButterflyIcon = React.forwardRef<
       rotate = p * 14;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.65) {
-      // Phase 2: Helical 3D spiral across the "Examizo" text
-      const p = (tNorm - 0.12) / 0.53;
-      const env = Math.min(1, p * 5);
-      const endEnv = Math.min(1, (1 - p) * 5);
+    } else if (tNorm < 0.66) {
+      // Phase 2: Helical 3D spiral weaving across "Examizo" lettering (~0.67s to ~3.7s)
+      const p = (tNorm - 0.12) / 0.54;
+      const env = Math.min(1, p * 4);
+      const endEnv = Math.min(1, (1 - p) * 4);
       const spiralEnv = Math.min(env, endEnv);
 
       const x_base = 450 + p * 1500;
-      const theta = p * 7 * Math.PI;
+      const theta = p * 6.5 * Math.PI;
 
       x = x_base - (1 - Math.cos(theta)) * 35 * spiralEnv;
-      y = Math.sin(theta) * 130 * env;
+      y = Math.sin(theta) * 125 * env;
       scale = 1.08 + Math.cos(theta) * 0.28 * spiralEnv;
       rotate = 14 * (1 - p * 0.5) + Math.cos(theta) * 20 * spiralEnv;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.77) {
-      // Phase 3: Victory flourish loop past letter 'o'
-      const p = (tNorm - 0.65) / 0.12;
+    } else if (tNorm < 0.78) {
+      // Phase 3: Victory flourish loop past letter 'o' (~3.7s to ~4.36s)
+      const p = (tNorm - 0.66) / 0.12;
       const loopAngle = p * Math.PI * 2;
       x = 1950 + Math.sin(loopAngle) * 90;
       y = -(1 - Math.cos(loopAngle)) * 95;
@@ -170,9 +177,9 @@ export const ExamizoButterflyIcon = React.forwardRef<
       rotate = 7 + Math.sin(loopAngle) * 28;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.89) {
-      // Phase 4: High-speed return glide back to crest
-      const p = (tNorm - 0.77) / 0.12;
+    } else if (tNorm < 0.90) {
+      // Phase 4: High-speed return glide back to crest (~4.36s to ~5.04s)
+      const p = (tNorm - 0.78) / 0.12;
       const ease = p * p * (3 - 2 * p);
       x = 1950 * (1 - ease) + 60 * ease;
       y = -ease * 70 - Math.sin(p * Math.PI) * 75;
@@ -181,19 +188,20 @@ export const ExamizoButterflyIcon = React.forwardRef<
       isFlapping = true;
       windActive = true;
     } else {
-      // Phase 5: Landing and book unfolding
-      const p = (tNorm - 0.89) / 0.11;
+      // Phase 5: Landing and book unfolding (~5.04s to 5.6s)
+      const p = (tNorm - 0.90) / 0.10;
       const ease = 1 - Math.pow(1 - p, 3);
       x = 60 * (1 - ease);
       y = -70 * (1 - ease);
       scale = 1.0;
       rotate = 8 * (1 - ease);
-      isFlapping = p < 0.40;
-      isLandingUnfold = p >= 0.40;
-      windActive = p < 0.50;
+      isFlapping = p < 0.35;
+      isLandingUnfold = p >= 0.35;
+      unfoldProgress = p;
+      windActive = p < 0.40;
     }
 
-    return { x, y, scale, rotate, isFlapping, isLandingUnfold, windActive };
+    return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
   };
 
   const calculateTransform = (time: number, mode: 'crest' | 'spiral-text') => {
@@ -202,37 +210,80 @@ export const ExamizoButterflyIcon = React.forwardRef<
       : calculateCrestTransform(time);
   };
 
-  const applyTransform = (x: number, y: number, scale: number, rotate: number) => {
+  // 100% Native SVG 1.1 transforms: works flawlessly in Safari, Chrome, Firefox, iOS WebKit
+  const applyTransform = (
+    x: number,
+    y: number,
+    scale: number,
+    rotate: number,
+    isFlapping: boolean,
+    unfoldProgress: number
+  ) => {
     if (butterflyRef.current) {
       butterflyRef.current.setAttribute(
         'transform',
-        `translate(${x.toFixed(2)} ${y.toFixed(2)}) translate(300 340) rotate(${rotate.toFixed(2)}) scale(${scale.toFixed(3)}) translate(-300 -340)`
+        `translate(${x.toFixed(2)}, ${y.toFixed(2)}) translate(300, 340) rotate(${rotate.toFixed(2)}) scale(${scale.toFixed(3)}) translate(-300, -340)`
       );
+    }
+
+    if (leftWingRef.current && rightWingRef.current) {
+      if (isFlapping) {
+        // High-frequency natural wing flap
+        const flap = Math.sin(animTimeRef.current * 36);
+        const flapScaleX = 0.32 + 0.68 * (0.5 + 0.5 * flap);
+        const flapAngle = 18 * (0.5 - 0.5 * flap);
+
+        leftWingRef.current.setAttribute(
+          'transform',
+          `translate(296, 340) rotate(${flapAngle.toFixed(2)}) scale(${flapScaleX.toFixed(3)}, 1) translate(-296, -340)`
+        );
+        rightWingRef.current.setAttribute(
+          'transform',
+          `translate(304, 340) rotate(${(-flapAngle).toFixed(2)}) scale(${flapScaleX.toFixed(3)}, 1) translate(-304, -340)`
+        );
+      } else if (unfoldProgress > 0) {
+        // Landing book unfold
+        const ease = 1 - Math.pow(1 - unfoldProgress, 3);
+        const unfoldScaleX = 0.35 + 0.65 * ease;
+        const unfoldAngle = (1 - ease) * 24;
+
+        leftWingRef.current.setAttribute(
+          'transform',
+          `translate(296, 340) rotate(${unfoldAngle.toFixed(2)}) scale(${unfoldScaleX.toFixed(3)}, 1) translate(-296, -340)`
+        );
+        rightWingRef.current.setAttribute(
+          'transform',
+          `translate(304, 340) rotate(${(-unfoldAngle).toFixed(2)}) scale(${unfoldScaleX.toFixed(3)}, 1) translate(-304, -340)`
+        );
+      } else {
+        // Idle open wings
+        leftWingRef.current.removeAttribute('transform');
+        rightWingRef.current.removeAttribute('transform');
+      }
     }
   };
 
   const triggerFlight = useCallback(
     (force: boolean = false) => {
       if (!interactive) return;
-      const now = Date.now();
-      lastInteractionTimeRef.current = now;
+      const now = performance.now();
+      // Guard against rapid duplicate clicks/invocations (< 200ms)
+      if (now - lastTriggerTickRef.current < 200) return;
+      lastTriggerTickRef.current = now;
 
       const currentMode = flightModeRef.current;
-      const currentDuration = currentMode === 'spiral-text' ? 9.2 : 9.0;
+      const currentDuration = currentMode === 'spiral-text' ? 5.6 : 4.4;
       const isMidAir =
         isPlayingRef.current &&
-        animTimeRef.current > 0.15 * currentDuration &&
-        animTimeRef.current < 0.85 * currentDuration;
+        animTimeRef.current > 0.05 * currentDuration &&
+        animTimeRef.current < 0.92 * currentDuration;
 
       // If mid-air and not forced, let current flight finish smoothly
       if (isMidAir && !force) {
         return;
       }
 
-      // 1st trigger (count 0) -> crest flight
-      // 2nd trigger (count 1) -> spiral-text flight (if allowTextSpiral is true)
-      // 3rd trigger (count 2) -> crest flight
-      // 4th trigger (count 3) -> spiral-text flight
+      // Alternate: 1st trigger (0) -> crest, 2nd trigger (1) -> spiral-text, etc.
       const count = flightCycleCountRef.current;
       const nextMode: 'crest' | 'spiral-text' =
         allowTextSpiral && count % 2 === 1 ? 'spiral-text' : 'crest';
@@ -247,8 +298,9 @@ export const ExamizoButterflyIcon = React.forwardRef<
         } catch (_) {}
       }
 
-      animTimeRef.current = nextMode === 'spiral-text' ? 0 : 0.22 * 9.0;
+      animTimeRef.current = 0;
       isPlayingRef.current = true;
+      lastTimeRef.current = performance.now();
     },
     [interactive, allowTextSpiral]
   );
@@ -261,59 +313,22 @@ export const ExamizoButterflyIcon = React.forwardRef<
     [triggerFlight]
   );
 
-  // Global Scroll & Click / Pointer interaction listener
   useEffect(() => {
-    if (!interactive) return;
+    if (!animate) return;
 
-    let lastThrottle = 0;
-
-    const handleInteraction = () => {
-      const now = Date.now();
-      lastInteractionTimeRef.current = now;
-
-      // Throttle trigger checks to 250ms
-      if (now - lastThrottle < 250) return;
-      lastThrottle = now;
-
-      // Only trigger if resting or near landing
-      const currentMode = flightModeRef.current;
-      const currentDuration = currentMode === 'spiral-text' ? 9.2 : 9.0;
-      const isRestingOrLanding =
-        !isPlayingRef.current ||
-        animTimeRef.current < 0.10 * currentDuration ||
-        animTimeRef.current > 0.88 * currentDuration;
-
-      if (isRestingOrLanding) {
-        triggerFlight(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleInteraction, { capture: true, passive: true });
-    window.addEventListener('pointerdown', handleInteraction, { capture: true, passive: true });
-    window.addEventListener('wheel', handleInteraction, { capture: true, passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleInteraction, { capture: true });
-      window.removeEventListener('pointerdown', handleInteraction, { capture: true });
-      window.removeEventListener('wheel', handleInteraction, { capture: true });
-    };
-  }, [interactive, triggerFlight]);
-
-  useEffect(() => {
-    if (!animate && !isPlayingRef.current) return;
+    let rafId: number;
 
     const loop = (now: number) => {
-      const dt = (now - lastTimeRef.current) / 1000;
+      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05);
       lastTimeRef.current = now;
 
       if (isPlayingRef.current) {
         animTimeRef.current += dt;
         const currentMode = flightModeRef.current;
-        const cycle = currentMode === 'spiral-text' ? 9.2 : 9.0;
+        const cycle = currentMode === 'spiral-text' ? 5.6 : 4.4;
 
         if (animTimeRef.current >= cycle) {
-          if (autoLoop || Date.now() - lastInteractionTimeRef.current < 1500) {
-            // Alternate to next flight cycle
+          if (autoLoop) {
             const count = flightCycleCountRef.current;
             const nextMode: 'crest' | 'spiral-text' =
               allowTextSpiral && count % 2 === 1 ? 'spiral-text' : 'crest';
@@ -321,61 +336,53 @@ export const ExamizoButterflyIcon = React.forwardRef<
             setFlightMode(nextMode);
             flightCycleCountRef.current = count + 1;
             globalCachedFlightCycle = count + 1;
-            if (typeof window !== 'undefined') {
-              try {
-                sessionStorage.setItem('ez_logo_flight_count', String(count + 1));
-              } catch (_) {}
-            }
-            animTimeRef.current = nextMode === 'spiral-text' ? 0 : 0.22 * 9.0;
+            animTimeRef.current = 0;
           } else {
             isPlayingRef.current = false;
             animTimeRef.current = 0;
-            const { x, y, scale, rotate } = calculateTransform(0, 'crest');
-            applyTransform(x, y, scale, rotate);
+            applyTransform(0, 0, 1, 0, false, 0);
+            if (lastWindRef.current) {
+              lastWindRef.current = false;
+              setShowWind(false);
+            }
             if (onFlightComplete) onFlightComplete();
           }
         }
 
-        const { x, y, scale, rotate, isFlapping, isLandingUnfold, windActive } = calculateTransform(
-          animTimeRef.current,
-          flightModeRef.current
-        );
-        applyTransform(x, y, scale, rotate);
+        if (isPlayingRef.current) {
+          const { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive } =
+            calculateTransform(animTimeRef.current, flightModeRef.current);
 
-        const nextWingState: 'idle' | 'flapping' | 'landing' = isFlapping
-          ? 'flapping'
-          : isLandingUnfold
-          ? 'landing'
-          : 'idle';
-        if (nextWingState !== lastWingStateRef.current) {
-          lastWingStateRef.current = nextWingState;
-          setWingState(nextWingState);
-        }
+          applyTransform(x, y, scale, rotate, isFlapping, isLandingUnfold ? unfoldProgress : 0);
 
-        if (windActive !== lastWindRef.current) {
-          lastWindRef.current = windActive;
-          setShowWind(windActive);
+          if (windActive !== lastWindRef.current) {
+            lastWindRef.current = windActive;
+            setShowWind(windActive);
+          }
         }
       }
 
-      animFrameRef.current = requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
     };
 
     lastTimeRef.current = performance.now();
-    animFrameRef.current = requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
 
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      cancelAnimationFrame(rafId);
     };
   }, [animate, autoLoop, onFlightComplete, allowTextSpiral]);
 
   return (
     <div
-      style={{ width: size, height: (size * 700) / 600, overflow: 'visible', contain: 'layout paint' }}
+      style={{ width: size, height: (size * 700) / 600, overflow: 'visible' }}
       className={`relative inline-flex items-center justify-center shrink-0 select-none overflow-visible group/ezbutterfly ${
         interactive ? 'cursor-pointer' : ''
       } ${className}`}
-      onClick={() => triggerFlight(true)}
+      onClick={(e) => {
+        e.stopPropagation();
+        triggerFlight(true);
+      }}
       title="Click to trigger butterfly flight"
     >
       <svg
@@ -580,46 +587,6 @@ export const ExamizoButterflyIcon = React.forwardRef<
             0%, 100% { -webkit-transform: scale(1); opacity: 0.95; }
             50% { -webkit-transform: scale(1.25); opacity: 1; }
           }
-          @keyframes ezWingFlapL {
-            0% { transform: rotate(0deg) scaleX(1); }
-            50% { transform: rotate(18deg) scaleX(0.3); }
-            100% { transform: rotate(0deg) scaleX(1); }
-          }
-          @-webkit-keyframes ezWingFlapL {
-            0% { -webkit-transform: rotate(0deg) scaleX(1); }
-            50% { -webkit-transform: rotate(18deg) scaleX(0.3); }
-            100% { -webkit-transform: rotate(0deg) scaleX(1); }
-          }
-          @keyframes ezWingFlapR {
-            0% { transform: rotate(0deg) scaleX(1); }
-            50% { transform: rotate(-18deg) scaleX(0.3); }
-            100% { transform: rotate(0deg) scaleX(1); }
-          }
-          @-webkit-keyframes ezWingFlapR {
-            0% { -webkit-transform: rotate(0deg) scaleX(1); }
-            50% { -webkit-transform: rotate(-18deg) scaleX(0.3); }
-            100% { -webkit-transform: rotate(0deg) scaleX(1); }
-          }
-          @keyframes ezLandingUnfoldL {
-            0% { transform: rotate(26deg) scaleX(0.35); }
-            65% { transform: rotate(-3deg) scaleX(1.02); }
-            100% { transform: rotate(0deg) scaleX(1); }
-          }
-          @-webkit-keyframes ezLandingUnfoldL {
-            0% { -webkit-transform: rotate(26deg) scaleX(0.35); }
-            65% { -webkit-transform: rotate(-3deg) scaleX(1.02); }
-            100% { -webkit-transform: rotate(0deg) scaleX(1); }
-          }
-          @keyframes ezLandingUnfoldR {
-            0% { transform: rotate(-26deg) scaleX(0.35); }
-            65% { transform: rotate(3deg) scaleX(1.02); }
-            100% { transform: rotate(0deg) scaleX(1); }
-          }
-          @-webkit-keyframes ezLandingUnfoldR {
-            0% { -webkit-transform: rotate(-26deg) scaleX(0.35); }
-            65% { -webkit-transform: rotate(3deg) scaleX(1.02); }
-            100% { -webkit-transform: rotate(0deg) scaleX(1); }
-          }
           @keyframes ezWindDash {
             0% { stroke-dashoffset: 800; opacity: 0; }
             20% { opacity: 0.95; }
@@ -657,56 +624,20 @@ export const ExamizoButterflyIcon = React.forwardRef<
             45%, 100% { -webkit-transform: translateX(340px) skewX(-24deg); opacity: 0; }
           }
           @keyframes ezGlintTwinkle {
-            0%, 100% { transform: scale(0.8) rotate(0deg); opacity: 0.65; }
-            50% { transform: scale(1.35) rotate(45deg); opacity: 1; }
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
           }
           @-webkit-keyframes ezGlintTwinkle {
-            0%, 100% { -webkit-transform: scale(0.8) rotate(0deg); opacity: 0.65; }
-            50% { -webkit-transform: scale(1.35) rotate(45deg); opacity: 1; }
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
           }
           .ez-star-twinkle {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 300px 122px;
-            -webkit-transform-origin: 300px 122px;
+            transform-box: fill-box;
+            -webkit-transform-box: fill-box;
+            transform-origin: center;
+            -webkit-transform-origin: center;
             animation: ezStarPulse 3s ease-in-out infinite;
             -webkit-animation: ezStarPulse 3s ease-in-out infinite;
-          }
-          .ez-flap-left {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 300px 340px;
-            -webkit-transform-origin: 300px 340px;
-            animation: ezWingFlapL 0.15s ease-in-out infinite;
-            -webkit-animation: ezWingFlapL 0.15s ease-in-out infinite;
-            will-change: transform;
-          }
-          .ez-flap-right {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 300px 340px;
-            -webkit-transform-origin: 300px 340px;
-            animation: ezWingFlapR 0.15s ease-in-out infinite;
-            -webkit-animation: ezWingFlapR 0.15s ease-in-out infinite;
-            will-change: transform;
-          }
-          .ez-unfold-left {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 300px 340px;
-            -webkit-transform-origin: 300px 340px;
-            animation: ezLandingUnfoldL 0.9s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-            -webkit-animation: ezLandingUnfoldL 0.9s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-            will-change: transform;
-          }
-          .ez-unfold-right {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 300px 340px;
-            -webkit-transform-origin: 300px 340px;
-            animation: ezLandingUnfoldR 0.9s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-            -webkit-animation: ezLandingUnfoldR 0.9s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-            will-change: transform;
           }
           .ez-wind-1 {
             stroke-dasharray: 180 600;
@@ -733,18 +664,10 @@ export const ExamizoButterflyIcon = React.forwardRef<
             -webkit-animation: ezLustreShine 4.2s ease-in-out infinite;
           }
           .ez-glint-left {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 144px 202px;
-            -webkit-transform-origin: 144px 202px;
             animation: ezGlintTwinkle 2.8s ease-in-out infinite;
             -webkit-animation: ezGlintTwinkle 2.8s ease-in-out infinite;
           }
           .ez-glint-right {
-            transform-box: view-box;
-            -webkit-transform-box: view-box;
-            transform-origin: 456px 202px;
-            -webkit-transform-origin: 456px 202px;
             animation: ezGlintTwinkle 2.8s 1.4s ease-in-out infinite;
             -webkit-animation: ezGlintTwinkle 2.8s 1.4s ease-in-out infinite;
           }
@@ -873,16 +796,8 @@ export const ExamizoButterflyIcon = React.forwardRef<
             {/* Back Aura */}
             <ellipse cx="300" cy="335" rx="145" ry="115" fill="#38bdf8" opacity="0.12" />
 
-            {/* LEFT WING / BOOK PAGE */}
-            <g
-              className={
-                wingState === 'flapping'
-                  ? 'ez-flap-left'
-                  : wingState === 'landing'
-                  ? 'ez-unfold-left'
-                  : ''
-              }
-            >
+            {/* LEFT WING / BOOK PAGE (Direct SVG transform driven) */}
+            <g ref={leftWingRef}>
               {/* Main Colorful Wing Base */}
               <path
                 d="M 296 242 C 275 208 195 168 142 200 C 118 215 110 248 120 282 C 130 315 158 332 176 354 C 152 388 140 425 168 456 C 200 488 255 470 296 445 Z"
@@ -933,16 +848,8 @@ export const ExamizoButterflyIcon = React.forwardRef<
               </g>
             </g>
 
-            {/* RIGHT WING / BOOK PAGE */}
-            <g
-              className={
-                wingState === 'flapping'
-                  ? 'ez-flap-right'
-                  : wingState === 'landing'
-                  ? 'ez-unfold-right'
-                  : ''
-              }
-            >
+            {/* RIGHT WING / BOOK PAGE (Direct SVG transform driven) */}
+            <g ref={rightWingRef}>
                 {/* Main Colorful Wing Base */}
                 <path
                   d="M 304 242 C 325 208 405 168 458 200 C 482 215 490 248 480 282 C 470 315 442 332 424 354 C 448 388 460 425 432 456 C 400 488 345 470 304 445 Z"
