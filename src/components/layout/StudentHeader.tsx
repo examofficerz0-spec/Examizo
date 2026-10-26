@@ -255,6 +255,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
               if (typeof window !== 'undefined') {
                 localStorage.setItem('examizo_digilocker_verified', 'true');
               }
+            } else {
+              setIsDigiLockerVerified(false);
+              setVerifiedDigiProfile(null);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('examizo_digilocker_verified');
+              }
             }
           }
         }
@@ -345,6 +351,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           }
           if (typeof window !== 'undefined') {
             localStorage.setItem('examizo_digilocker_verified', 'true');
+          }
+        } else {
+          setIsDigiLockerVerified(false);
+          setVerifiedDigiProfile(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('examizo_digilocker_verified');
           }
         }
       })
@@ -861,7 +873,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
 
                   {profiles.map((prof, idx) => {
                     const avatarBg = profileColors[idx % profileColors.length];
-                    const isProfVerified = Boolean(prof.digilocker_verified || isDigiLockerVerified);
+                    const isProfVerified = Boolean(prof.digilocker_verified || prof.digilockerProfile?.verified);
                     return (
                       <div
                         key={prof.id}

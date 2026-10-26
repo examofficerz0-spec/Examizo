@@ -123,6 +123,9 @@ export default function ProfilePage() {
           if (data.user.digilocker_verified || data.user.digilockerProfile?.verified) {
             setIsDigiLockerVerified(true);
             setDigilockerProfile(data.user.digilockerProfile);
+          } else {
+            setIsDigiLockerVerified(false);
+            setDigilockerProfile(null);
           }
         }
       })

@@ -42,6 +42,8 @@ interface ProfileItem {
   hasPin: boolean;
   avatarColor?: string;
   xp_total?: number;
+  digilocker_verified?: boolean;
+  digilockerProfile?: any;
 }
 
 const AVATAR_PALETTES = [
@@ -391,6 +393,13 @@ export default function ProfilesPage() {
                   {profile.hasPin && (
                     <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/95 backdrop-blur-xs text-amber-600 flex items-center justify-center border border-amber-300 shadow-sm">
                       <Lock className="w-3 h-3" />
+                    </div>
+                  )}
+
+                  {/* DigiLocker Verified Badge */}
+                  {profile.digilocker_verified && !isManaging && (
+                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-emerald-600/90 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-xs border border-emerald-400">
+                      <ShieldCheck className="w-2.5 h-2.5" /> Verified
                     </div>
                   )}
 

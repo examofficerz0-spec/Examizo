@@ -44,35 +44,12 @@ export async function GET(req: NextRequest) {
 
   const userId = authUser.userId;
   const userEmail = (authUser.email || '').toLowerCase().trim();
-  const parentEmail = (user.account_email || (authUser.email ? authUser.email.split('+')[0] + '@' + (authUser.email.split('@')[1] || '') : '')).toLowerCase().trim();
-  const baseHandle = (parentEmail || userEmail).split('@')[0].split('+')[0].trim();
-
-  // Check if parent account is verified in Exam Portal D1
-  if (parentEmail) {
-    try {
-      const parentRows = await queryD1(
-        'SELECT digilocker_verified, digilocker_profile_json, digilocker_raw_response_json FROM users WHERE LOWER(email) = ? OR id = ? LIMIT 1',
-        [parentEmail, userId]
-      );
-      if (parentRows && parentRows.length > 0 && parentRows[0].digilocker_verified) {
-        const norm = ensureOfficialDigiName(normalizeDigiLockerProfile(parentRows[0].digilocker_profile_json));
-        const pRaw = parentRows[0].digilocker_raw_response_json || parentRows[0].digilocker_profile_json || '{}';
-        // Persist to sub_profiles and current user
-        executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR LOWER(email) = ?', [JSON.stringify(norm), pRaw, userId, userEmail]).catch(() => {});
-        executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ? OR parent_user_id = ? OR LOWER(parent_email) = ?', [JSON.stringify(norm), pRaw, userId, userId, parentEmail]).catch(() => {});
-        return NextResponse.json({
-          verified: true,
-          profile: norm,
-        });
-      }
-    } catch (_) {}
-  }
 
   try {
-    // 2. Query Medizo D1 for matching user record
+    // 2. Query Medizo D1 for matching user record strictly for this user
     const healthRows = await queryHealthD1(
-      'SELECT id, email, digilockerVerified, digilockerProfile FROM users WHERE id = ? OR LOWER(email) = ? OR LOWER(email) = ? OR LOWER(email) LIKE ? LIMIT 1',
-      [userId, userEmail, parentEmail, `${baseHandle}@%`]
+      'SELECT id, email, digilockerVerified, digilockerProfile FROM users WHERE id = ? OR LOWER(email) = ? LIMIT 1',
+      [userId, userEmail]
     );
 
     let foundProfile: any = null;
@@ -90,47 +67,19 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fallback: check recent verified records if email or ID match
-    if (!foundProfile) {
-      const recentRows = await queryHealthD1(
-        'SELECT id, email, digilockerVerified, digilockerProfile FROM users WHERE (digilockerVerified = 1 OR digilockerVerified = "1") AND digilockerProfile IS NOT NULL ORDER BY updatedAt DESC LIMIT 10'
-      );
-      if (recentRows && recentRows.length > 0) {
-        for (const row of recentRows) {
-          let p = row.digilockerProfile;
-          if (typeof p === 'string') {
-            try { p = JSON.parse(p); } catch (e) {}
-          }
-          if (p && p.verified) {
-            const rowEmail = (row.email || '').toLowerCase().trim();
-            const profEmail = (p.email || '').toLowerCase().trim();
-            if (
-              row.id === userId ||
-              (rowEmail && (rowEmail === userEmail || rowEmail === parentEmail || (baseHandle && rowEmail.startsWith(baseHandle)))) ||
-              (profEmail && (profEmail === userEmail || profEmail === parentEmail || (baseHandle && profEmail.startsWith(baseHandle))))
-            ) {
-              foundProfile = p;
-              foundRaw = row;
-              break;
-            }
-          }
-        }
-      }
-    }
-
     if (foundProfile) {
       const normalized = ensureOfficialDigiName(normalizeDigiLockerProfile(foundProfile));
       const profileJson = JSON.stringify(normalized);
       const rawJson = JSON.stringify(foundRaw || foundProfile);
 
-      // Auto persist into Exam Portal D1 users and sub_profiles tables
+      // Auto persist strictly into the specific profile
       await executeD1(
-        'UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime("now") WHERE id = ? OR LOWER(email) = ? OR LOWER(account_email) = ? OR LOWER(email) LIKE ?',
-        [profileJson, rawJson, userId, userEmail, parentEmail, `${baseHandle}@%`]
+        'UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime("now") WHERE id = ?',
+        [profileJson, rawJson, userId]
       );
       await executeD1(
-        'UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime("now") WHERE id = ? OR parent_user_id = ? OR LOWER(parent_email) = ? OR LOWER(parent_email) LIKE ?',
-        [profileJson, rawJson, userId, userId, parentEmail, `${baseHandle}@%`]
+        'UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ?, updated_at = datetime("now") WHERE id = ?',
+        [profileJson, rawJson, userId]
       );
 
       return NextResponse.json({

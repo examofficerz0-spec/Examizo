@@ -80,15 +80,6 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
               isD1: true,
             };
           }
-
-          // If parent is verified and sub-profile is not, inherit and persist
-          if (p.digilocker_verified && !u.digilocker_verified) {
-            u.digilocker_verified = 1;
-            u.digilocker_profile_json = p.digilocker_profile_json;
-            u.digilocker_raw_response_json = p.digilocker_raw_response_json || '{}';
-            executeD1('UPDATE users SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [p.digilocker_profile_json, p.digilocker_raw_response_json || '{}', u.id]).catch(() => {});
-            executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [p.digilocker_profile_json, p.digilocker_raw_response_json || '{}', u.id]).catch(() => {});
-          }
         }
       }
 
@@ -166,13 +157,9 @@ export async function getUserFromAuth(auth: UserPayload | null): Promise<UserLoo
       const parentD1 = await queryD1('SELECT * FROM users WHERE LOWER(email) = ? OR id = ? LIMIT 1', [parentEmail, sp.parent_user_id]);
       const parentUser = parentD1 && parentD1.length > 0 ? parentD1[0] : null;
 
-      const isVerified = Boolean(sp.digilocker_verified || parentUser?.digilocker_verified);
-      const profJson = sp.digilocker_profile_json || parentUser?.digilocker_profile_json || '{}';
-      const rawJson = sp.digilocker_raw_response_json || parentUser?.digilocker_raw_response_json || '{}';
-
-      if (parentUser?.digilocker_verified && !sp.digilocker_verified) {
-        executeD1('UPDATE sub_profiles SET digilocker_verified = 1, digilocker_profile_json = ?, digilocker_raw_response_json = ? WHERE id = ?', [profJson, rawJson, sp.id]).catch(() => {});
-      }
+      const isVerified = Boolean(sp.digilocker_verified === 1 || sp.digilocker_verified === true || sp.digilocker_verified === '1');
+      const profJson = sp.digilocker_profile_json || '{}';
+      const rawJson = sp.digilocker_raw_response_json || '{}';
 
       const subDigi = parseDigiProfile(profJson, isVerified ? 1 : 0);
       return {
