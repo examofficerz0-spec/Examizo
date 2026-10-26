@@ -27,6 +27,7 @@ import {
   SelectedCurriculumResult,
 } from '@/components/curriculum/CurriculumPickerModal';
 import { isCompetitiveCourse } from '@/components/ui/DigiLockerModal';
+import { ProfileSwitchOverlay, ProfileSwitchTarget } from '@/components/common/ProfileSwitchOverlay';
 
 interface ProfileItem {
   id: string;
@@ -68,6 +69,10 @@ export default function ProfilesPage() {
   const [pinError, setPinError] = useState('');
   const [pinSubmitting, setPinSubmitting] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
+
+  // Profile Switching Smooth Transition State
+  const [switchingTarget, setSwitchingTarget] = useState<ProfileSwitchTarget | null>(null);
+  const [switchDestination, setSwitchDestination] = useState<string>('/dashboard');
   const pinInputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -176,12 +181,27 @@ export default function ProfilesPage() {
         pinInputRefs[0].current?.focus();
       } else {
         clearAllClientUserCaches();
-        // Redirect to course selection if not locked, otherwise dashboard
-        if (!data.profile?.lockedCourseId) {
-          window.location.href = '/course-selection';
-        } else {
-          window.location.href = '/dashboard';
-        }
+        setSelectedProfileForPin(null);
+
+        const destination = !data.profile?.lockedCourseId
+          ? '/course-selection'
+          : '/dashboard';
+        setSwitchDestination(destination);
+
+        const targetProf = profiles.find((p) => p.id === profileId);
+        const profIdx = profiles.findIndex((p) => p.id === profileId);
+        const gradientBg =
+          profIdx >= 0 ? AVATAR_PALETTES[profIdx % AVATAR_PALETTES.length] : undefined;
+        const avatarBg = gradientBg ? `bg-gradient-to-br ${gradientBg}` : undefined;
+
+        setSwitchingTarget({
+          name: targetProf?.name || data.profile?.name || 'Student',
+          fullName: targetProf?.fullName || data.profile?.fullName,
+          nickname: targetProf?.nickname || data.profile?.nickname,
+          avatarBg,
+          lockedCourseName: data.profile?.lockedCourseName || targetProf?.lockedCourseName,
+          isVerified: Boolean(targetProf?.digilocker_verified || targetProf?.digilockerProfile?.verified),
+        });
       }
     } catch (err) {
       setPinError('Network error while switching profiles');
@@ -895,6 +915,15 @@ export default function ProfilesPage() {
         onClose={() => setShowSignOutModal(false)}
         onConfirm={handleLogout}
         isSigningOut={isSigningOut}
+      />
+
+      {/* ── Smooth Profile Switch Transition Overlay ── */}
+      <ProfileSwitchOverlay
+        target={switchingTarget}
+        onComplete={() => {
+          window.location.href = switchDestination;
+        }}
+        durationMs={1350}
       />
     </div>
   );

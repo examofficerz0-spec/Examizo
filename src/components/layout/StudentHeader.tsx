@@ -45,6 +45,7 @@ import {
   CurriculumPickerModal,
   SelectedCurriculumResult,
 } from '@/components/curriculum/CurriculumPickerModal';
+import { ProfileSwitchOverlay, ProfileSwitchTarget } from '@/components/common/ProfileSwitchOverlay';
 
 interface StudentHeaderProps {
   userName?: string;
@@ -113,6 +114,10 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
   const [pinInputValue, setPinInputValue] = useState('');
   const [pinPromptError, setPinPromptError] = useState('');
   const [pinPromptLoading, setPinPromptLoading] = useState(false);
+
+  // Profile Switching Smooth Transition State
+  const [switchingTarget, setSwitchingTarget] = useState<ProfileSwitchTarget | null>(null);
+  const [switchDestination, setSwitchDestination] = useState<string>('/dashboard');
 
   // Notification State
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -447,12 +452,24 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         clearAllClientUserCaches();
         setShowProfileMenu(false);
         setProfilePinPrompt(null);
-        // If the target profile has NO locked course, redirect to course selection!
-        if (!data.profile?.lockedCourseId) {
-          window.location.href = '/course-selection';
-        } else {
-          window.location.href = '/dashboard';
-        }
+
+        const destination = !data.profile?.lockedCourseId
+          ? '/course-selection'
+          : '/dashboard';
+        setSwitchDestination(destination);
+
+        const profIdx = profiles.findIndex((p) => p.id === profile.id);
+        const avatarBg =
+          profIdx >= 0 ? profileColors[profIdx % profileColors.length] : undefined;
+
+        setSwitchingTarget({
+          name: profile.name,
+          fullName: profile.fullName || undefined,
+          nickname: profile.nickname || undefined,
+          avatarBg,
+          lockedCourseName: data.profile?.lockedCourseName || profile.lockedCourseName || undefined,
+          isVerified: Boolean(profile.digilocker_verified || profile.digilockerProfile?.verified),
+        });
       }
     } catch (err) {
       setPinPromptError('Failed to switch profile');
@@ -1361,6 +1378,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         onClose={() => setShowSignOutModal(false)}
         onConfirm={handleLogout}
         isSigningOut={isSigningOut}
+      />
+
+      {/* Smooth Profile Switch Transition Overlay */}
+      <ProfileSwitchOverlay
+        target={switchingTarget}
+        onComplete={() => {
+          window.location.href = switchDestination;
+        }}
+        durationMs={1350}
       />
     </>
   );
