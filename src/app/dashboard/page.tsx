@@ -41,10 +41,62 @@ import { hideNativeSplashScreen } from '@/lib/nativeApp';
 export default function StudentDashboardPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
-  const [mockTests, setMockTests] = useState<any[]>([]);
-  const [mockTestHistory, setMockTestHistory] = useState<any[]>([]);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [userData, setUserData] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) {
+          const parsed = JSON.parse(fresh);
+          if (parsed?.user) return parsed.user;
+        }
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (cached?.user) return cached.user;
+      } catch (_) {}
+    }
+    return null;
+  });
+  const [mockTests, setMockTests] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) {
+          const parsed = JSON.parse(fresh);
+          if (Array.isArray(parsed?.mockTests)) return parsed.mockTests;
+        }
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (Array.isArray(cached?.mockTests)) return cached.mockTests;
+      } catch (_) {}
+    }
+    return [];
+  });
+  const [mockTestHistory, setMockTestHistory] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) {
+          const parsed = JSON.parse(fresh);
+          if (Array.isArray(parsed?.mockTestHistory)) return parsed.mockTestHistory;
+        }
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (Array.isArray(cached?.mockTestHistory)) return cached.mockTestHistory;
+      } catch (_) {}
+    }
+    return [];
+  });
+  const [leaderboard, setLeaderboard] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) {
+          const parsed = JSON.parse(fresh);
+          if (Array.isArray(parsed?.leaderboard)) return parsed.leaderboard;
+        }
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (Array.isArray(cached?.leaderboard)) return cached.leaderboard;
+      } catch (_) {}
+    }
+    return [];
+  });
   const [levelInfo, setLevelInfo] = useState<{
     levelId?: string;
     levelLabel?: string;
@@ -52,8 +104,34 @@ export default function StudentDashboardPage() {
     headline?: string;
     badgeText?: string;
     totalStudentsInLevel?: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
+  } | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) {
+          const parsed = JSON.parse(fresh);
+          if (parsed?.levelInfo) return parsed.levelInfo;
+        }
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (cached?.levelInfo) return cached.levelInfo;
+      } catch (_) {}
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('examizo_just_switched_profile') === 'true') {
+          return false;
+        }
+        const fresh = sessionStorage.getItem('examizo_fresh_switched_cache');
+        if (fresh) return false;
+        const cached = getSwrCache<any>('dashboard_cache');
+        if (cached?.user) return false;
+      } catch (_) {}
+    }
+    return true;
+  });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showBookmarksModal, setShowBookmarksModal] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
@@ -148,8 +226,50 @@ export default function StudentDashboardPage() {
       }
     }
 
-    return () => unsubscribe();
+    const handleProfileSwitched = (e: any) => {
+      const detail = e?.detail;
+      if (detail?.dashData) {
+        const data = detail.dashData;
+        if (data.user) setUserData(data.user);
+        if (Array.isArray(data.mockTests)) setMockTests(data.mockTests);
+        if (Array.isArray(data.mockTestHistory)) setMockTestHistory(data.mockTestHistory);
+        if (Array.isArray(data.topLeaderboard)) setLeaderboard(data.topLeaderboard);
+        if (data.levelInfo) setLevelInfo(data.levelInfo);
+        setLoading(false);
+      } else {
+        fetch('/api/dashboard', { cache: 'no-store' })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.user) {
+              setUserData(data.user);
+              if (Array.isArray(data.mockTests)) setMockTests(data.mockTests);
+              if (Array.isArray(data.mockTestHistory)) setMockTestHistory(data.mockTestHistory);
+              if (Array.isArray(data.topLeaderboard)) setLeaderboard(data.topLeaderboard);
+              if (data.levelInfo) setLevelInfo(data.levelInfo);
+              setLoading(false);
+            }
+          })
+          .catch(console.error);
+      }
+      fetchPromoteInfo();
+    };
+
+    window.addEventListener('examizo:profile-switched', handleProfileSwitched);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('examizo:profile-switched', handleProfileSwitched);
+    };
   }, []);
+
+  useEffect(() => {
+    if (userData) {
+      try {
+        sessionStorage.removeItem('examizo_just_switched_profile');
+        sessionStorage.removeItem('examizo_fresh_switched_cache');
+      } catch (_) {}
+    }
+  }, [userData]);
 
   const handlePromoteAction = async (action: 'promote' | 'rollback') => {
     setPromoteInfo((prev) => (prev ? { ...prev, loading: true } : null));
@@ -233,7 +353,13 @@ export default function StudentDashboardPage() {
   const studentRank = Number(userData?.rank) || 1;
   const displayName = userData?.name || 'Student';
 
-  if (!mounted || (loading && !userData)) {
+  // If a profile switch is in-flight or cached user data is available, do not flash the blocking PageLoader
+  const isProfileSwitching =
+    typeof window !== 'undefined' &&
+    (sessionStorage.getItem('examizo_just_switched_profile') === 'true' ||
+      Boolean(sessionStorage.getItem('examizo_fresh_switched_cache')));
+
+  if (!isProfileSwitching && (!mounted || (loading && !userData))) {
     return (
       <PageLoader
         title="Loading Student Dashboard"

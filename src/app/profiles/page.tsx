@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { PageLoader } from '@/components/common/PageLoader';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { setSwrCache } from '@/lib/swrCache';
 import { hideNativeSplashScreen } from '@/lib/nativeApp';
 import { SignOutConfirmModal } from '@/components/common/SignOutConfirmModal';
 import {
@@ -180,7 +181,6 @@ export default function ProfilesPage() {
         setPinDigits(['', '', '', '']);
         pinInputRefs[0].current?.focus();
       } else {
-        clearAllClientUserCaches();
         setSelectedProfileForPin(null);
 
         const destination = !data.profile?.lockedCourseId
@@ -194,6 +194,13 @@ export default function ProfilesPage() {
           profIdx >= 0 ? AVATAR_PALETTES[profIdx % AVATAR_PALETTES.length] : undefined;
         const avatarBg = gradientBg ? `bg-gradient-to-br ${gradientBg}` : undefined;
 
+        // Current active profile as 'from' source
+        const activeProf = profiles.find((p) => p.isActive);
+        const activeIdx = profiles.findIndex((p) => p.isActive);
+        const activeGradientBg =
+          activeIdx >= 0 ? AVATAR_PALETTES[activeIdx % AVATAR_PALETTES.length] : undefined;
+        const fromAvatarBg = activeGradientBg ? `bg-gradient-to-br ${activeGradientBg}` : undefined;
+
         setSwitchingTarget({
           name: targetProf?.name || data.profile?.name || 'Student',
           fullName: targetProf?.fullName || data.profile?.fullName,
@@ -201,7 +208,46 @@ export default function ProfilesPage() {
           avatarBg,
           lockedCourseName: data.profile?.lockedCourseName || targetProf?.lockedCourseName,
           isVerified: Boolean(targetProf?.digilocker_verified || targetProf?.digilockerProfile?.verified),
+          from: activeProf
+            ? {
+                name: activeProf.name,
+                fullName: activeProf.fullName,
+                nickname: activeProf.nickname || undefined,
+                avatarBg: fromAvatarBg,
+                lockedCourseName: activeProf.lockedCourseName || undefined,
+                isVerified: Boolean(
+                  activeProf.digilocker_verified || activeProf.digilockerProfile?.verified
+                ),
+              }
+            : undefined,
         });
+
+        // BACKGROUND DASHBOARD PREFETCH: Immediately load dashboard data in background
+        try {
+          sessionStorage.setItem('examizo_just_switched_profile', 'true');
+        } catch (_) {}
+
+        fetch('/api/dashboard', { cache: 'no-store' })
+          .then((r) => r.json())
+          .then((dashData) => {
+            if (dashData && dashData.user) {
+              const newCache = {
+                user: dashData.user || null,
+                mockTests: Array.isArray(dashData.mockTests) ? dashData.mockTests : [],
+                mockTestHistory: Array.isArray(dashData.mockTestHistory) ? dashData.mockTestHistory : [],
+                leaderboard: Array.isArray(dashData.topLeaderboard) ? dashData.topLeaderboard : [],
+                levelInfo: dashData.levelInfo || null,
+                incorrectLog: Array.isArray(dashData.incorrectLog) ? dashData.incorrectLog : [],
+              };
+              setSwrCache('dashboard_cache', newCache, dashData.user?.email);
+              try {
+                sessionStorage.setItem('examizo_fresh_switched_cache', JSON.stringify(newCache));
+              } catch (_) {}
+            }
+          })
+          .catch((err) => {
+            console.warn('[ProfilesPage] Background dashboard prefetch:', err);
+          });
       }
     } catch (err) {
       setPinError('Network error while switching profiles');
@@ -921,9 +967,10 @@ export default function ProfilesPage() {
       <ProfileSwitchOverlay
         target={switchingTarget}
         onComplete={() => {
-          window.location.href = switchDestination;
+          setSwitchingTarget(null);
+          router.push(switchDestination);
         }}
-        durationMs={1350}
+        durationMs={1450}
       />
     </div>
   );

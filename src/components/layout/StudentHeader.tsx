@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '../common/Logo';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { clearAllClientUserCaches } from '@/lib/clientCache';
+import { setSwrCache } from '@/lib/swrCache';
 import { SignOutConfirmModal } from '../common/SignOutConfirmModal';
 import {
   Home,
@@ -449,7 +450,6 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       }
 
       if (data.success) {
-        clearAllClientUserCaches();
         setShowProfileMenu(false);
         setProfilePinPrompt(null);
 
@@ -462,6 +462,12 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
         const avatarBg =
           profIdx >= 0 ? profileColors[profIdx % profileColors.length] : undefined;
 
+        // Current active profile as 'from' source
+        const currentActive = profiles.find((p) => p.isActive);
+        const currentActiveIdx = profiles.findIndex((p) => p.isActive);
+        const fromAvatarBg =
+          currentActiveIdx >= 0 ? profileColors[currentActiveIdx % profileColors.length] : undefined;
+
         setSwitchingTarget({
           name: profile.name,
           fullName: profile.fullName || undefined,
@@ -469,7 +475,54 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
           avatarBg,
           lockedCourseName: data.profile?.lockedCourseName || profile.lockedCourseName || undefined,
           isVerified: Boolean(profile.digilocker_verified || profile.digilockerProfile?.verified),
+          from: currentActive
+            ? {
+                name: currentActive.name,
+                fullName: currentActive.fullName || undefined,
+                nickname: currentActive.nickname || undefined,
+                avatarBg: fromAvatarBg,
+                lockedCourseName: currentActive.lockedCourseName || currentCourseName || undefined,
+                isVerified: Boolean(
+                  currentActive.digilocker_verified || currentActive.digilockerProfile?.verified
+                ),
+              }
+            : undefined,
         });
+
+        // BACKGROUND DASHBOARD PREFETCH: Immediately load dashboard data behind the switch overlay
+        try {
+          sessionStorage.setItem('examizo_just_switched_profile', 'true');
+        } catch (_) {}
+
+        fetch('/api/dashboard', { cache: 'no-store' })
+          .then((r) => r.json())
+          .then((dashData) => {
+            if (dashData && dashData.user) {
+              const newCache = {
+                user: dashData.user || null,
+                mockTests: Array.isArray(dashData.mockTests) ? dashData.mockTests : [],
+                mockTestHistory: Array.isArray(dashData.mockTestHistory) ? dashData.mockTestHistory : [],
+                leaderboard: Array.isArray(dashData.topLeaderboard) ? dashData.topLeaderboard : [],
+                levelInfo: dashData.levelInfo || null,
+                incorrectLog: Array.isArray(dashData.incorrectLog) ? dashData.incorrectLog : [],
+              };
+              setSwrCache('dashboard_cache', newCache, dashData.user?.email);
+              try {
+                sessionStorage.setItem('examizo_fresh_switched_cache', JSON.stringify(newCache));
+              } catch (_) {}
+
+              // Live update subscribers and refresh header profile badge
+              window.dispatchEvent(
+                new CustomEvent('examizo:profile-switched', {
+                  detail: { profile: data.profile, dashData },
+                })
+              );
+              fetchProfiles();
+            }
+          })
+          .catch((err) => {
+            console.warn('[StudentHeader] Background dashboard fetch:', err);
+          });
       }
     } catch (err) {
       setPinPromptError('Failed to switch profile');
@@ -1384,9 +1437,15 @@ export const StudentHeader: React.FC<StudentHeaderProps> = ({ userName: propsUse
       <ProfileSwitchOverlay
         target={switchingTarget}
         onComplete={() => {
-          window.location.href = switchDestination;
+          setSwitchingTarget(null);
+          if (pathname === switchDestination) {
+            // Already on /dashboard: seamless in-place transition with no page reload!
+            window.dispatchEvent(new Event('examizo:profile-switched-complete'));
+          } else {
+            router.push(switchDestination);
+          }
         }}
-        durationMs={1350}
+        durationMs={1450}
       />
     </>
   );
