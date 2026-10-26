@@ -29,15 +29,20 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   const butterflyRef = useRef<ExamizoButterflyIconHandle>(null);
 
+  // Scaled 10% larger for enhanced visual presence and prestige brand stature
+  const scaledSize = Math.round(size * 1.10);
+
   const calculatedTextSize =
     textSize ||
-    (size >= 50
+    (scaledSize >= 56
+      ? 'text-[28px] sm:text-[32px]'
+      : scaledSize >= 48
       ? 'text-[26px] sm:text-[29px]'
-      : size >= 42
-      ? 'text-[25px] sm:text-[27px]'
-      : size >= 33
+      : scaledSize >= 42
+      ? 'text-[24px] sm:text-[26px]'
+      : scaledSize >= 33
       ? 'text-[22px]'
-      : size >= 26
+      : scaledSize >= 26
       ? 'text-[20px]'
       : 'text-base');
 
@@ -59,7 +64,7 @@ export const Logo: React.FC<LogoProps> = ({
         }
       }}
       style={{ overflow: 'visible' }}
-      className={`flex items-center gap-3.5 group examizo-container select-none overflow-visible ${
+      className={`flex items-center gap-4 group examizo-container select-none overflow-visible ${
         interactive ? 'cursor-pointer' : ''
       } ${className}`}
     >
@@ -67,13 +72,13 @@ export const Logo: React.FC<LogoProps> = ({
         {variant === 'butterfly' ? (
           <ExamizoButterflyIcon
             ref={butterflyRef}
-            size={size}
+            size={scaledSize}
             animate={animate}
             interactive={interactive}
             allowTextSpiral={showText}
           />
         ) : (
-          <ExamizoIcon size={size} animate={animate} interactive={interactive} />
+          <ExamizoIcon size={scaledSize} animate={animate} interactive={interactive} />
         )}
       </div>
 

@@ -69,9 +69,9 @@ export const ExamizoButterflyIcon = React.forwardRef<
   const lastWindRef = useRef(false);
   const lastTriggerTickRef = useRef<number>(0);
 
-  // Trajectory 1: Soaring loop around the Shield Crest (4.4s duration, instant takeoff)
+  // Trajectory 1: Soaring loop around the Shield Crest (4.6s duration, instant takeoff)
   const calculateCrestTransform = (time: number) => {
-    const DURATION = 4.4;
+    const DURATION = 4.6;
     const tNorm = Math.min(0.9999, Math.max(0, time / DURATION));
     let x = 0;
     let y = 0;
@@ -83,7 +83,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
     let windActive = false;
 
     if (tNorm < 0.16) {
-      // Phase 1: Rapid, majestic takeoff from crest (0 to ~0.7s)
+      // Phase 1: Rapid, majestic takeoff from crest (0 to ~0.74s)
       const p = tNorm / 0.16;
       const ease = p * p * (3 - 2 * p);
       x = Math.sin(p * Math.PI) * 14;
@@ -93,7 +93,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
       isFlapping = true;
       windActive = true;
     } else if (tNorm < 0.72) {
-      // Phase 2: Soaring panoramic loop around the shield crest (0.7s to ~3.15s)
+      // Phase 2: Soaring panoramic loop around the shield crest (0.74s to ~3.31s)
       const p = (tNorm - 0.16) / 0.56;
       const angle = p * Math.PI * 2;
       x = Math.sin(angle) * 165 + Math.cos(angle * 2) * 35;
@@ -103,7 +103,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
       isFlapping = true;
       windActive = true;
     } else if (tNorm < 0.88) {
-      // Phase 3: Gliding approach down to the open book base (3.15s to ~3.87s)
+      // Phase 3: Gliding approach down to the open book base (3.31s to ~4.05s)
       const p = (tNorm - 0.72) / 0.16;
       const ease = 1 - Math.pow(1 - p, 3);
       x = 65 * (1 - ease);
@@ -113,7 +113,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
       isFlapping = p < 0.6;
       windActive = p < 0.5;
     } else {
-      // Phase 4: Touchdown and book page unfolding (3.87s to 4.4s)
+      // Phase 4: Touchdown and book page unfolding (4.05s to 4.6s)
       const p = (tNorm - 0.88) / 0.12;
       x = 0;
       y = 0;
@@ -128,9 +128,9 @@ export const ExamizoButterflyIcon = React.forwardRef<
     return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
   };
 
-  // Trajectory 2: 3D Helical Spiral weaving across the entire "Examizo" lettering (5.6s duration)
+  // Trajectory 2: 3D Helical Spiral weaving across "Examizo" lettering with smooth return spiral (7.6s duration)
   const calculateSpiralTransform = (time: number) => {
-    const DURATION = 5.6;
+    const DURATION = 7.6;
     const tNorm = Math.min(0.9999, Math.max(0, time / DURATION));
     let x = 0;
     let y = 0;
@@ -141,64 +141,70 @@ export const ExamizoButterflyIcon = React.forwardRef<
     let unfoldProgress = 0;
     let windActive = false;
 
-    if (tNorm < 0.12) {
-      // Phase 1: Takeoff towards letter 'E' (0 to ~0.67s)
-      const p = tNorm / 0.12;
+    if (tNorm < 0.10) {
+      // Phase 1: Rapid, majestic takeoff towards letter 'E' (0 to ~0.76s)
+      const p = tNorm / 0.10;
       const ease = p * p * (3 - 2 * p);
       x = ease * 450;
-      y = -Math.sin(p * Math.PI) * 70;
-      scale = 1.0 + Math.sin(p * Math.PI) * 0.15;
+      y = -Math.sin(p * Math.PI) * 75;
+      scale = 1.0 + Math.sin(p * Math.PI) * 0.16;
       rotate = p * 14;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.66) {
-      // Phase 2: Helical 3D spiral weaving across "Examizo" lettering (~0.67s to ~3.7s)
-      const p = (tNorm - 0.12) / 0.54;
+    } else if (tNorm < 0.50) {
+      // Phase 2: Forward 3D helical spiral weaving across "Examizo" (~0.76s to ~3.80s)
+      const p = (tNorm - 0.10) / 0.40;
       const env = Math.min(1, p * 4);
       const endEnv = Math.min(1, (1 - p) * 4);
       const spiralEnv = Math.min(env, endEnv);
 
       const x_base = 450 + p * 1500;
-      const theta = p * 6.5 * Math.PI;
+      const theta = p * 6.0 * Math.PI;
 
-      x = x_base - (1 - Math.cos(theta)) * 35 * spiralEnv;
-      y = Math.sin(theta) * 125 * env;
+      x = x_base - (1 - Math.cos(theta)) * 38 * spiralEnv;
+      y = Math.sin(theta) * 128 * env;
       scale = 1.08 + Math.cos(theta) * 0.28 * spiralEnv;
-      rotate = 14 * (1 - p * 0.5) + Math.cos(theta) * 20 * spiralEnv;
+      rotate = 14 * (1 - p * 0.5) + Math.cos(theta) * 22 * spiralEnv;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.78) {
-      // Phase 3: Victory flourish loop past letter 'o' (~3.7s to ~4.36s)
-      const p = (tNorm - 0.66) / 0.12;
+    } else if (tNorm < 0.60) {
+      // Phase 3: Victory flourish orbit past letter 'o' (~3.80s to ~4.56s)
+      const p = (tNorm - 0.50) / 0.10;
       const loopAngle = p * Math.PI * 2;
-      x = 1950 + Math.sin(loopAngle) * 90;
-      y = -(1 - Math.cos(loopAngle)) * 95;
-      scale = 1.08 + Math.sin(p * Math.PI) * 0.22;
-      rotate = 7 + Math.sin(loopAngle) * 28;
+      x = 1950 + Math.sin(loopAngle) * 95;
+      y = -(1 - Math.cos(loopAngle)) * 105;
+      scale = 1.08 + Math.sin(p * Math.PI) * 0.24;
+      rotate = 7 + Math.sin(loopAngle) * 30;
       isFlapping = true;
       windActive = true;
-    } else if (tNorm < 0.90) {
-      // Phase 4: High-speed return glide back to crest (~4.36s to ~5.04s)
-      const p = (tNorm - 0.78) / 0.12;
+    } else if (tNorm < 0.88) {
+      // Phase 4: Smooth Return Spiral weaving BACK across "Examizo" (~4.56s to ~6.69s)
+      // Generous 2.13-second graceful return spiral with undulating waves instead of a sudden fast rush
+      const p = (tNorm - 0.60) / 0.28;
       const ease = p * p * (3 - 2 * p);
-      x = 1950 * (1 - ease) + 60 * ease;
-      y = -ease * 70 - Math.sin(p * Math.PI) * 75;
-      scale = 1.08 * (1 - ease) + 1.0 * ease;
-      rotate = 7 * (1 - ease) - 12 * Math.sin(p * Math.PI) + 8 * ease;
+      const x_base = 1950 * (1 - ease) + 80 * ease;
+
+      const thetaRet = p * 5.0 * Math.PI;
+      const retEnv = Math.sin(p * Math.PI);
+
+      x = x_base + Math.sin(thetaRet) * 40 * retEnv;
+      y = -45 * ease + Math.cos(thetaRet) * 110 * retEnv;
+      scale = (1.08 * (1 - ease) + 1.05 * ease) + Math.cos(thetaRet) * 0.22 * retEnv;
+      rotate = (7 * (1 - ease) + 6 * ease) - Math.sin(thetaRet) * 22 * retEnv;
       isFlapping = true;
       windActive = true;
     } else {
-      // Phase 5: Landing and book unfolding (~5.04s to 5.6s)
-      const p = (tNorm - 0.90) / 0.10;
+      // Phase 5: Soft approach, touchdown, and book page unfolding (~6.69s to 7.60s)
+      const p = (tNorm - 0.88) / 0.12;
       const ease = 1 - Math.pow(1 - p, 3);
-      x = 60 * (1 - ease);
-      y = -70 * (1 - ease);
-      scale = 1.0;
-      rotate = 8 * (1 - ease);
-      isFlapping = p < 0.35;
-      isLandingUnfold = p >= 0.35;
-      unfoldProgress = p;
-      windActive = p < 0.40;
+      x = 80 * (1 - ease);
+      y = -45 * (1 - ease);
+      scale = 1.05 * (1 - ease) + 1.0 * ease;
+      rotate = 6 * (1 - ease);
+      isFlapping = p < 0.40;
+      isLandingUnfold = p >= 0.40;
+      unfoldProgress = (p - 0.40) / 0.60;
+      windActive = p < 0.35;
     }
 
     return { x, y, scale, rotate, isFlapping, isLandingUnfold, unfoldProgress, windActive };
@@ -267,16 +273,16 @@ export const ExamizoButterflyIcon = React.forwardRef<
     (force: boolean = false) => {
       if (!interactive) return;
       const now = performance.now();
-      // Guard against rapid duplicate clicks/invocations (< 200ms)
-      if (now - lastTriggerTickRef.current < 200) return;
+      // Guard against rapid duplicate clicks/invocations (< 250ms)
+      if (now - lastTriggerTickRef.current < 250) return;
       lastTriggerTickRef.current = now;
 
       const currentMode = flightModeRef.current;
-      const currentDuration = currentMode === 'spiral-text' ? 5.6 : 4.4;
+      const currentDuration = currentMode === 'spiral-text' ? 7.6 : 4.6;
       const isMidAir =
         isPlayingRef.current &&
         animTimeRef.current > 0.05 * currentDuration &&
-        animTimeRef.current < 0.92 * currentDuration;
+        animTimeRef.current < 0.94 * currentDuration;
 
       // If mid-air and not forced, let current flight finish smoothly
       if (isMidAir && !force) {
@@ -325,7 +331,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
       if (isPlayingRef.current) {
         animTimeRef.current += dt;
         const currentMode = flightModeRef.current;
-        const cycle = currentMode === 'spiral-text' ? 5.6 : 4.4;
+        const cycle = currentMode === 'spiral-text' ? 7.6 : 4.6;
 
         if (animTimeRef.current >= cycle) {
           if (autoLoop) {
@@ -600,15 +606,15 @@ export const ExamizoButterflyIcon = React.forwardRef<
             100% { stroke-dashoffset: 0; opacity: 0; }
           }
           @keyframes ezSpiralWindDash {
-            0% { stroke-dashoffset: 1800; opacity: 0; }
-            15% { opacity: 0.95; }
-            85% { opacity: 0.95; }
+            0% { stroke-dashoffset: 3600; opacity: 0; }
+            10% { opacity: 0.95; }
+            90% { opacity: 0.95; }
             100% { stroke-dashoffset: 0; opacity: 0; }
           }
           @-webkit-keyframes ezSpiralWindDash {
-            0% { stroke-dashoffset: 1800; opacity: 0; }
-            15% { opacity: 0.95; }
-            85% { opacity: 0.95; }
+            0% { stroke-dashoffset: 3600; opacity: 0; }
+            10% { opacity: 0.95; }
+            90% { opacity: 0.95; }
             100% { stroke-dashoffset: 0; opacity: 0; }
           }
           @keyframes ezLustreShine {
@@ -650,14 +656,14 @@ export const ExamizoButterflyIcon = React.forwardRef<
             -webkit-animation: ezWindDash 2.0s 0.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
           }
           .ez-spiral-wind-1 {
-            stroke-dasharray: 320 1600;
-            animation: ezSpiralWindDash 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
-            -webkit-animation: ezSpiralWindDash 2.4s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+            stroke-dasharray: 450 3600;
+            animation: ezSpiralWindDash 3.8s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+            -webkit-animation: ezSpiralWindDash 3.8s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
           }
           .ez-spiral-wind-2 {
-            stroke-dasharray: 260 1400;
-            animation: ezSpiralWindDash 2.8s 0.3s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
-            -webkit-animation: ezSpiralWindDash 2.8s 0.3s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+            stroke-dasharray: 380 3400;
+            animation: ezSpiralWindDash 4.2s 0.3s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+            -webkit-animation: ezSpiralWindDash 4.2s 0.3s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
           }
           .ez-lustre-sweep {
             animation: ezLustreShine 4.2s ease-in-out infinite;
@@ -757,7 +763,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
           <g>
             <path
               className="ez-spiral-wind-1"
-              d="M 300 340 C 380 260 440 220 520 260 C 620 310 700 460 820 440 C 940 420 1020 220 1140 240 C 1260 260 1340 460 1460 440 C 1580 420 1660 220 1780 250 C 1900 280 1960 400 2050 340 C 2150 260 2160 140 2050 150 C 1920 160 1400 180 300 340"
+              d="M 300 340 C 380 260 440 220 520 260 C 620 310 700 460 820 440 C 940 420 1020 220 1140 240 C 1260 260 1340 460 1460 440 C 1580 420 1660 220 1780 250 C 1900 280 1960 400 2050 340 C 2150 260 2160 140 2050 150 C 1920 170 1820 400 1680 370 C 1540 340 1440 190 1300 220 C 1160 250 1060 410 920 370 C 780 330 700 190 560 230 C 440 270 380 400 300 340"
               fill="none"
               stroke="url(#ezSpiralWindGrad)"
               strokeWidth="5.5"
@@ -765,7 +771,7 @@ export const ExamizoButterflyIcon = React.forwardRef<
             />
             <path
               className="ez-spiral-wind-2"
-              d="M 460 300 C 580 230 680 470 800 450 C 920 430 1020 230 1140 250 C 1260 270 1360 470 1480 450 C 1600 430 1700 230 1820 270 C 1940 310 2080 340 2100 220 C 2120 160 1980 140 1800 150 C 1300 180 700 220 340 330"
+              d="M 460 300 C 580 230 680 470 800 450 C 920 430 1020 230 1140 250 C 1260 270 1360 470 1480 450 C 1600 430 1700 230 1820 270 C 1940 310 2080 340 2100 220 C 2120 160 1980 140 1800 160 C 1640 390 1500 350 1360 210 C 1220 240 1120 390 980 350 C 840 310 740 180 600 220 C 480 260 380 350 320 340"
               fill="none"
               stroke="url(#ezWindGrad)"
               strokeWidth="3.5"
@@ -773,12 +779,18 @@ export const ExamizoButterflyIcon = React.forwardRef<
               opacity="0.85"
             />
             <g filter="url(#ezStarGlow)">
+              {/* Forward flight stars */}
               <circle className="ez-star-twinkle" cx="520" cy="260" r="4.5" fill="#fef08a" opacity="0.9" />
               <circle className="ez-star-twinkle" cx="820" cy="440" r="4" fill="#38bdf8" opacity="0.9" />
               <circle className="ez-star-twinkle" cx="1140" cy="240" r="5" fill="#fef08a" opacity="0.95" />
               <circle className="ez-star-twinkle" cx="1460" cy="440" r="4" fill="#38bdf8" opacity="0.9" />
               <circle className="ez-star-twinkle" cx="1780" cy="250" r="4.5" fill="#fef08a" opacity="0.9" />
               <circle className="ez-star-twinkle" cx="2050" cy="150" r="6" fill="#fde047" opacity="1" />
+              {/* Return flight spiral stars */}
+              <circle className="ez-star-twinkle" cx="1680" cy="370" r="4.5" fill="#38bdf8" opacity="0.9" />
+              <circle className="ez-star-twinkle" cx="1300" cy="220" r="5" fill="#fef08a" opacity="0.95" />
+              <circle className="ez-star-twinkle" cx="920" cy="370" r="4" fill="#38bdf8" opacity="0.9" />
+              <circle className="ez-star-twinkle" cx="560" cy="230" r="4.5" fill="#fef08a" opacity="0.9" />
             </g>
           </g>
         )}
