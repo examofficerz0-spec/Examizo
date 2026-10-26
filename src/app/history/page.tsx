@@ -30,6 +30,7 @@ import {
 import { getSwrCache, setSwrCache, subscribeSwrCache } from '@/lib/swrCache';
 import { PageLoader } from '@/components/common/PageLoader';
 import { DigiLockerGuard } from '@/components/ui/DigiLockerModal';
+import { MistakeLogAudit } from '@/components/history/MistakeLogAudit';
 
 export default function MockTestHistoryPage() {
   const router = useRouter();
@@ -207,6 +208,15 @@ export default function MockTestHistoryPage() {
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                       {historyList.length} Attempt{historyList.length === 1 ? '' : 's'} Logged
                     </span>
+                    {incorrectLog.length > 0 && (
+                      <a
+                        href="#mistake-log-section"
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/80 dark:hover:bg-rose-900/80 text-rose-700 dark:text-rose-300 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <AlertCircle className="w-3 h-3 text-rose-600" />
+                        <span>{incorrectLog.length} Mistakes to Audit</span>
+                      </a>
+                    )}
                   </div>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">
                     Track your scores, completion accuracy, time benchmarks, and test performance history.
@@ -673,6 +683,9 @@ export default function MockTestHistoryPage() {
               })}
             </div>
           )}
+
+          {/* ─── Mistake Log & Incorrect Answers Audit Section ─── */}
+          <MistakeLogAudit incorrectLog={incorrectLog} defaultExpanded={true} />
 
         </main>
       </DigiLockerGuard>
